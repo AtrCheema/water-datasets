@@ -1,0 +1,20 @@
+
+sphinx
+sphinx-prompt
+sphinx_rtd_theme
+sphinx_issues
+sphinx_copybutton
+sphinx-gallery
+
+git+https://github.com/AtrCheema/AI4Water.git@dev
+
+seaborn
+xarray
+netcdf4
+requests
+
+# spatial processing
+imageio
+# shapely manually download the wheel file and install
+pyshp
+statsmodels
