@@ -10,7 +10,7 @@ git+https://github.com/AtrCheema/AI4Water.git@dev
 
 openpyxl
 seaborn
-xarray
+xarray==0.21.1
 netcdf4
 requests
 
