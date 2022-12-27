@@ -153,7 +153,7 @@ grouper = dyn.groupby("OBJECTID")
 
 fig, axes = create_subplots(grouper.ngroups, figsize=(12, 10))
 for (idx, grp), ax in zip(grouper, axes.flat):
-    hist(grp['median_C_TOC'], ax=ax, show=False, title=idx)
+    hist(grp['median_C_TOC'], ax=ax, show=False, ax_kws=dict(title=idx))
 plt.show()
 
 # %%
