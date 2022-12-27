@@ -10,9 +10,11 @@ git+https://github.com/AtrCheema/AI4Water.git@dev
 
 openpyxl
 seaborn
-xarray==0.21.1
-netcdf4
+xarray==0.20.2
+netcdf4==1.6.0
 requests
+numpy==1.21.6
+pandas==1.2.3
 
 # spatial processing
 imageio
