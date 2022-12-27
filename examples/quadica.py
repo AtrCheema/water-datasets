@@ -4,7 +4,6 @@ Quadica dataset
 =========================
 """
 
-
 # sphinx_gallery_thumbnail_number = 3
 
 import pandas as pd
@@ -108,7 +107,7 @@ print(cat.shape)
 
 df = pd.concat([grp['median_C_TN'] for idx,grp in dyn.groupby('OBJECTID')], axis=1)
 df.columns = dyn['OBJECTID'].unique()
-ridge(df, figsize=(10, 10), cmap="GnBu", title="median_C_TN")
+ridge(df, figsize=(10, 10), color="GnBu", title="median_C_TN")
 
 
 # %%
