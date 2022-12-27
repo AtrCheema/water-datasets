@@ -11,7 +11,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from easy_mpl import hist, ridge
 from ai4water.datasets import Quadica
-from ai4water.backend import create_subplots
+from easy_mpl.utils import create_subplots
 
 # %%
 dataset = Quadica()
@@ -162,7 +162,7 @@ plt.show()
 df = pd.concat([grp['median_C_TOC'] for idx,grp in dyn.groupby('OBJECTID')], axis=1)
 df.columns = dyn['OBJECTID'].unique()
 
-ridge(df, figsize=(10, 10), cmap="GnBu", title="median_C_TOC")
+ridge(df, figsize=(10, 10), color="GnBu", title="median_C_TOC")
 
 # %%
 dyn.head()
