@@ -5,31 +5,31 @@ GRQA
 """
 
 
-from ai4water.datasets import GRQA
-from easy_mpl import plot
-import matplotlib.pyplot as plt
-
-# %%
-import ai4water
-print(ai4water.__version__)
-
-# %%
-ds = GRQA()
-
-# %%
-print(ds.parameters)
-
-# %%
-country = "Pakistan"
-len(ds.fetch_parameter('TEMP', country=country))
-
-# %%
-params = []
-for param in ds.parameters:
-    if len(ds.fetch_parameter(param, country=country))>1:
-        params.append(param)
-
-print(params)
+# from ai4water.datasets import GRQA
+# from easy_mpl import plot
+# import matplotlib.pyplot as plt
+#
+# # %%
+# import ai4water
+# print(ai4water.__version__)
+#
+# # %%
+# ds = GRQA()
+#
+# # %%
+# print(ds.parameters)
+#
+# # %%
+# country = "Pakistan"
+# len(ds.fetch_parameter('TEMP', country=country))
+#
+# # %%
+# params = []
+# for param in ds.parameters:
+#     if len(ds.fetch_parameter(param, country=country))>1:
+#         params.append(param)
+#
+# print(params)
 
 # %%
 
