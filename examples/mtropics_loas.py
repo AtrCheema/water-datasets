@@ -18,24 +18,29 @@ laos = MtropicsLaos()
 pcp = laos.fetch_pcp()
 print(pcp.shape)
 #
-# # %%
-# # weather station
-# # -----------------
-# w = laos.fetch_weather_station_data()
-#
+# %%
+# weather station
+# -----------------
+w = laos.fetch_weather_station_data()
+print(w.shape)
+
 # %%
 wl, spm = laos.fetch_hydro()
+print(wl.shape)
+
+# %%
+print(spm.shape)
 
 # %%
 ecoli = laos.fetch_ecoli()
 print(ecoli.shape)
 
-# # %%
-# print(ecoli.head())
-#
-# # %%
-# print(ecoli.tail())
-#
+# %%
+print(ecoli.head())
+
+# %%
+print(ecoli.tail())
+
 # # %%
 # ecoli_all = laos.fetch_ecoli(features='all')
 # print(ecoli_all.shape)
