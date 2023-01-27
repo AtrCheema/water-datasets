@@ -10,7 +10,7 @@ from easy_mpl import pie
 from ai4water.eda import EDA
 from ai4water.datasets import MtropicsLaos, ecoli_mekong
 
-laos = MtropicsLaos(save_as_nc=False)
+laos = MtropicsLaos()
 
 # %%
 # precipitation
@@ -23,13 +23,13 @@ print(pcp.shape)
 # # -----------------
 # w = laos.fetch_weather_station_data()
 #
-# # %%
-# wl, spm = laos.fetch_hydro()
-#
-# # %%
-# ecoli = laos.fetch_ecoli()
-# print(ecoli.shape)
-#
+# %%
+wl, spm = laos.fetch_hydro()
+
+# %%
+ecoli = laos.fetch_ecoli()
+print(ecoli.shape)
+
 # # %%
 # print(ecoli.head())
 #
