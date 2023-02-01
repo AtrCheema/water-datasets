@@ -42,9 +42,9 @@ print(ecoli.head())
 print(ecoli.tail())
 
 # # %%
-# ecoli_all = laos.fetch_ecoli(features='all')
-# print(ecoli_all.shape)
-#
+ecoli_all = laos.fetch_ecoli(features='all')
+print(ecoli_all.shape)
+
 # # %%
 # ecoli_all.head()
 #
@@ -63,16 +63,16 @@ print(ecoli.tail())
 # # -------------
 # rg = laos.fetch_rain_gauges()
 # print(rg.shape)
-#
-# # %%
-# # regression
-# # -----------
-# df = laos.make_regression()
-# print(df.shape)
-#
-# # %%
-# df.head()
-#
+
+# %%
+# regression
+# -----------
+df = laos.make_regression()
+print(df.shape)
+
+# %%
+df.head()
+
 # # %%
 # df = laos.make_regression(lookback_steps=30)
 # print(df.shape)
