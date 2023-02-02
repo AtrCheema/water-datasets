@@ -37,6 +37,7 @@ extensions = [
 'sphinx_toggleprompt',
 'sphinx_copybutton',
 'nbsphinx',
+'sphinx_gallery.load_style',
 ]
 
 # These projects are also used for the sphinx_codeautolink extension:

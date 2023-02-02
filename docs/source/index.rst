@@ -8,10 +8,17 @@ Welcome to ai4water datasets!
 
 .. toctree::
    :maxdepth: 2
+   :caption: Scripts
 
    auto_examples/index
-   notebooks
 
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Notebooks
+
+   _notebooks/grqa
+   _notebooks/mtropics_laos
 
 Indices and tables
 ==================
