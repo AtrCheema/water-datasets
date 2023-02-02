@@ -17,6 +17,7 @@ Welcome to ai4water datasets!
    :maxdepth: 1
    :caption: Notebooks
 
+   _notebooks/main
    _notebooks/grqa
    _notebooks/mtropics_laos
 
