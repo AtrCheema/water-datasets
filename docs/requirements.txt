@@ -6,6 +6,7 @@ sphinx_issues
 sphinx_copybutton
 sphinx-gallery
 sphinx_toggleprompt
+nbsphinx
 
 git+https://github.com/AtrCheema/AI4Water.git@dev
 

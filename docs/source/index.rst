@@ -10,6 +10,7 @@ Welcome to ai4water datasets!
    :maxdepth: 2
 
    auto_examples/index
+   notebooks
 
 
 Indices and tables

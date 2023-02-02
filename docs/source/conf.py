@@ -36,7 +36,19 @@ extensions = [
 'sphinx.ext.ifconfig',
 'sphinx_toggleprompt',
 'sphinx_copybutton',
+'nbsphinx',
 ]
+
+# These projects are also used for the sphinx_codeautolink extension:
+intersphinx_mapping = {
+    'matplotlib': ('https://matplotlib.org/', None),
+    'numpy': ('https://docs.scipy.org/doc/numpy/', None),
+    'pandas': ('https://pandas.pydata.org/docs/', None),
+    'python': ('https://docs.python.org/3/', None),
+}
+
+# Don't add .txt suffix to source files:
+html_sourcelink_suffix = ''
 
 toggleprompt_offset_right  = 30
 

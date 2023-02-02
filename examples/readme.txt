@@ -1,4 +1,4 @@
-datasets
+scripts
 =========
 
-Examples describing datasets from ai4water
+Scripts describing datasets from ai4water
