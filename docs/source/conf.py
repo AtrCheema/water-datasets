@@ -93,3 +93,13 @@ sphinx_gallery_conf = {
 
 html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']
+
+# List of arguments to be passed to the kernel that executes the notebooks:
+nbsphinx_execute_arguments = [
+    "--InlineBackend.figure_formats={'svg', 'pdf'}",
+]
+
+nbsphinx_thumbnails = {
+    'gallery/thumbnail-from-conf-py': 'gallery/a-local-file.png',
+    'gallery/*-rst': 'images/notebook_icon.png',
+}

@@ -11,8 +11,14 @@ import matplotlib.pyplot as plt
 from easy_mpl import hist, ridge
 from ai4water.datasets import Quadica
 from easy_mpl.utils import create_subplots
+from ai4water.utils.utils import get_version_info
+# %%
+
+for k,v in get_version_info.items():
+    print(k, v)
 
 # %%
+
 dataset = Quadica()
 
 avg_temp = dataset.avg_temp()
