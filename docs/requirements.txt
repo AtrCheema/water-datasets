@@ -7,6 +7,7 @@ sphinx_copybutton
 sphinx-gallery
 sphinx_toggleprompt
 nbsphinx
+ipykernel
 
 git+https://github.com/AtrCheema/AI4Water.git@dev
 
