@@ -99,7 +99,7 @@ nbsphinx_execute_arguments = [
     "--InlineBackend.figure_formats={'svg', 'pdf'}",
 ]
 
-nbsphinx_thumbnails = {
-    'gallery/thumbnail-from-conf-py': 'gallery/a-local-file.png',
-    'gallery/*-rst': 'images/notebook_icon.png',
-}
+# nbsphinx_thumbnails = {
+#     'gallery/thumbnail-from-conf-py': 'gallery/a-local-file.png',
+#     'gallery/*-rst': 'images/notebook_icon.png',
+# }
