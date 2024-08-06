@@ -6,20 +6,28 @@ Quadica dataset
 
 # sphinx_gallery_thumbnail_number = 3
 
+import os
+import site
+
+if __name__ == '__main__':
+    wd_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath('__file__')))))
+    print(wd_dir)
+    site.addsitedir(wd_dir)
+
 import pandas as pd
 import matplotlib.pyplot as plt
 from easy_mpl import hist, ridge
-from ai4water.datasets import Quadica
 from easy_mpl.utils import create_subplots
-from ai4water.utils.utils import get_version_info
+
+from water_datasets import Quadica
+from water_datasets.utils import print_info
 # %%
 
-for k,v in get_version_info().items():
-    print(k, v)
+print_info()
 
 # %%
 
-dataset = Quadica()
+dataset = Quadica(path='/mnt/datawaha/hyex/atr/data')
 
 avg_temp = dataset.avg_temp()
 print(avg_temp.shape)

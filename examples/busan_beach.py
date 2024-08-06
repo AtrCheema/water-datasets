@@ -4,15 +4,25 @@ beach water quality
 ===========================
 """
 
+import numpy as np
+
+np.bool = np.bool_
+
+import os
+import site
+
+if __name__ == '__main__':
+    wd_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath('__file__')))))
+    print(wd_dir)
+    site.addsitedir(wd_dir)
 
 from ai4water.eda import EDA
-from ai4water.datasets import busan_beach
-from ai4water.utils.utils import get_version_info
+from water_datasets import busan_beach
+from water_datasets.utils import print_info
 
 # sphinx_gallery_thumbnail_number = 7
 
-for k,v in get_version_info().items():
-    print(f"{k} version: {v}")
+print_info()
 ###########################################################
 
 

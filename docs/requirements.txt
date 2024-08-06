@@ -9,7 +9,7 @@ sphinx_toggleprompt
 nbsphinx
 ipykernel
 
-git+https://github.com/AtrCheema/AI4Water.git@dev
+ai4water
 
 openpyxl
 seaborn
@@ -20,7 +20,7 @@ numpy==1.21.6
 pandas==1.2.3
 
 # spatial processing
-imageio
+#imageio
 # shapely manually download the wheel file and install
-pyshp
-statsmodels
+#pyshp
+#statsmodels
