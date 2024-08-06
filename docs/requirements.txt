@@ -13,11 +13,11 @@ ai4water
 
 openpyxl
 seaborn
-xarray==0.20.2
-netcdf4==1.6.0
+xarray==2024.7.0
+netcdf4
 requests
-numpy==1.21.6
-pandas==1.2.3
+numpy==1.26.4
+pandas==2.1.4
 
 # spatial processing
 #imageio
