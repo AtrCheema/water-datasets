@@ -7,4 +7,8 @@ The datasets are downloaded only once upon their first use.
 
 ## Installation
 
+Using GitHub link for the latest code
+
+	python -m pip install git+https://github.com/AtrCheema/water-datasets.git
+
 ## How to Use
