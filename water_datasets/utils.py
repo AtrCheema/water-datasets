@@ -927,6 +927,12 @@ def get_version_info()->dict:
     if netCDF4 is not None:
         versions['netCDF4'] = netCDF4.__version__
 
+    try:
+        import scipy
+        versions['scipy'] = scipy.__version__
+    except (ImportError, ModuleNotFoundError):
+        pass
+
     return versions
 
 

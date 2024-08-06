@@ -50,8 +50,10 @@ from ._datasets import EtpPcpSamoylov
 from ._datasets import SWECanada
 from ._datasets import gw_punjab
 from ._datasets import RRAlpineCatchments
-from ._datasets import mg_photodegradation
-from ._datasets import ec_removal_biochar
+
+
+from ._wwt import mg_photodegradation
+from ._wwt import ec_removal_biochar
 
 from .mtropics import MtropicsLaos
 from .mtropics import MtropcsThailand
@@ -76,13 +78,14 @@ from .water_quality import busan_beach
 from .water_quality import RiverChemSiberia
 from .water_quality import SyltRoads
 
+
 def load_nasdaq(inputs: Union[str, list, None] = None, target: str = 'NDX'):
     """Loads Nasdaq100 by downloading it if it is not already downloaded."""
 
     DeprecationWarning("load_nasdaq is deprecated and will be removed in future versions."
                        "See ai4water.datasets to get an appropriate dataset")
 
-    fname = os.path.join(os.path.dirname(__file__), "nasdaq100_padding.csv")
+    fname = os.path.join(os.path.dirname(__file__), "data", "nasdaq100_padding.csv")
 
     if not os.path.exists(fname):
         print(f"downloading file to {fname}")
@@ -98,9 +101,5 @@ def load_nasdaq(inputs: Union[str, list, None] = None, target: str = 'NDX'):
 
     return df[inputs + target]
 
-
-# all_datasets = ['CAMELS_AUS', 'CAMELS_CL', 'CAMELS_US', 'CAMELS_GB', 'CAMELS_BR',
-#                 'CAMELS_CL', 'LamaH', 'HYPE',
-#                 'HYSETS']
 
 __version__ = '0.1.0'
