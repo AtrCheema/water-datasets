@@ -27,7 +27,7 @@ print_info()
 
 # %%
 
-dataset = Quadica(path='/mnt/datawaha/hyex/atr/data')
+dataset = Quadica()
 
 avg_temp = dataset.avg_temp()
 print(avg_temp.shape)
