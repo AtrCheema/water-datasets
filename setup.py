@@ -53,9 +53,6 @@ setup(
     author='Ather Abbas',
     author_email='ather_abbas786@yahoo.com',
 
-    package_data={'water_datasets/datasets': ['arg_busan.csv']},
-    include_package_data=True,
-
     classifiers=[
         'Development Status :: 4 - Beta',
 

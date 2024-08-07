@@ -86,7 +86,12 @@ def download(
     binurl[2] = urlparse.quote(binurl[2])
     binurl = urlparse.urlunsplit(binurl)
 
-    (tmpfile, headers) = ulib.urlretrieve(binurl, tmpfile, callback)
+    try:
+        (tmpfile, headers) = ulib.urlretrieve(binurl, tmpfile, callback)
+    except ulib.HTTPError as e:
+        print(f"HTTP Error for {url} to download {fname}")
+        raise e
+    
     filename = filename_from_url(url)
 
     if fname:
