@@ -77,7 +77,7 @@ def busan_beach(
     fpath = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "arg_busan.csv")
 
     if os.path.exists(fpath):
-        df = pd.read_csv("fpath", index_col="index")
+        df = pd.read_csv(fpath, index_col="index")
     else:
         df = pd.read_csv(
             "https://raw.githubusercontent.com/AtrCheema/AI4Water/ec2a4a426673b11e3589b64cef9d7160b1de28d4/ai4water/datasets/arg_busan.csv",

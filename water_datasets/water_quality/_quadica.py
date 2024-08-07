@@ -179,9 +179,13 @@ class Quadica(Datasets):
             >>> dataset = Quadica()
             >>> df = dataset.pet() # -> (828, 1386)
         """
+        kws = dict()
+        if pd.__version__ >= "2.0.0":
+            kws = dict(date_format="%Y-%m")
+
         fname = os.path.join(self.path, "quadica", "pet_monthly.csv")
         pet = pd.read_csv(fname, parse_dates=[['Year', 'Month']], 
-                          index_col='Year_Month', date_format="%Y-%m")
+                          index_col='Year_Month', **kws)
 
         pet.index = pd.to_datetime(pet.index)
 
@@ -223,10 +227,13 @@ class Quadica(Datasets):
             >>> dataset = Quadica()
             >>> df = dataset.avg_temp() # -> (828, 1388)
         """
+        kws = dict()
+        if pd.__version__ >= "2.0.0":
+            kws = dict(date_format="%Y-%m")
 
         fname = os.path.join(self.path, "quadica", "tavg_monthly.csv")
         temp = pd.read_csv(fname, parse_dates=[['Year', 'Month']], index_col='Year_Month', 
-                           date_format="%Y-%m")
+                           **kws)
         
         temp.index = pd.to_datetime(temp.index)
 
@@ -267,9 +274,13 @@ class Quadica(Datasets):
             >>> df = dataset.precipitation() # -> (828, 1388)
         """
 
+        kws = dict()
+        if pd.__version__ >= "2.0.0":
+            kws = dict(date_format="%Y-%m")
+
         fname = os.path.join(self.path, "quadica", "pre_monthly.csv")
         pcp = pd.read_csv(fname, parse_dates=[['Year', 'Month']], 
-                          index_col='Year_Month', date_format="%Y-%m")
+                          index_col='Year_Month', **kws)
 
         pcp.index = pd.to_datetime(pcp.index)
 

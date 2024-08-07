@@ -11,11 +11,11 @@ np.bool = np.bool_
 import os
 import site
 
-if __name__ == '__main__':
-    wd_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath('__file__')))))
-    # wd_dir = os.path.dirname(os.path.dirname(os.path.realpath('__file__')))
-    print(wd_dir)
-    site.addsitedir(wd_dir)
+# if __name__ == '__main__':
+#     wd_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath('__file__')))))
+#     # wd_dir = os.path.dirname(os.path.dirname(os.path.realpath('__file__')))
+#     print(wd_dir)
+#     site.addsitedir(wd_dir)
 
 import sklearn.metrics
 sklearn.metrics.plot_roc_curve = sklearn.metrics.RocCurveDisplay.from_estimator
