@@ -2,7 +2,6 @@
 import re
 import os
 import sys
-import ssl
 import glob
 import shutil
 import random
@@ -13,8 +12,6 @@ import tempfile
 import urllib.request as ulib
 from typing import Union, List
 import urllib.parse as urlparse
-
-import requests
 
 import numpy as np
 import pandas as pd
@@ -54,73 +51,22 @@ DATA_FILES = {
 }
 
 
-def download_all_http_directory(url, outpath=None, filetypes=".zip", match_name=None):
-    """
-    Download all the files which are of category filetypes at the location of
-    outpath. If a file is already present. It will not be downloaded.
-    filetypes str: extension of files to be downloaded. By default only .zip files
-        are downloaded.
-    mathc_name str: if not None, then only those files will be downloaded whose name
-        have match_name string in them.
-    """
-    try:
-        import bs4
-    except (ModuleNotFoundError, ImportError) as e:
-        print(f"You must install bs4 library e.g. by using"
-                f"pip install bs4")
-        raise e
-
-    if os.name == 'nt':
-        ssl._create_default_https_context = ssl._create_unverified_context
-    page = list(urlparse.urlsplit(url))[2].split('/')[-1]
-    basic_url = url.split(page)[0]
-
-    r = requests.get(url)
-    data = bs4.BeautifulSoup(r.text, "html.parser")
-    match_name = filetypes if match_name is None else match_name
-
-    for l in data.find_all("a"):
-
-        if l["href"].endswith(filetypes) and match_name in l['href']:
-            _outpath = outpath
-            if outpath is not None:
-                _outpath = os.path.join(outpath, l['href'])
-
-            if os.path.exists(_outpath):
-                print(f"file {l['href']} already exists at {outpath}")
-                continue
-            download(basic_url + l["href"], _outpath)
-            print(r.status_code, l["href"], )
-    return
-
-
 def download(
-        url, 
+        url:str, 
         outdir:os.PathLike=None,
         fname:str = None
-        ):
+        )->os.PathLike:
     """High level function, which downloads URL into tmp file in current
-    directory and then renames it to filename autodetected from either URL
-    or HTTP headers.
+    directory and then moves and/or renames it to outdir/fname
 
     :param url:
     :param outdir: output filename or directory
-    :param fname: filename to save the downloaded file
-    :return:    filename where URL is downloaded to
+    :param fname: filename to save the downloaded file. If not given, then autodetected from either URL
+        or HTTP headers.
+    :return:    filepath] where URL is downloaded to
     """
     if outdir is None:
         outdir = os.getcwd()
-    # # detect of out is a directory
-    # if out is not None:
-    #     outdir = os.path.dirname(out)
-    #     out_filename = os.path.basename(out)
-    #     if outdir == '':
-    #         outdir = os.getcwd()
-    #     if not os.path.exists(outdir):
-    #         os.makedirs(outdir)
-    # else:
-    #     outdir = os.getcwd()
-    #     out_filename = None
 
     # get filename for temp file in current directory
     prefix = filename_from_url(url)
@@ -146,7 +92,7 @@ def download(
     if fname:
         filename = fname
 
-    fpath = outdir + "/" + filename
+    fpath = outdir + os.sep + filename
 
     # add numeric ' (x)' suffix if filename already exists
     if os.path.exists(fpath):
