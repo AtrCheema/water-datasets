@@ -19,6 +19,7 @@ if __name__ == '__main__':
 
 import sklearn.metrics
 sklearn.metrics.plot_roc_curve = sklearn.metrics.RocCurveDisplay.from_estimator
+sklearn.metrics.plot_precision_recall_curve = sklearn.metrics.PrecisionRecallDisplay.from_estimator
 from ai4water.eda import EDA
 from water_datasets import busan_beach
 from water_datasets.utils import print_info
