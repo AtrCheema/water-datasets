@@ -5,13 +5,9 @@ from typing import Union, List
 
 import numpy as np
 import pandas as pd
-import xarray as xr
-
-import matplotlib.pyplot as plt
-
-from easy_mpl import plot
 
 from .._datasets import Datasets
+from .._backend import xarray as xr, plt, easy_mpl, plt_Axes
 from ..utils import check_attributes, dateandtime_now
 
 
@@ -550,10 +546,10 @@ class Camels(Datasets):
             self,
             stations:List[str] = None,
             marker='.',
-            ax:plt.Axes = None,
+            ax:plt_Axes = None,
             show:bool = True,
             **kwargs
-    )->plt.Axes:
+    )->plt_Axes:
         """
         plots coordinates of stations
 
@@ -587,7 +583,7 @@ class Camels(Datasets):
         """
         xy = self.stn_coords(stations)
 
-        ax = plot(xy.loc[:, 'long'].values,
+        ax = easy_mpl.plot(xy.loc[:, 'long'].values,
                   xy.loc[:, 'lat'].values,
                   marker, ax=ax, show=False, **kwargs)
 

@@ -7,27 +7,13 @@ from typing import Union, Tuple
 
 import numpy as np
 import pandas as pd
-import xarray as xr
 
-try:
-    from shapely.geometry import shape, mapping
-    from shapely.ops import unary_union
-except (ModuleNotFoundError, OSError):
-    shape, mapping, unary_union = None, None, None
+from ._backend import shape, mapping, unary_union
+from ._backend import xarray as xr, fiona, shapefile
 
-try:
-    import shapefile
-except (ModuleNotFoundError, ImportError):
-    shapefile = None
-
-try:
-    import fiona
-except (ModuleNotFoundError, ImportError):
-    fiona = None
-
+from ._datasets import Datasets, maybe_download
 
 from .utils import check_attributes, check_st_en, find_records, Resampler
-from ._datasets import Datasets, maybe_download
 
 
 class MtropicsLaos(Datasets):

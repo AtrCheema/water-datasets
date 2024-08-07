@@ -299,9 +299,13 @@ class Datasets(object):
     def path(self, x):
         if x is None:
             # path is not given dataset is not downloaded yet
-            x = os.path.join(self.camels_dir, self.__class__.__name__)
-            assert not os.path.exists(x), f"The path {x} already exists. Please provide a new path"
-            os.makedirs(x)
+            if self.__class__.__name__.startswith('CAMELS'):
+                x = os.path.join(self.camels_dir, self.__class__.__name__)
+            else:
+                x = os.path.join(self.base_ds_dir, self.__class__.__name__)
+
+            if not os.path.exists(x):
+                os.makedirs(x)
         else:
             assert os.path.exists(x), f"The path {x} does not exist"
             x = os.path.join(x, self.__class__.__name__)

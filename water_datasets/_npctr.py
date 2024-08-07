@@ -6,7 +6,8 @@ from typing import Union, List, Tuple
 
 import numpy as np
 import pandas as pd
-import xarray as xr
+
+from ._backend import xarray as xr
 
 from ._datasets import Datasets
 from .utils import check_attributes, sanity_check, check_st_en

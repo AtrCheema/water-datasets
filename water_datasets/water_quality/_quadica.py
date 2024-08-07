@@ -180,7 +180,10 @@ class Quadica(Datasets):
             >>> df = dataset.pet() # -> (828, 1386)
         """
         fname = os.path.join(self.path, "quadica", "pet_monthly.csv")
-        pet = pd.read_csv(fname, parse_dates=[['Year', 'Month']], index_col='Year_Month')
+        pet = pd.read_csv(fname, parse_dates=[['Year', 'Month']], 
+                          index_col='Year_Month', date_format="%Y-%m")
+
+        pet.index = pd.to_datetime(pet.index)
 
         if stations is not None:
             stations = [str(stn) for stn in stations]
@@ -222,7 +225,10 @@ class Quadica(Datasets):
         """
 
         fname = os.path.join(self.path, "quadica", "tavg_monthly.csv")
-        temp = pd.read_csv(fname, parse_dates=[['Year', 'Month']], index_col='Year_Month')
+        temp = pd.read_csv(fname, parse_dates=[['Year', 'Month']], index_col='Year_Month', 
+                           date_format="%Y-%m")
+        
+        temp.index = pd.to_datetime(temp.index)
 
         if stations is not None:
             stations = [str(stn) for stn in stations]
@@ -262,7 +268,10 @@ class Quadica(Datasets):
         """
 
         fname = os.path.join(self.path, "quadica", "pre_monthly.csv")
-        pcp = pd.read_csv(fname, parse_dates=[['Year', 'Month']], index_col='Year_Month')
+        pcp = pd.read_csv(fname, parse_dates=[['Year', 'Month']], 
+                          index_col='Year_Month', date_format="%Y-%m")
+
+        pcp.index = pd.to_datetime(pcp.index)
 
         if stations is not None:
             stations = [str(stn) for stn in stations]

@@ -7,9 +7,9 @@ import concurrent.futures as cf
 from multiprocessing import cpu_count
 
 import numpy as np
-import xarray as xr
 import pandas as pd
 
+from .._backend import xarray as xr
 from ..utils import check_attributes, dateandtime_now
 from .camels import Camels
 

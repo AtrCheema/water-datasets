@@ -11,6 +11,7 @@ import site
 
 if __name__ == '__main__':
     wd_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath('__file__')))))
+    wd_dir = os.path.dirname(os.path.dirname(os.path.realpath('__file__')))
     print(wd_dir)
     site.addsitedir(wd_dir)
 
@@ -28,6 +29,8 @@ print_info()
 # %%
 
 dataset = Quadica()
+
+# %%
 
 avg_temp = dataset.avg_temp()
 print(avg_temp.shape)
@@ -212,7 +215,6 @@ print(dyn.isna().sum())
 
 # %%
 print(cat.shape)
-
 
 # %%
 

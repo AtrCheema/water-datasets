@@ -4,8 +4,9 @@ from typing import Union, List
 
 import numpy as np
 import pandas as pd
-import xarray as xr
+
 from .camels import Camels
+from .._backend import xarray as xr
 from ..utils import check_attributes, sanity_check
 
 
