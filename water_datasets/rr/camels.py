@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 
 from .._datasets import Datasets
+from .._backend import netCDF4
 from .._backend import xarray as xr, plt, easy_mpl, plt_Axes
 from ..utils import check_attributes, dateandtime_now
 
@@ -85,7 +86,7 @@ class Camels(Datasets):
                 Any other keyword arguments for the Datasets class
         """
         super(Camels, self).__init__(path=path, verbosity=verbosity, **kwargs)
-        self.path = path
+        #self.path = path
 
     def stations(self)->List[str]:
         raise NotImplementedError
@@ -210,23 +211,23 @@ class Camels(Datasets):
          datasets directory"""
         return os.path.join(self.base_ds_dir, "CAMELS")
 
-    @property
-    def path(self):
-        """Directory where a particular dataset will be saved. """
-        return self._path
+    # @property
+    # def path(self):
+    #     """Directory where a particular dataset will be saved. """
+    #     return self._path
 
-    @path.setter
-    def path(self, x):
-        if x is None:
-            # path is not given dataset is not downloaded yet
-            x = os.path.join(self.camels_dir, self.__class__.__name__)
-            assert not os.path.exists(x), f"The path {x} already exists. Please provide a new path"
-            os.makedirs(x)
-        else:
-            assert os.path.exists(x), f"The path {x} does not exist"
-            x = os.path.join(x, self.__class__.__name__)
-        # sanity_check(self.name, x)
-        self._path = x
+    # @path.setter
+    # def path(self, x):
+    #     if x is None:
+    #         # path is not given dataset is not downloaded yet
+    #         x = os.path.join(self.camels_dir, self.__class__.__name__)
+    #         assert not os.path.exists(x), f"The path {x} already exists. Please provide a new path"
+    #         os.makedirs(x)
+    #     else:
+    #         assert os.path.exists(x), f"The path {x} does not exist"
+    #         x = os.path.join(x, self.__class__.__name__)
+    #     # sanity_check(self.name, x)
+    #     self._path = x
 
     def fetch(self,
               stations: Union[str, list, int, float, None] = None,
@@ -303,8 +304,8 @@ class Camels(Datasets):
         else:
             raise TypeError(f"Unknown value provided for stations {stations}")
 
-        if xr is None:
-            raise ModuleNotFoundError("modeule xarray must be installed to use `datasets` module")
+        # if xr is None:
+        #     raise ModuleNotFoundError("modeule xarray must be installed to use `datasets` module")
 
         return self.fetch_stations_features(
             stations,
@@ -400,7 +401,7 @@ class Camels(Datasets):
 
             dynamic_features = check_attributes(dynamic_features, self.dynamic_features)
 
-            if not os.path.exists(self.dyn_fname):
+            if netCDF4 is None or not os.path.exists(self.dyn_fname):
                 # read from csv files
                 # following code will run only once when fetch is called inside init method
                 dyn = self._read_dynamic_from_csv(stations, dynamic_features, st=st, en=en)

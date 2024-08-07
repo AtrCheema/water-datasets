@@ -755,9 +755,9 @@ class CAMELS_AUS(Camels):
         "03_streamflow.zip": "https://download.pangaea.de/dataset/921850/files/",
         "04_attributes.zip": "https://download.pangaea.de/dataset/921850/files/",
         "05_hydrometeorology.zip": "https://download.pangaea.de/dataset/921850/files/",
-        "CAMELS_AUS_Attributes-Indices_MasterTable.csv": "https://download.pangaea.de/dataset/921850/files/",
-        "Units_01_TimeseriesData.pdf": "https://download.pangaea.de/dataset/921850/files/",
-        "Units_02_AttributeMasterTable.pdf": "https://download.pangaea.de/dataset/921850/files/",
+        "CAMELS_AUS_Attributes&Indices_MasterTable.csv": "https://download.pangaea.de/dataset/921850/files/",
+        #"Units_01_TimeseriesData.pdf": "https://download.pangaea.de/dataset/921850/files/",
+        #"Units_02_AttributeMasterTable.pdf": "https://download.pangaea.de/dataset/921850/files/",
     }
 
     folders = {
@@ -811,18 +811,22 @@ class CAMELS_AUS(Camels):
             assert isinstance(path, str), f'path must be string like but it is "{path}" of type {path.__class__.__name__}'
             if not os.path.exists(path) or len(os.listdir(path)) < 2:
                 raise FileNotFoundError(f"The path {path} does not exist")
-        self.path = path
 
         super().__init__(path=path, verbosity=verbosity, **kwargs)
-        if not os.path.exists(self.path):
-            os.makedirs(self.path)
 
         for _file, url in self.urls.items():
             fpath = os.path.join(self.path, _file)
             if not os.path.exists(fpath):
-                download(url + _file, fpath)
+                if verbosity > 0:
+                    print(f"Downloading {_file} from {url+ _file}")
+                download(url + _file, outdir=self.path, fname=_file,)
+            elif verbosity > 0:
+                print(f"{_file} at {self.path} already exists")
 
         _unzip(self.path)
+
+        if netCDF4 is None:
+            to_netcdf = False
 
         if to_netcdf:
             self._maybe_to_netcdf('camels_aus_dyn')
@@ -859,7 +863,7 @@ class CAMELS_AUS(Camels):
 
     @property
     def static_features(self) -> list:
-        static_fpath = os.path.join(self.path, 'CAMELS_AUS_Attributes-Indices_MasterTable.csv')
+        static_fpath = os.path.join(self.path, 'CAMELS_AUS_Attributes&Indices_MasterTable.csv')
 
         df = pd.read_csv(static_fpath, index_col='station_id', nrows=1)
         cols = list(df.columns)
@@ -931,7 +935,7 @@ class CAMELS_AUS(Camels):
         stations = check_attributes(stations, self.stations())
 
         static_fpath = os.path.join(self.path,
-                                    'CAMELS_AUS_Attributes-Indices_MasterTable.csv')
+                                    'CAMELS_AUS_Attributes&Indices_MasterTable.csv')
 
         df = pd.read_csv(static_fpath, index_col='station_id')
         s = df.loc[stations, 'catchment_area']
@@ -969,7 +973,7 @@ class CAMELS_AUS(Camels):
         stations = check_attributes(stations, self.stations())
 
         static_fpath = os.path.join(self.path,
-                                    'CAMELS_AUS_Attributes-Indices_MasterTable.csv')
+                                    'CAMELS_AUS_Attributes&Indices_MasterTable.csv')
 
         df = pd.read_csv(static_fpath,
                          index_col='station_id')
@@ -981,7 +985,7 @@ class CAMELS_AUS(Camels):
                      st=None, en=None):
 
         features = check_attributes(features, self.static_features)
-        static_fname = 'CAMELS_AUS_Attributes-Indices_MasterTable.csv'
+        static_fname = 'CAMELS_AUS_Attributes&Indices_MasterTable.csv'
         static_fpath = os.path.join(self.path, static_fname)
         static_df = pd.read_csv(static_fpath, index_col='station_id')
 

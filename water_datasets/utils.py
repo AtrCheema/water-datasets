@@ -20,6 +20,7 @@ import numpy as np
 import pandas as pd
 
 from ._backend import shapefile, plt, xarray, netCDF4, matplotlib
+from ._backend import fiona, shapely
 
 
 COLORS = ['#CDC0B0', '#00FFFF', '#76EEC6', '#C1CDCD', '#E3CF57', '#EED5B7', '#8B7D6B', '#0000FF', '#8A2BE2', '#9C661F',
@@ -932,6 +933,12 @@ def get_version_info()->dict:
         versions['scipy'] = scipy.__version__
     except (ImportError, ModuleNotFoundError):
         pass
+
+    if fiona is not None:
+        versions['fiona'] = fiona.__version__
+    
+    if shapely is not None:
+        versions['shapely'] = shapely.__version__
 
     return versions
 
