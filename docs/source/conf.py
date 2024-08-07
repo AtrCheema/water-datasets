@@ -13,13 +13,7 @@ project = 'water-datasets'
 copyright = '2024, Ather Abbas'
 author = 'Ather Abbas'
 
-sys.path.insert(0,  os.path.abspath('../../../..'))
-print('path1 : ', os.path.abspath('../..'))
-print('path2 : ', os.path.abspath('../../..'))
-print('path3 : ', os.path.abspath('../../../..'))
-
-import site
-site.addsitedir(os.path.abspath('../../../..'))
+sys.path.insert(0, os.path.abspath('../..'))
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
