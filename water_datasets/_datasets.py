@@ -387,7 +387,7 @@ class Weisssee(Datasets):
         """
         Examples
         --------
-            >>> from ai4water.datasets import Weisssee
+            >>> from water_datasets import Weisssee
             >>> dataset = Weisssee()
             >>> data = dataset.fetch()
         """
@@ -548,7 +548,7 @@ class WeatherJena(Datasets):
 
         Examples
         --------
-        >>> from ai4water.datasets import WeatherJena
+        >>> from water_datasets import WeatherJena
         >>> dataset = WeatherJena()
         >>> data = dataset.fetch()
         >>> data.sum()
@@ -660,7 +660,7 @@ class WeatherJena(Datasets):
 
         Examples
         --------
-            >>> from ai4water.datasets import WeatherJena
+            >>> from water_datasets import WeatherJena
             >>> dataset = WeatherJena()
             >>> data = dataset.fetch()
             >>> data.shape
@@ -714,7 +714,7 @@ class SWECanada(Datasets):
 
     Examples
     --------
-        >>> from ai4water.datasets import SWECanada
+        >>> from water_datasets import SWECanada
         >>> swe = SWECanada()
         ... # get names of all available stations
         >>> stns = swe.stations()
@@ -928,7 +928,7 @@ def gw_punjab(
 
     Examples
     ---------
-    >>> from ai4water.datasets import gw_punjab
+    >>> from water_datasets import gw_punjab
     >>> full_data = gw_punjab()
     find out the earliest observation
     >>> print(full_data.sort_index().head(1))

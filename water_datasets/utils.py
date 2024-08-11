@@ -326,6 +326,7 @@ def download_and_unzip(
     if not os.path.exists(path):
         os.makedirs(path)
     if isinstance(url, str):
+        print(f"downloading {url} to {path}")
         if 'zenodo' in url:
             download_from_zenodo(path, 
                                  doi=url, 
@@ -336,7 +337,11 @@ def download_and_unzip(
             download(url, path)
         _unzip(path)
     elif isinstance(url, list):
+        print(f"downloading {len(url)} files to {path}")
+
         for url in url:
+            print(f"downloading {url}")
+
             if 'zenodo' in url:
                 download_from_zenodo(path, url, include=include,
                                      files_to_check=files_to_check,
@@ -345,7 +350,11 @@ def download_and_unzip(
                 download(url, path)
         _unzip(path)
     elif isinstance(url, dict):
+        print(f"downloading {len(url)} files to {path}")
+
         for fname, url in url.items():
+            print(f"downloading {fname}")
+
             if 'zenodo' in url:
                 download_from_zenodo(path, doi=url, include=include,
                                      files_to_check=files_to_check,

@@ -58,7 +58,7 @@ class LamaH(Camels):
 
         Examples
         --------
-        >>> from ai4water.datasets import LamaH
+        >>> from water_datasets import LamaH
         >>> dataset = LamaH(time_step='daily', data_type='total_upstrm')
         # The daily dataset is from 859 with 61 static and 22 dynamic features
         >>> len(dataset.stations()), len(dataset.static_features), len(dataset.dynamic_features)
@@ -230,7 +230,7 @@ class LamaH(Camels):
 
         Examples
         --------
-            >>> from ai4water.datasets import CAMELS_AUS
+            >>> from water_datasets import CAMELS_AUS
             >>> dataset = CAMELS_AUS()
             ... # find out station ids
             >>> dataset.stations()
@@ -325,7 +325,7 @@ class LamaH(Camels):
 
         Examples
         ---------
-        >>> from ai4water.datasets import LamaH
+        >>> from water_datasets import LamaH
         >>> dataset = LamaH(time_step="daily")
         >>> dataset.area()  # returns area of all stations
         >>> dataset.area('1')  # returns area of station whose id is 912101A
@@ -462,7 +462,7 @@ class LamaH(Camels):
 
         Examples
         --------
-            >>> from ai4water.datasets import LamaH
+            >>> from water_datasets import LamaH
             >>> dataset = LamaH(time_step='daily', data_type='total_upstrm')
             >>> df = dataset.fetch_static_features('99')  # (1, 61)
             ...  # get list of all static features
@@ -674,12 +674,12 @@ class LamaHIce(Camels):
 'lamah_ice_hourly.zip':
 'https://www.hydroshare.org/resource/86117a5f36cc4b7c90a5d54e18161c91/data/contents/lamah_ice_hourly.zip'
     }
-    _data_types = ['total_upstrm', 'diff_upstrm_all', 'diff_upstrm_lowimp']
+    _data_types = ['total_upstrm', 'intermediate_all', 'intermediate_lowimp']
     time_steps = ['daily', 'hourly']
     DTYPES = {
         'total_upstrm': 'A_basins_total_upstrm',
-        'diff_upstrm_all': 'B_basins_intermediate_all',
-        'diff_upstrm_lowimp': 'C_basins_intermediate_lowimp'
+        'intermediate_all': 'B_basins_intermediate_all',
+        'intermediate_lowimp': 'C_basins_intermediate_lowimp'
     }
     def __init__(
             self,
@@ -832,7 +832,7 @@ class LamaHIce(Camels):
 
         Examples
         ---------
-        >>> from ai4water.datasets import LamaHIce
+        >>> from water_datasets import LamaHIce
         >>> dataset = LamaHIce(time_step="daily")
         >>> dataset.area()  # returns area of all stations
         >>> dataset.area('1')  # returns area of station whose id is 912101A
