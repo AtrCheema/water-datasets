@@ -72,9 +72,14 @@ def busan_beach(
         >>> dataframe = busan_beach(target=['tetx_coppml', 'sul1_coppml'])
         >>> dataframe.shape
         (1446, 15)
+    
+    See usage `here <https://tabulight.readthedocs.io/en/latest/auto_examples/busan_beach.html>`_ for more details.
 
     """
-    fpath = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "arg_busan.csv")
+    path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
+    if not os.path.exists(path):
+        os.makedirs(path)
+    fpath = os.path.join(path, "arg_busan.csv")
 
     if os.path.exists(fpath):
         df = pd.read_csv(fpath, index_col="index")
