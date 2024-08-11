@@ -6,13 +6,7 @@ CAMELS Australia
 import os
 import site
 
-if __name__ == '__main__':
-    # wd_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath('__file__')))))
-    wd_dir = os.path.dirname(os.path.dirname(os.path.realpath('__file__')))
-    print(wd_dir)
-    site.addsitedir(wd_dir)
-
-from ai4water.eda import EDA
+from tabulight import EDA
 import matplotlib.pyplot as plt
 from easy_mpl import scatter, hist
 from easy_mpl.utils import process_cbar

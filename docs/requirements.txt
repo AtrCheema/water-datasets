@@ -9,7 +9,7 @@ sphinx_toggleprompt
 nbsphinx
 ipykernel
 
-ai4water
+git+https://github.com/AtrCheema/tabulight.git  # for examples
 
 openpyxl
 seaborn
