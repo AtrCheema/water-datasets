@@ -69,7 +69,7 @@ static.shape
 
 # %%
 
-EDA(data=static, save=False).heatmap()
+# EDA(data=static, save=False).heatmap()
 
 # %%
 

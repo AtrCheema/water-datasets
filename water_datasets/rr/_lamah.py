@@ -4,7 +4,6 @@ import os
 from datetime import datetime
 from typing import Union, List
 import concurrent.futures as cf
-from multiprocessing import cpu_count
 
 import numpy as np
 import pandas as pd
@@ -424,7 +423,7 @@ class LamaH(Camels):
     ):
         """Reads features of one or more station"""
 
-        cpus = self.processes or cpu_count()
+        cpus = self.processes or get_cpus()
 
         dynamic_features = [dynamic_features for _ in range(len(stations))]
 
@@ -714,6 +713,10 @@ class LamaHIce(LamaH):
 
         super().__init__(path=path, time_step=time_step, data_type=data_type, **kwargs)
         self.path = path
+
+        # don't download hourly data if time_step is daily
+        if time_step == "daily":
+            self.url.pop("lamah_ice_hourly.zip")
 
         self._download(overwrite=overwrite)
 
@@ -1047,9 +1050,18 @@ class LamaHIce(LamaH):
         """
         stations = check_attributes(stations, self.stations())
 
-        qs = []
-        for stn in stations:  # todo, this can be parallelized
-            qs.append(self.fetch_stn_q(stn))
+        cpus = self.processes or max(get_cpus(), 16)
+
+        if cpus == 1 or len(stations) <=10:
+            qs = []
+            for stn in stations:  # todo, this can be parallelized
+                qs.append(self.fetch_stn_q(stn))
+        else:
+            with  cf.ProcessPoolExecutor(max_workers=cpus) as executor:
+                qs = list(executor.map(
+                    self.fetch_stn_q,
+                    stations,
+                ))
 
         return pd.concat(qs, axis=1)
 
@@ -1065,6 +1077,8 @@ class LamaHIce(LamaH):
                                 'qobs': np.float32,
                                 'qc_flag': np.float32
                                 })
+
+        # todo : consider quality code!
 
         index = df.apply(  # todo, is it taking more time?
             lambda x:datetime.strptime("{0} {1} {2}".format(
