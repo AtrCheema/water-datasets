@@ -21,6 +21,8 @@ from water_datasets import CAMELS_GB, CAMELS_BR, CAMELS_AUS
 from water_datasets import CAMELS_CL, CAMELS_US, LamaH, HYSETS, HYPE
 from water_datasets import WaterBenchIowa
 from water_datasets import CAMELS_DE
+from water_datasets import LamaHIce
+
 
 gscad_path = '/mnt/datawaha/hyex/atr/gscad_database/raw'
 
@@ -29,6 +31,7 @@ if __name__ == "__main__":
 
 
 logger = logging.getLogger(__name__)
+
 
 def test_dynamic_data(dataset, stations, num_stations, stn_data_len, as_dataframe=False):
     logger.info(f"test_dynamic_data for {dataset.name}")
@@ -103,8 +106,9 @@ def test_static_data(dataset, stations, target):
     if len(dataset.static_features)>0:
         df = dataset.fetch(stations=stations, dynamic_features=None, static_features='all')
         assert isinstance(df, pd.DataFrame)
-        assert len(df) == target, f'length of data is {len(df)} and not {target}'
-        assert df.shape == (target, len(dataset.static_features)), f'for {dataset.name}, v is of shape {df.shape} and not of {len(dataset.static_features)}'
+        assert len(df) == target, f'length of static df is {len(df)} Expected {target}'
+        exp_shape = (target, len(dataset.static_features))
+        assert df.shape == exp_shape, f'for {dataset.name}, actual shape {df.shape} and exp shape {exp_shape}'
 
     return
 
@@ -558,7 +562,19 @@ class TestCamels(unittest.TestCase):
     def test_camels_de(self):
         dataset = CAMELS_DE(path=os.path.join(gscad_path, 'CAMELS'))
         test_dataset(dataset, 1555, 25568, 111, 21)
+        return
+    
+    def test_lamahice(self):
+        
+        for data_type in LamaHIce._data_types:
 
+            for time_step in [#'hourly', 
+                              'daily']:
+
+                dataset = LamaHIce(path=gscad_path, time_step=time_step, data_type=data_type)
+
+                test_dataset(dataset, 111, 26298, 154, 35)
+        return
 
 
 if __name__=="__main__":

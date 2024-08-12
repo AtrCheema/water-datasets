@@ -7,8 +7,8 @@ import os
 import site
 
 if __name__ == '__main__':
-    # wd_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath('__file__')))))
-    wd_dir = os.path.dirname(os.path.dirname(os.path.realpath('__file__')))
+    wd_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath('__file__')))))
+    # wd_dir = os.path.dirname(os.path.dirname(os.path.realpath('__file__')))
     print(wd_dir)
     site.addsitedir(wd_dir)
 

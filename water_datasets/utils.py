@@ -163,7 +163,11 @@ def bar(current_size, total_size, width):
     return
 
 
-def check_attributes(attributes, check_against: list, attribute_name:str = '') -> list:
+def check_attributes(
+        attributes, 
+        check_against: list, 
+        attribute_name:str = ''
+        ) -> List[str]:
     if attributes == 'all' or attributes is None:
         attributes = check_against
     elif not isinstance(attributes, list):
@@ -931,3 +935,10 @@ def print_info(
     for k, v in info.items():
         print(k, v)
     return
+
+
+def get_cpus()->int:
+    if os.name == "nt":
+        return os.cpu_count()
+    else:
+        return len(os.sched_getaffinity(0))

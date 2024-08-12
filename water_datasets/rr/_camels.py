@@ -802,7 +802,7 @@ class CAMELS_AUS(Camels):
     ):
         """
         Arguments:
-            path: path where the CAMELS-AUS dataset has been downloaded. This path
+            path: path where the CAMELS_AUS dataset has been downloaded. This path
                 must contain five zip files and one xlsx file. If None, then the
                 data will be downloaded.
             to_netcdf :

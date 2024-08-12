@@ -86,7 +86,6 @@ class Camels(Datasets):
                 Any other keyword arguments for the Datasets class
         """
         super(Camels, self).__init__(path=path, verbosity=verbosity, **kwargs)
-        #self.path = path
 
     def stations(self)->List[str]:
         raise NotImplementedError

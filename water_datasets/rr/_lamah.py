@@ -10,6 +10,9 @@ import numpy as np
 import pandas as pd
 
 from .._backend import xarray as xr
+from .._backend import netCDF4
+
+from ..utils import get_cpus
 from ..utils import check_attributes, dateandtime_now
 from .camels import Camels
 
@@ -38,6 +41,7 @@ class LamaH(Camels):
                  time_step: str,
                  data_type: str,
                  path=None,
+                to_netcdf:bool = True,   
                  **kwargs
                  ):
 
@@ -81,13 +85,14 @@ class LamaH(Camels):
 
         _data_types = self._data_types if self.time_step == 'daily' else ['total_upstrm']
 
+        if netCDF4 is None:
+            to_netcdf = False
 
-        if not self.all_ncs_exist:
+        if not self.all_ncs_exist and to_netcdf:
             self._maybe_to_netcdf(fdir = f"{data_type}_{time_step}")
 
         self.dyn_fname = os.path.join(self.path,
                                       f'lamah_{data_type}_{time_step}_dyn.nc')
-
 
     def _maybe_to_netcdf(self, fdir: str):
         # since data is very large, saving all the data in one file
@@ -126,7 +131,7 @@ class LamaH(Camels):
                         attrs={'date': f"create on {dateandtime_now()}"}
                     )
 
-                    xds.to_netcdf(self.dyn_fname)
+                    xds.to_netcdf(dyn_fname)
 
                     gc.collect()
         return
@@ -159,7 +164,7 @@ class LamaH(Camels):
     def data_type_dir(self):
         directory = 'CAMELS_AT'
         if self.time_step == 'hourly':
-            directory = 'CAMELS_AT1'  # todo, use it only for hourly, daily is causing errors
+            directory = 'CAMELS_AT1' 
         # self.path/CAMELS_AT/data_type_dir
         f = [f for f in os.listdir(os.path.join(self.path, directory)) if self.data_type in f][0]
         return os.path.join(self.path, f'{directory}{SEP}{f}')
@@ -475,20 +480,20 @@ class LamaH(Camels):
 
         df = pd.read_csv(fname, sep=';', index_col='ID')
 
-        # if features is not None:
         static_features = check_attributes(features, self.static_features)
+        stations = check_attributes(stn_id, self.stations())
 
         df = df[static_features]
 
-        if stn_id == "all":
-            stn_id = self.stations()
+        # if stn_id == "all":
+        #     stn_id = self.stations()
 
-        if isinstance(stn_id, list):
-            stations = [str(i) for i in stn_id]
-        elif isinstance(stn_id, int):
-            stations = str(stn_id)
-        else:
-            stations = stn_id
+        # if isinstance(stn_id, list):
+        #     stations = [str(i) for i in stn_id]
+        # elif isinstance(stn_id, int):
+        #     stations = str(stn_id)
+        # else:
+        #     stations = stn_id
 
         df.index = df.index.astype(str)
         df = df.loc[stations]
@@ -655,9 +660,9 @@ class LamaH(Camels):
         return "20191231"
 
 
-class LamaHIce(Camels):
+class LamaHIce(LamaH):
     """
-    Daily and hourly hydro-meteorological time series data of 107 river basins
+    Daily and hourly hydro-meteorological time series data of 111 river basins
     of Iceland. The total period of dataset is from 1950 to 2021. The average
     length of daily data is 33 years while for that of hourly it is 11 years.
     The dataset is available on hydroshare at
@@ -688,40 +693,103 @@ class LamaHIce(Camels):
             *,
             time_step:str = "daily",
             data_type:str = "total_upstrm",
+            to_netcdf:bool = True,            
             **kwargs):
-        super().__init__(path=path, **kwargs)
+        """
+        
+        Parameters
+        ----------
+            path : str
+                If the data is alredy downloaded then provide the complete
+                path to it. If None, then the data will be downloaded.
+                The data is downloaded once and therefore susbsequent
+                calls to this class will not download the data unless
+                ``overwrite`` is set to True.
+            time_step :
+                    possible values are ``daily`` or ``hourly``
+            data_type :
+                    possible values are ``total_upstrm``, ``intermediate_all``
+                    or ``intermediate_lowimp``    
+        """
+
+        super().__init__(path=path, time_step=time_step, data_type=data_type, **kwargs)
         self.path = path
 
         self._download(overwrite=overwrite)
 
-        assert time_step in self.time_steps, f"invalid time_step {time_step} given"
-        assert data_type in self._data_types, f"invalid data_type {data_type} given."
+        # assert time_step in self.time_steps, f"invalid time_step {time_step} given"
+        # assert data_type in self._data_types, f"invalid data_type {data_type} given."
 
-        self.time_step = time_step
-        self.data_type = data_type
+        # self.time_step = time_step
+        # self.data_type = data_type
 
-    """
-    
-    Parameters
-    ----------
-        path : str
-            If the data is alredy downloaded then provide the complete
-            path to it. If None, then the data will be downloaded.
-            The data is downloaded once and therefore susbsequent
-            calls to this class will not download the data unless
-            ``overwrite`` is set to True.
-        time_step :
-                possible values are ``daily`` or ``hourly``
-        data_type :
-                possible values are ``total_upstrm``, ``diff_upstrm_all``
-                or ``diff_upstrm_lowimp``    
-    """
+        # if netCDF4 is None:
+        #     to_netcdf = False
+
+        # self.dyn_fname = os.path.join(self.path,
+        #                               f'lamah_{data_type}_{time_step}_dyn.nc')
+
+        # if not self.all_ncs_exist and to_netcdf:
+        #    self._maybe_to_netcdf(fdir = f"{data_type}_{time_step}")
+
+        basin = self.basin_attributes()
+        gauge = self.gauge_attributes()
+
+        # better to read once instead of reading again and again
+        self._static_features = pd.concat([basin, gauge], axis=1).columns.to_list()
+
+    # def _maybe_to_netcdf(self, fdir: str):
+    #     # since data is very large, saving all the data in one file
+    #     # consumes a lot of memory, which is impractical for most of the personal
+    #     # computers! Therefore, saving each feature separately
+
+    #     fdir = os.path.join(self.path, fdir)
+    #     if not os.path.exists(fdir):
+    #         os.makedirs(fdir)
+
+    #     if not self.all_ncs_exist:
+    #         print(f'converting data to netcdf format for faster io operations')
+
+    #         for feature in self.dynamic_features:
+
+    #             # we must specify class level dyn_fname feature
+    #             dyn_fname = os.path.join(fdir, f"{feature}.nc")
+
+    #             if not os.path.exists(dyn_fname):
+    #                 print(f'Saving {feature} as .nc to disk')
+    #                 data = self.fetch(static_features=None, dynamic_features=feature)
+
+    #                 data_vars = {}
+    #                 coords = {}
+    #                 for k, v in data.items():
+    #                     data_vars[k] = (['time', 'dynamic_features'], v)
+    #                     index = v.index
+    #                     index.name = 'time'
+    #                     coords = {
+    #                         'dynamic_features': [feature],
+    #                         'time': index
+    #                     }
+    #                 xds = xr.Dataset(
+    #                     data_vars=data_vars,
+    #                     coords=coords,
+    #                     attrs={'date': f"create on {dateandtime_now()}"}
+    #                 )
+
+    #                 xds.to_netcdf(dyn_fname)
+
+    #                 gc.collect()
+    #     return
+
     @property
     def start(self):
-        return "19510101"
+        if self.time_step == "hourly":
+            return "19500101 00:00"
+        return "19500101"
 
     @property
-    def end(self):  # todo, is it untill 2017 or 2019?
+    def end(self):  
+        if self.time_step == "hourly":
+            return "20211231 23:00"
         return "20211231"
 
     @property
@@ -749,24 +817,26 @@ class LamaHIce(Camels):
         returns gauge attributes from following two files
 
             - Gauge_attributes.csv
-            - hydro_indices_filtered_obs.csv
+            - hydro_indices_1981_2018.csv
 
         Returns
         -------
         pd.DataFrame
-            a dataframe of shape (111, 29)
+            a dataframe of shape (111, 28)
         """
         g_attr_fpath = os.path.join(self.gauges_path, "1_attributes", "Gauge_attributes.csv")
 
-        df_gattr = pd.read_csv(g_attr_fpath)
-        df_gattr.index = df_gattr.pop('id').astype(str)
+        df_gattr = pd.read_csv(g_attr_fpath, sep=';', index_col='id')
+        df_gattr.index = df_gattr.index.astype(str)
 
-        hydro_idx_fpath = os.path.join(self.gauges_path, "1_attributes", "hydro_indices_filtered_obs.csv")
+        hydro_idx_fpath = os.path.join(self.gauges_path, "1_attributes", "hydro_indices_1981_2018.csv")
 
-        df_hidx = pd.read_csv(hydro_idx_fpath)
-        df_hidx.index = df_hidx.pop('id').astype(str)
+        df_hidx = pd.read_csv(hydro_idx_fpath, sep=';', index_col='id')
+        df_hidx.index = df_hidx.index.astype(str)
 
         df = pd.concat([df_gattr, df_hidx], axis=1)
+
+        df.columns = [col + "_gauge" for col in df.columns]
 
         return df
 
@@ -801,9 +871,8 @@ class LamaHIce(Camels):
          """
         g_attr_fpath = os.path.join(self.gauges_path, "1_attributes", "Gauge_attributes.csv")
 
-        df = pd.read_csv(g_attr_fpath)
-
-        df.index = df.pop('id').astype(str)
+        df = pd.read_csv(g_attr_fpath, sep=';', index_col='id')
+        df.index = df.index.astype(str)
         df = df[['lon', 'lat']]
         df.columns = ['long', 'lat']
         stations = check_attributes(stations, self.stations())
@@ -841,18 +910,12 @@ class LamaHIce(Camels):
         stations = check_attributes(stations, self.stations())
 
         df = self.catchment_attributes()
-        return df.loc[stations, 'area_calc']
+        s = df.loc[stations, 'area_calc']
+        s.name = 'area'
+        return s
 
-    def _catch_attr_path(self)->str:
-        p = "lamah_ice"
-        if self.time_step == "hourly":
-            p = "lamah_ice_hourly"
-
-        path = os.path.join(self.path, p,
-                             p,
-                             self.DTYPES[self.data_type],
-                             "1_attributes")
-        return path
+    def _catch_attr_path(self)->os.PathLike:
+        return os.path.join(self.data_type_dir, "1_attributes")
 
     def _clim_ts_path(self)->str:
         p0 = "lamah_ice"
@@ -875,28 +938,28 @@ class LamaHIce(Camels):
 
         fpath = os.path.join(self._catch_attr_path(), "Catchment_attributes.csv")
 
-        df = pd.read_csv(fpath)
-        df.index = df.pop('id').astype(str)
+        df = pd.read_csv(fpath, sep=';', index_col='id')
+        df.index = df.index.astype(str)
         return df
 
     def wat_bal_attrs(self)->pd.DataFrame:
         """water balance attributes"""
         fpath = os.path.join(self._catch_attr_path(),
-                             "Water_balance_using_all_streamflow_data.csv")
+                             "water_balance.csv")
 
-        df = pd.read_csv(fpath)
-        df.index = df.pop('Unnamed: 0').astype(str)
+        df = pd.read_csv(fpath, sep=';', index_col='id')
+        df.index = df.index.astype(str)
         df.columns = [col + "_all" for col in df.columns]
         return df
 
-    def wat_bal_filt_attrs(self)->pd.DataFrame:
-        """water balance attributes from filtered q"""
+    def wat_bal_unfiltered(self)->pd.DataFrame:
+        """water balance attributes from unfiltered q"""
         fpath = os.path.join(self._catch_attr_path(),
-                             "Water_balance_using_filtered_streamflow_data.csv")
+                             "water_balance_unfiltered.csv")
 
-        df = pd.read_csv(fpath)
-        df.index = df.pop('Unnamed: 0').astype(str)
-        df.columns = [col + "_filtered" for col in df.columns]
+        df = pd.read_csv(fpath, sep=';', index_col='id')
+        df.index = df.index.astype(str)
+        df.columns = [col + "_unfiltered" for col in df.columns]
         return df
 
     def basin_attributes(self)->pd.DataFrame:
@@ -911,9 +974,10 @@ class LamaHIce(Camels):
         """
         cat = self.catchment_attributes()
         wat_bal_all = self.wat_bal_attrs()
-        wat_bal_filt = self.wat_bal_filt_attrs()
+        wat_bal_filt = self.wat_bal_unfiltered()
 
         df = pd.concat([cat, wat_bal_all, wat_bal_filt], axis=1)
+        df.columns = [col + '_basin' for col in df.columns]
         return df
 
     def fetch_static_features(
@@ -926,6 +990,13 @@ class LamaHIce(Camels):
         gauge = self.gauge_attributes()
 
         df = pd.concat([basin, gauge], axis=1)
+        df.index = df.index.astype(str)
+
+        static_features = check_attributes(features, self.static_features)
+        stations = check_attributes(stn_id, self.stations())
+
+        df = df.loc[stations, static_features]
+
         return df
 
     def q_mmd(
@@ -977,7 +1048,7 @@ class LamaHIce(Camels):
         stations = check_attributes(stations, self.stations())
 
         qs = []
-        for stn in stations:
+        for stn in stations:  # todo, this can be parallelized
             qs.append(self.fetch_stn_q(stn))
 
         return pd.concat(qs, axis=1)
@@ -995,13 +1066,19 @@ class LamaHIce(Camels):
                                 'qc_flag': np.float32
                                 })
 
-        index = df.apply(
+        index = df.apply(  # todo, is it taking more time?
             lambda x:datetime.strptime("{0} {1} {2}".format(
                 x['YYYY'].astype(int),x['MM'].astype(int), x['DD'].astype(int)),"%Y %m %d"),
             axis=1)
-        df.index = pd.to_datetime(index)
-
-        return df['qobs']
+        
+        if self.time_step == "hourly":
+            hour = df.groupby(['YYYY', 'MM', 'DD']).cumcount()
+            df.index = index + pd.to_timedelta(hour, unit='h')
+        else:
+            df.index = pd.to_datetime(index)
+        s = df['qobs']
+        s.name = stn
+        return s
 
     def fetch_clim_features(
             self,
@@ -1014,10 +1091,19 @@ class LamaHIce(Camels):
         pd.DataFrame
         """
         stations = check_attributes(stations, self.stations())
-        raise NotImplementedError
 
-    def fetch_stn_clim(self, stn)->pd.DataFrame:
-        """returns climate time series data for one station
+        dfs = []
+        for stn in stations:
+            dfs.append(self.fetch_stn_meteo(stn))
+
+        return pd.concat(dfs, axis=1)
+
+    def fetch_stn_meteo(
+            self, 
+            stn:str,
+            nrows:int = None
+            )->pd.DataFrame:
+        """returns climate/meteorological time series data for one station
 
         Returns
         -------
@@ -1054,14 +1140,205 @@ class LamaHIce(Camels):
             "prec_rav": np.float32,
             "prec_carra": np.float32,
         }
-        df = pd.read_csv(fpath, sep=';', dtype=dtypes)
+        df = pd.read_csv(fpath, sep=';', dtype=dtypes, nrows=nrows)
 
         index = df.apply(
             lambda x: datetime.strptime("{0} {1} {2}".format(
                 x['YYYY'].astype(int), x['MM'].astype(int), x['DD'].astype(int)), "%Y %m %d"),
             axis=1)
-        df.index = pd.to_datetime(index)
-        for col in ['YYYY', 'MM', 'DD', 'DOY']:
-            df.pop(col)
+        
+        if self.time_step == "hourly":
+            #hour = df.groupby(['YYYY', 'MM', 'DD']).cumcount()
+            df.index = index + pd.to_timedelta(df['HOD'], unit='h')
+            for col in ['YYYY', 'MM', 'DD', 'DOY', 'hh', 'mm', 'HOD']:
+                df.pop(col)
+        else:
+            df.index = pd.to_datetime(index)
+            for col in ['YYYY', 'MM', 'DD', 'DOY',]:
+                df.pop(col)
 
         return df
+
+    @property
+    def data_type_dir(self):
+        p = "lamah_ice"
+        if self.time_step == "hourly":
+            p = "lamah_ice_hourly"
+        return os.path.join(self.path, p, p, self.DTYPES[self.data_type])
+
+    @property
+    def dynamic_features(self):
+        station = self.stations()[0]
+        df = self.fetch_stn_meteo(station, nrows=2)  # this takes time
+        cols = df.columns.to_list()
+        [cols.remove(val) for val in ['DOY', 'checked', 'HOD']  if val in cols ]
+        return cols
+
+    @property
+    def static_features(self) -> List[str]:
+        return self._static_features
+
+    def _read_dynamic_from_csv(
+            self,
+            stations,
+            dynamic_features: Union[str, list] = 'all',
+            st=None,
+            en=None,
+    ):
+        """Reads features of one or more station"""
+
+        cpus = self.processes or get_cpus()
+
+        if cpus > 1:
+
+            dynamic_features = [dynamic_features for _ in range(len(stations))]
+
+            with  cf.ProcessPoolExecutor(max_workers=cpus) as executor:
+                results = executor.map(
+                    self._read_dynamic_for_stn,
+                    stations,
+                    dynamic_features
+                )
+
+            results = {stn:data[dynamic_features[0]] for stn, data in zip(stations, results)}
+        else:
+            results = {}
+            for idx, stn in enumerate(stations):
+                results[stn] = self._read_dynamic_for_stn(stn, dynamic_features)
+
+                if idx % 10 == 0:
+                    print(f"processed {idx} stations")
+    
+        return results
+
+    def _read_dynamic_for_stn(
+            self, 
+            stn_id:str,
+            dynamic_features
+            )->pd.DataFrame:
+        """
+        Reads daily dynamic (meteorological + streamflow) data for one catchment
+        and returns as DataFrame
+        """    
+
+        q = self.fetch_stn_q(stn_id)
+        met = self.fetch_stn_meteo(stn_id)
+
+        # drop duplicated index from met
+        met = met.loc[~met.index.duplicated(keep='first')]
+
+        return pd.concat([met, q], axis=1).loc[self.start:self.end, dynamic_features]
+
+    @property
+    def dynamic_fnames(self):
+        return [f"{feature}.nc" for feature in self.dynamic_features]
+    
+    # @property
+    # def all_ncs_exist(self):
+    #     fdir = os.path.join(self.path, f"{self.data_type}_{self.time_step}")
+    #     return all(os.path.exists(os.path.join(fdir, fname_)) for fname_ in self.dynamic_fnames)    
+
+    # def fetch_stations_features(
+    #         self,
+    #         stations: list,
+    #         dynamic_features='all',
+    #         static_features=None,
+    #         st=None,
+    #         en=None,
+    #         as_dataframe: bool = False,
+    #         **kwargs
+    # ):
+    #     """Reads attributes of more than one stations.
+
+    #     This function checks of .nc files exist, then they are not prepared
+    #     and saved otherwise first nc files are prepared and then the data is
+    #     read again from nc files. Upon subsequent calls, the nc files are used
+    #     for reading the data.
+
+    #     Arguments:
+    #         stations : list of stations for which data is to be fetched.
+    #         dynamic_features : list of dynamic attributes to be fetched.
+    #             if 'all', then all dynamic attributes will be fetched.
+    #         static_features : list of static attributes to be fetched.
+    #             If `all`, then all static attributes will be fetched. If None,
+    #             then no static attribute will be fetched.
+    #         st : start of data to be fetched.
+    #         en : end of data to be fetched.
+    #         as_dataframe : whether to return the data as pandas dataframe. default
+    #             is xr.dataset object
+    #         kwargs dict: additional keyword arguments
+
+    #     Returns:
+    #         Dynamic and static features of multiple stations. Dynamic features
+    #         are by default returned as xr.Dataset unless ``as_dataframe`` is True, in
+    #         such a case, it is a pandas dataframe with multiindex. If xr.Dataset,
+    #         it consists of ``data_vars`` equal to number of stations and for each
+    #         station, the ``DataArray`` is of dimensions (time, dynamic_features).
+    #         where `time` is defined by ``st`` and ``en`` i.e length of ``DataArray``.
+    #         In case, when the returned object is pandas DataFrame, the first index
+    #         is `time` and second index is `dyanamic_features`. Static attributes
+    #         are always returned as pandas DataFrame and have the shape:
+    #         ``(stations, static_features)``. If ``dynamic_features`` is None,
+    #         then they are not returned and the returned value only consists of
+    #         static features. Same holds true for `static_features`.
+    #         If both are not None, then the returned type is a dictionary with
+    #         `static` and `dynamic` keys.
+
+    #     Raises:
+    #         ValueError, if both dynamic_features and static_features are None
+
+    #     Examples
+    #     --------
+    #         >>> from water_datasets import LamaHIce
+    #         >>> dataset = LamaHIce()
+    #         ... # find out station ids
+    #         >>> dataset.stations()
+    #         ... # get data of selected stations
+    #         >>> dataset.fetch_stations_features(['912101A', '912105A', '915011A'],
+    #         ...  as_dataframe=True)
+    #     """
+    #     st, en = self._check_length(st, en)
+
+    #     if dynamic_features is not None:
+
+    #         dynamic_features = check_attributes(dynamic_features, self.dynamic_features)
+
+    #         if not self.all_ncs_exist:
+    #             # read from csv files
+    #             # following code will run only once when fetch is called inside init method
+    #             dyn = self._read_dynamic_from_csv(stations, dynamic_features, st=st, en=en)
+    #         else:
+    #             dyn = self._make_ds_from_ncs(dynamic_features, stations, st, en)
+
+    #             if as_dataframe:
+    #                 dyn = dyn.to_dataframe(['time', 'dynamic_features'])
+
+    #         if static_features is not None:
+    #             static = self.fetch_static_features(stations, static_features)
+    #             stns = {'dynamic': dyn, 'static': static}
+    #         else:
+    #             # if the dyn is a dictionary of key, DataFames, we will return a MultiIndex
+    #             # dataframe instead of a dictionary
+    #             if as_dataframe and isinstance(dyn, dict) and isinstance(list(dyn.values())[0], pd.DataFrame):
+    #                 dyn = pd.concat(dyn, axis=0, keys=dyn.keys())
+    #             stns = dyn
+
+    #     elif static_features is not None:
+
+    #         return self.fetch_static_features(stations, static_features)
+
+    #     else:
+    #         raise ValueError
+
+    #     return stns    
+    
+    # def _make_ds_from_ncs(self, dynamic_features, stations, st, en):
+    #     """makes xarray Dataset by reading multiple .nc files"""
+
+    #     dyns = []
+    #     for f in dynamic_features:
+    #         dyn_fpath = os.path.join(self.path, f"{self.data_type}_{self.time_step}", f'{f}.nc')
+    #         dyn = xr.load_dataset(dyn_fpath)  # daataset
+    #         dyns.append(dyn[stations].sel(time=slice(st, en)))
+
+    #     return xr.concat(dyns, dim='dynamic_features')  # dataset    
