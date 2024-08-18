@@ -1863,6 +1863,50 @@ class CAMELS_DE(Camels):
     This class reads staic and dynamic data of catchments as well as loads the catchment
     boundaries.
 
+    Examples
+    --------
+    >>> from water_datasets import CAMELS_DE
+    >>> dataset = CAMELS_DE()
+    >>> df = dataset.fetch(stations=1, as_dataframe=True)
+    >>> df = df.unstack() # the returned dataframe is a multi-indexed dataframe so we have to unstack it
+    >>> df.shape
+       
+    ... # get name of all stations as list
+    >>> stns = dataset.stations()
+    >>> len(stns)
+       1555
+    ... # get data of 10 % of stations as dataframe
+    >>> df = dataset.fetch(0.1, as_dataframe=True)
+    >>> df.shape
+
+    ... # The returned dataframe is a multi-indexed data
+    >>> df.index.names == ['time', 'dynamic_features']
+        True
+    ... # get data by station id
+    >>> df = dataset.fetch(stations='DE110260', as_dataframe=True).unstack()
+    >>> df.shape
+
+    ... # get names of available dynamic features
+    >>> dataset.dynamic_features
+    ... # get only selected dynamic features
+    >>> data = dataset.fetch(1, as_dataframe=True,
+    ...  dynamic_features=['tmax_AWAP', 'precipitation_AWAP', 'et_morton_actual_SILO', 'streamflow_MLd']).unstack()
+    >>> data.shape
+
+    ... # get names of available static features
+    >>> dataset.static_features
+    ... # get data of 10 random stations
+    >>> df = dataset.fetch(10, as_dataframe=True)
+    >>> df.shape  # remember this is a multiindexed dataframe
+
+    # when we get both static and dynamic data, the returned data is a dictionary
+    # with ``static`` and ``dyanic`` keys.
+    >>> data = dataset.fetch(stations='DE110260', static_features="all", as_dataframe=True)
+    >>> data['static'].shape, data['dynamic'].shape
+
+    >>> dataset.stn_coords() # returns coordinates of all stations
+    >>> dataset.stn_coords('DE110250')  # returns coordinates of station whose id is 912101A
+    >>> dataset.stn_coords(['DE110250', 'DE110260'])  # returns coordinates of two stations
     """
     url = "https://zenodo.org/record/12733968"
 
@@ -1872,6 +1916,7 @@ class CAMELS_DE(Camels):
             path=None,
             overwrite:bool = False,
             to_netcdf: bool = True,
+            verbsity: int = 1,
             **kwargs
     ):
         """
@@ -1890,9 +1935,9 @@ class CAMELS_DE(Camels):
         to_netcdf : bool
             whether to convert all the data into one netcdf file or not.
             This will fasten repeated calls to fetch etc. but will
-            require netcdf5 package as well as xarry.
+            require netCDF5 package as well as xarray.
         """
-        super().__init__(path=path,  **kwargs)
+        super().__init__(path=path, verbosity=verbsity,  **kwargs)
 
         self._download(overwrite=overwrite)
 

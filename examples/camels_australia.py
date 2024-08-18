@@ -208,7 +208,7 @@ streamflow
 
 # %%
 
-EDA(data=streamflow, save=False).heatmap()
+# EDA(data=streamflow, save=False).heatmap()
 
 # %%
 

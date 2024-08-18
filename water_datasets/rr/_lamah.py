@@ -715,7 +715,7 @@ class LamaHIce(LamaH):
         self.path = path
 
         # don't download hourly data if time_step is daily
-        if time_step == "daily":
+        if time_step == "daily" and "lamah_ice_hourly.zip" in self.url:
             self.url.pop("lamah_ice_hourly.zip")
 
         self._download(overwrite=overwrite)
@@ -1032,6 +1032,7 @@ class LamaHIce(LamaH):
     def fetch_q(
             self,
             stations:Union[str, List[str]] = None,
+            qc_flag:int = None
     ):
         """
         returns streamflow for one or more stations
@@ -1040,6 +1041,14 @@ class LamaHIce(LamaH):
         -----------
         stations : str/List[str]
             name or names of stations for which streamflow is to be fetched
+        qc_flag : int
+            following flags are available
+            40 Good
+            80 Fair
+            100 Estimated
+            120 suspect
+            200 unchecked
+            250 missing
 
         Returns
         --------
@@ -1055,17 +1064,23 @@ class LamaHIce(LamaH):
         if cpus == 1 or len(stations) <=10:
             qs = []
             for stn in stations:  # todo, this can be parallelized
-                qs.append(self.fetch_stn_q(stn))
+                qs.append(self.fetch_stn_q(stn, qc_flag=qc_flag))
         else:
+            qc_flag = [qc_flag for _ in range(len(stations))]
             with  cf.ProcessPoolExecutor(max_workers=cpus) as executor:
                 qs = list(executor.map(
                     self.fetch_stn_q,
                     stations,
+                    qc_flag
                 ))
 
         return pd.concat(qs, axis=1)
 
-    def fetch_stn_q(self, stn:str)->pd.Series:
+    def fetch_stn_q(
+            self, 
+            stn:str,
+            qc_flag:int = None
+            )->pd.Series:
         """returns streamflow for single station"""
 
         fpath = os.path.join(self.q_path, f"ID_{stn}.csv")

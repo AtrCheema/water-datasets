@@ -257,6 +257,7 @@ class Datasets(object):
             path:str = None,
             verbosity:int = 1,
             processes:int = None,
+            remove_zip:bool = True
     ):
         """
         Arguments:
@@ -269,6 +270,10 @@ class Datasets(object):
                 If None, it will be downloaded
             processes : int
                 number of processes to use for parallel processing
+            verbosity : int
+                determines the amount of information to be printed
+            remove_zip : bool
+                whether to remove the zip files after unz
         """
         if name is None:
             name = self.__class__.__name__
@@ -281,6 +286,7 @@ class Datasets(object):
         self.processes = processes
         self.verbosity = verbosity
         self.path = path
+        self.remove_zip = remove_zip
 
     @property
     def url(self):
@@ -365,6 +371,17 @@ class Datasets(object):
             fname = ds.download(self.path)
             self.metadata_files.append(fname + '._metadata.json')
             self.data_files.append(fname + '.txt')
+        return
+    
+    def remove_zip_files(self):
+        for f in os.listdir(self.path):
+            if f.endswith('.zip'):
+                os.remove(os.path.join(self.path, f))
+        return
+
+    def maybe_remove_zip_files(self):
+        if self.remove_zip:
+            self.remove_zip_files()
         return
 
 
