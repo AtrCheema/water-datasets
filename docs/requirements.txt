@@ -1,7 +1,7 @@
 
 sphinx
 sphinx-prompt
-sphinx_rtd_theme
+sphinx_rtd_theme==2.0.0
 sphinx_issues
 sphinx_copybutton
 sphinx-gallery
@@ -9,18 +9,20 @@ sphinx_toggleprompt
 nbsphinx
 ipykernel
 
-git+https://github.com/AtrCheema/AI4Water.git@dev
+git+https://github.com/AtrCheema/tabulight.git  # for examples
 
 openpyxl
 seaborn
-xarray==0.20.2
-netcdf4==1.6.0
+xarray==2024.7.0
+netcdf4
 requests
-numpy==1.21.6
-pandas==1.2.3
+numpy==1.26.4
+pandas==2.1.4
+
+scipy
 
 # spatial processing
-imageio
+#imageio
 # shapely manually download the wheel file and install
-pyshp
-statsmodels
+#pyshp
+#statsmodels

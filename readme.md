@@ -1,10 +1,14 @@
 
 [![Documentation Status](https://readthedocs.org/projects/ai4water-datasets/badge/?version=latest)](https://ai4water-datasets.readthedocs.io/en/latest/?badge=latest)
 
-This repository contains examples which illustrate datasets from ai4water.
+A unified interface to fetch hydrological data into your python environment. This 
+repository provides a unified and smooth interface to download and retrieve over 100 datasets.
+The datasets are downloaded only once upon their first use.
 
-The [`datasets`](https://ai4water.readthedocs.io/en/latest/datasets.html) module is part of [ai4water](https://ai4water.readthedocs.io) library 
-which can be used to fetch and prepare different datasets related to hydrology and environment.
+## Installation
 
-If your results are different or you encounter errors during running the examples,
-please check the versions of all the third party libraries before reporting an issue.
+Using GitHub link for the latest code
+
+	python -m pip install git+https://github.com/AtrCheema/water-datasets.git
+
+## How to Use

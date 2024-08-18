@@ -7,14 +7,13 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 import os
+import sys
 
-
-project = 'ai4water datasets'
-copyright = '2022, Ather Abbas'
+project = 'water-datasets'
+copyright = '2024, Ather Abbas'
 author = 'Ather Abbas'
 
-import site
-site.addsitedir("D:\\mytools\\AI4Water")
+sys.path.insert(0, os.path.abspath('../..'))
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -98,6 +97,8 @@ html_static_path = ['_static']
 nbsphinx_execute_arguments = [
     "--InlineBackend.figure_formats={'svg', 'pdf'}",
 ]
+
+nbsphinx_allow_errors = True
 
 # nbsphinx_thumbnails = {
 #     'gallery/thumbnail-from-conf-py': 'gallery/a-local-file.png',
