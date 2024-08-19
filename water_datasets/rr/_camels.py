@@ -799,6 +799,7 @@ class CAMELS_AUS(Camels):
             self,
             path: str = None,
             to_netcdf:bool = True,
+            overwrite:bool = False,
             verbosity:int = 1,
             **kwargs
     ):
@@ -818,7 +819,7 @@ class CAMELS_AUS(Camels):
 
         for _file, url in self.urls.items():
             fpath = os.path.join(self.path, _file)
-            if not os.path.exists(fpath):
+            if not os.path.exists(fpath) and not overwrite:
                 if verbosity > 0:
                     print(f"Downloading {_file} from {url+ _file}")
                 download(url + _file, outdir=self.path, fname=_file,)
@@ -1871,7 +1872,7 @@ class CAMELS_DE(Camels):
     >>> df = dataset.fetch(stations=1, as_dataframe=True)
     >>> df = df.unstack() # the returned dataframe is a multi-indexed dataframe so we have to unstack it
     >>> df.shape
-       
+       (25568, 21)
     get name of all stations as list
     >>> stns = dataset.stations()
     >>> len(stns)
@@ -1879,34 +1880,37 @@ class CAMELS_DE(Camels):
     get data of 10 % of stations as dataframe
     >>> df = dataset.fetch(0.1, as_dataframe=True)
     >>> df.shape
-
+        (536928, 155)
     The returned dataframe is a multi-indexed data
     >>> df.index.names == ['time', 'dynamic_features']
         True
     get data by station id
     >>> df = dataset.fetch(stations='DE110260', as_dataframe=True).unstack()
     >>> df.shape
-
+        (25568, 21)
     get names of available dynamic features
     >>> dataset.dynamic_features
     get only selected dynamic features
     >>> data = dataset.fetch(1, as_dataframe=True,
-    ...  dynamic_features=['tmax_AWAP', 'precipitation_AWAP', 'et_morton_actual_SILO', 'streamflow_MLd']).unstack()
+    ...  dynamic_features=['temperature_mean', 'humidity_mean', 'precipitation_mean', 'discharge_vol']).unstack()
     >>> data.shape
-
+        (25568, 4)
     get names of available static features
     >>> dataset.static_features
     get data of 10 random stations
     >>> df = dataset.fetch(10, as_dataframe=True)
     >>> df.shape  # remember this is a multiindexed dataframe
-
+        (536928, 10)
     when we get both static and dynamic data, the returned data is a dictionary
     with ``static`` and ``dyanic`` keys.
     >>> data = dataset.fetch(stations='DE110260', static_features="all", as_dataframe=True)
     >>> data['static'].shape, data['dynamic'].shape
-
-    >>> dataset.stn_coords() # returns coordinates of all stations
+        ((1, 111), (536928, 1))
+    >>> coords = dataset.stn_coords() # returns coordinates of all stations
+    >>> coords.shape
+        (1555, 2)
     >>> dataset.stn_coords('DE110250')  # returns coordinates of station whose id is DE110250
+        47.925221	8.191595
     >>> dataset.stn_coords(['DE110250', 'DE110260'])  # returns coordinates of two stations
     """
     url = "https://zenodo.org/record/12733968"
@@ -2238,7 +2242,7 @@ class GRDCCaravan(Camels):
 
         for _file, url in self.url.items():
             fpath = os.path.join(self.path, _file)
-            if not os.path.exists(fpath):
+            if not os.path.exists(fpath) and not overwrite:
                 if self.verbosity > 0:
                     print(f"Downloading {_file} from {url+ _file}")
                 download(url + _file, outdir=self.path, fname=_file,)
@@ -2464,7 +2468,58 @@ class GRDCCaravan(Camels):
 
 class CAMELS_SE(Camels):
     """
-    `Teutschbein et al., 2024 < https://doi.org/10.1002/gdj3.239>`_ dataset of 50 catchments in Sweden.
+
+    Data set of 50 Swedish catchments following the work of 
+    `Teutschbein et al., 2024 < https://doi.org/10.1002/gdj3.239>`_ .
+
+    Examples
+    --------
+    >>> from water_datasets import CAMELS_SE
+    >>> dataset = CAMELS_SE()
+    >>> df = dataset.fetch(stations=1, as_dataframe=True)
+    >>> df = df.unstack() # the returned dataframe is a multi-indexed dataframe so we have to unstack it
+    >>> df.shape
+       (21915, 4)
+    get name of all stations as list
+    >>> stns = dataset.stations()
+    >>> len(stns)
+       50
+    get data of 10 % of stations as dataframe
+    >>> df = dataset.fetch(0.1, as_dataframe=True)
+    >>> df.shape
+       (87660, 5)
+    The returned dataframe is a multi-indexed data
+    >>> df.index.names == ['time', 'dynamic_features']
+        True
+    get data by station id
+    >>> df = dataset.fetch(stations='5', as_dataframe=True).unstack()
+    >>> df.shape
+         (21915, 4)
+    get names of available dynamic features
+    >>> dataset.dynamic_features
+    get only selected dynamic features
+    >>> data = dataset.fetch(1, as_dataframe=True,
+    ...  dynamic_features=['Qobs_m3s', 'Qobs_mm', 'Pobs_mm', 'Tobs_C']).unstack()
+    >>> data.shape
+        (21915, 4)
+    get names of available static features
+    >>> dataset.static_features
+    ... # get data of 10 random stations
+    >>> df = dataset.fetch(10, as_dataframe=True)
+    >>> df.shape  # remember this is a multiindexed dataframe
+        (87660, 10)
+    when we get both static and dynamic data, the returned data is a dictionary
+    with ``static`` and ``dyanic`` keys.
+    >>> data = dataset.fetch(stations='5', static_features="all", as_dataframe=True)
+    >>> data['static'].shape, data['dynamic'].shape
+        ((1, 76), (87660, 1))
+    >>> coords = dataset.stn_coords() # returns coordinates of all stations
+    >>> coords.shape
+        (50, 2)
+    >>> dataset.stn_coords('5')  # returns coordinates of station whose id is GRDC_3664802
+        68.0356	21.9758
+    >>> dataset.stn_coords(['5', '200'])  # returns coordinates of two stations
+    
     """
 
     url = {
@@ -2472,3 +2527,228 @@ class CAMELS_SE(Camels):
         'catchment time series.zip': 'https://snd.se/sv/catalogue/download/dataset/2023-173/1?principal=user.uu.se&filename=catchment+time+series.zip',
         'catchment_GIS_shapefiles.zip': "https://snd.se/sv/catalogue/download/dataset/2023-173/2?principal=user.uu.se&filename=catchment_GIS_shapefiles.zip",
     }
+
+    def __init__(
+            self,
+            path: str = None,
+            to_netcdf:bool = True,
+            overwrite:bool = False,
+            verbosity:int = 1,
+            **kwargs
+    ):
+        """
+        Arguments:
+            path: path where the CAMELS_SE dataset has been downloaded. This path
+                must contain five zip files and one xlsx file. If None, then the
+                data will be downloaded.
+            to_netcdf :
+        """
+        if path is not None:
+            assert isinstance(path, str), f'path must be string like but it is "{path}" of type {path.__class__.__name__}'
+            if not os.path.exists(path) or len(os.listdir(path)) < 2:
+                raise FileNotFoundError(f"The path {path} does not exist")
+
+        super().__init__(path=path, verbosity=verbosity, **kwargs)
+
+        for _file, url in self.url.items():
+            fpath = os.path.join(self.path, _file)
+            if not os.path.exists(fpath) and not overwrite:
+                if verbosity > 0:
+                    print(f"Downloading {_file} from {url+ _file}")
+                download(url, outdir=self.path, fname=_file,)
+                _unzip(self.path)
+            else:
+                if self.verbosity> 0: print(f"{_file} at {self.path} already exists")
+
+        self._static_features = list(set(self.static_data().columns.tolist()))
+        self._stations = self.physical_properties().index.to_list()
+        self._dynamic_features = self._read_dynamic_for_stn(self.stations()[0], nrows=2).columns.tolist()
+
+        if to_netcdf and netCDF4 is None:
+            warnings.warn("netCDF4 is not installed. Therefore, the data will not be converted to netcdf format.")  
+            to_netcdf = False
+
+        if to_netcdf:
+            self._maybe_to_netcdf('camels_se_dyn')
+
+    @property
+    def static_features(self):
+        return self._static_features
+    
+    @property
+    def dynamic_features(self)->List[str]:
+        return self._dynamic_features
+
+    @property
+    def properties_path(self):
+        return os.path.join(self.path, 'catchment properties', 'catchment properties')
+
+    @property
+    def ts_dir(self)->os.PathLike:
+        return os.path.join(self.path, 'catchment time series', 'catchment time series')
+
+    @property
+    def _mmd_feature_name(self) ->str:
+        return 'Qobs_mm'   
+
+    @property
+    def _coords_name(self)->List[str]:
+        return ['Latitude_WGS84', 'Longitude_WGS84']
+
+    @property
+    def _area_name(self) ->str:
+        return 'Area_km2'  
+
+    @property
+    def start(self):
+        return pd.Timestamp("19610101")
+
+    @property
+    def end(self):
+        return pd.Timestamp("20201231")
+
+    def stations(self)->List[str]:
+        return self._stations
+    
+    def landcover(self)->pd.DataFrame:
+        return pd.read_csv(
+            os.path.join(self.properties_path, 'catchments_landcover.csv'), 
+            index_col='ID', dtype={'ID': str})
+    
+    def physical_properties(self)->pd.DataFrame:
+        return pd.read_csv(
+            os.path.join(self.properties_path, 'catchments_physical_properties.csv'), 
+            index_col='ID', dtype={'ID': str})
+    
+    def soil_classes(self)->pd.DataFrame:
+        df = pd.read_csv(
+            os.path.join(self.properties_path, 'catchments_soil_classes.csv'), 
+            index_col='ID', dtype={'ID': str})
+        df.columns = [f"{c}_sc" for c in df.columns]
+        return df
+    
+    def hydro_signatures_1961_2020(self)->pd.DataFrame:
+        df = pd.read_csv(
+            os.path.join(self.properties_path, 'catchments_hydrological_signatures_1961_2020.csv'), 
+            index_col='ID', dtype={'ID': str})
+        df.columns = [f"{c}_hs" for c in df.columns]
+        return df
+
+    def hydro_signatures_CNP_1961_1990(self)->pd.DataFrame:
+        df = pd.read_csv(
+            os.path.join(self.properties_path, 'catchments_hydrological_signatures_CNP1_1961_1990.csv'), 
+            index_col='ID', dtype={'ID': str})    
+        df.columns = [f"{c}_CNP_61_90" for c in df.columns]
+        return df
+
+    def hydro_signatures_CNP_1990_2020(self)->pd.DataFrame:
+        df = pd.read_csv(
+            os.path.join(self.properties_path, 'catchments_hydrological_signatures_CNP2_1991_2020.csv'), 
+            index_col='ID', dtype={'ID': str})      
+        df.columns = [f"{c}_CNP_91_20" for c in df.columns]
+        return df
+
+    def static_data(self)->pd.DataFrame:
+        return pd.concat([
+            self.landcover(),
+            self.physical_properties(),
+            self.soil_classes(),
+            self.hydro_signatures_1961_2020(),
+            self.hydro_signatures_CNP_1961_1990(),
+            self.hydro_signatures_CNP_1990_2020()
+        ], axis=1)    
+ 
+
+    def _read_dynamic_from_csv(
+            self,
+            stations,
+            dynamic_features,
+            st="1961-01-01",
+            en="2020-12-31"
+    ) ->dict:
+        """
+        reads dynamic data of one or more catchments
+        """
+
+        attributes = check_attributes(dynamic_features, self.dynamic_features)
+        stations = check_attributes(stations, self.stations())
+
+        dyn = {
+            stn: self._read_dynamic_for_stn(stn).loc[st: en, attributes] for stn in stations
+        }
+
+        return dyn
+
+    def _read_dynamic_for_stn(self, stn_id, nrows=None)->pd.DataFrame:
+        """
+        Reads daily dynamic (meteorological + streamflow) data for one catchment
+        and returns as DataFrame
+        """
+        # find file starting with 'catchment_id_stn_id_' in self.path
+        stn_id = f'catchment_id_{stn_id}_'
+        fname = [f for f in os.listdir(self.ts_dir) if f.startswith(stn_id)]
+        assert len(fname) == 1
+        fname = fname[0]
+
+        df = pd.read_csv(
+            os.path.join(self.ts_dir, fname),
+            index_col='Year_Month_Day',
+            parse_dates=[['Year', 'Month', 'Day']],
+            dtype={'Qobs_m3s': np.float32, 'Qobs_mm': np.float32, 'Pobs_mm': np.float32, 'Tobs_C': np.float32},
+            nrows=nrows,
+        )   
+        df.index.name = 'time'
+        df.columns.name = 'dynamic_features'
+        return df
+
+
+    def fetch_static_features(
+            self,
+            stn_id: Union[str, list] = None,
+            features: Union[str, list] = None
+    )->pd.DataFrame:
+        """
+
+        Returns static features of one or more stations.
+
+        Parameters
+        ----------
+            stn_id : str
+                name/id of station/stations of which to extract the data
+            features : list/str, optional (default="all")
+                The name/names of features to fetch. By default, all available
+                static features are returned.
+
+        Returns
+        -------
+        pd.DataFrame
+            a pandas dataframe of shape (stations, features)
+
+        Examples
+        ---------
+        >>> from water_datasets import CAMELS_SE
+        >>> dataset = CAMELS_SE()
+        get all static data of all stations
+        >>> static_data = dataset.fetch_static_features(stns)
+        >>> static_data.shape
+           (50, 76)
+        get static data of one station only
+        >>> static_data = dataset.fetch_static_features('5')
+        >>> static_data.shape
+           (1, 76)
+        get the names of static features
+        >>> dataset.static_features
+        get only selected features of all stations
+        >>> static_data = dataset.fetch_static_features(stns, ['Area_km2', 'Water_percentage', 'Elevation_mabsl'])
+        >>> static_data.shape
+           (50, 3)
+        >>> data = dataset.fetch_static_features('5', features=['Area_km2', 'Water_percentage', 'Elevation_mabsl'])
+        >>> data.shape
+           (1, 3)
+        """
+        stations = check_attributes(stn_id, self.stations())
+
+        df = self.static_data().copy()
+        features = check_attributes(features, self.static_features,
+                                    "static features")
+        return df.loc[stations, features]        

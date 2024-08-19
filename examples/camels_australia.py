@@ -25,7 +25,7 @@ print_info()
 
 # %%
 
-dataset = CAMELS_AUS()
+dataset = CAMELS_AUS(overwrite=True)
 
 # %%
 dataset.start

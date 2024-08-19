@@ -80,6 +80,14 @@ LamaH
 
    .. automethod:: __init__
 
+LamaHIce
+========
+.. autoclass:: water_datasets.rr.LamaHIce
+   :members:
+   :show-inheritance:
+
+   .. automethod:: __init__
+
 HYSETS
 ======
 .. autoclass:: water_datasets.rr.HYSETS

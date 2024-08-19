@@ -23,6 +23,7 @@ from .rr import CAMELS_CH
 from .rr import LamaHIce
 from .rr import CAMELS_DE
 from .rr import GRDCCaravan
+from .rr import CAMELS_SE
 
 from ._datasets import Weisssee
 from ._datasets import WaterChemEcuador

@@ -23,6 +23,7 @@ from water_datasets import WaterBenchIowa
 from water_datasets import CAMELS_DE
 from water_datasets import LamaHIce
 from water_datasets import GRDCCaravan
+from water_datasets import CAMELS_SE
 
 
 gscad_path = '/mnt/datawaha/hyex/atr/gscad_database/raw'

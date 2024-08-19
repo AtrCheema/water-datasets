@@ -25,7 +25,6 @@ Quadica
 =======
 .. autoclass:: water_datasets.Quadica
    :members:
-   :undoc-members:
    :show-inheritance:
 
    .. automethod:: __init__
@@ -35,7 +34,6 @@ RC4USCoast
 ===========
 .. autoclass:: water_datasets.RC4USCoast
    :members:
-   :undoc-members:
    :show-inheritance:
 
    .. automethod:: __init__

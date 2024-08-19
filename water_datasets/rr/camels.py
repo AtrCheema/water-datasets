@@ -326,22 +326,22 @@ class Camels(Datasets):
             # saving all the data in netCDF file using xarray
             print(f'converting data to netcdf format for faster io operations')
             data = self.fetch(static_features=None)
-            data_vars = {}
-            coords = {}
-            for k, v in data.items():
-                data_vars[k] = (['time', 'dynamic_features'], v)
-                index = v.index
-                index.name = 'time'
-                coords = {
-                    'dynamic_features': list(v.columns),
-                    'time': index
-                }
-            xds = xr.Dataset(
-                data_vars=data_vars,
-                coords=coords,
-                attrs={'date': f"created on {dateandtime_now()}"}
-            )
-            xds.to_netcdf(self.dyn_fname)
+            # data_vars = {}
+            # coords = {}
+            # for k, v in data.items():
+            #     data_vars[k] = (['time', 'dynamic_features'], v)
+            #     index = v.index
+            #     index.name = 'time'
+            #     coords = {
+            #         'dynamic_features': list(v.columns),
+            #         'time': index
+            #     }
+            # xds = xr.Dataset(
+            #     data_vars=data_vars,
+            #     coords=coords,
+            #     attrs={'date': f"created on {dateandtime_now()}"}
+            # )
+            data.to_netcdf(self.dyn_fname)
         return
 
     def fetch_stations_features(
@@ -366,7 +366,7 @@ class Camels(Datasets):
             st : start of data to be fetched.
             en : end of data to be fetched.
             as_dataframe : whether to return the data as pandas dataframe. default
-                is xr.DataSet object
+                is xr.Dataset object
             kwargs dict: additional keyword arguments
 
         Returns:
