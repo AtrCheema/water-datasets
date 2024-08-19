@@ -20,3 +20,4 @@ from ._rrluleasweden import RRLuleaSweden
 from ._camels import CAMELS_CH
 from ._lamah import LamaHIce
 from ._camels import CAMELS_DE
+from ._camels import GRDCCaravan

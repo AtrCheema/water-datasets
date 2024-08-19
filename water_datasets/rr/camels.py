@@ -143,8 +143,12 @@ class Camels(Datasets):
 
     @property
     def _mmd_feature_name(self)->str:
-        raise NotImplementedError
+        return None
 
+    @property
+    def _q_name(self)->str:
+        return None
+    
     @property
     def _coords_name(self)->List[str]:
         raise NotImplementedError
@@ -413,12 +417,10 @@ class Camels(Datasets):
 
             if static_features is not None:
                 static = self.fetch_static_features(stations, static_features)
+                dyn = _handle_dynamic(dyn, as_dataframe)
                 stns = {'dynamic': dyn, 'static': static}
             else:
-                # if the dyn is a dictionary of key, DataFames, we will return a MultiIndex
-                # dataframe instead of a dictionary
-                if as_dataframe and isinstance(dyn, dict) and isinstance(list(dyn.values())[0], pd.DataFrame):
-                    dyn = pd.concat(dyn, axis=0, keys=dyn.keys())
+                dyn = _handle_dynamic(dyn, as_dataframe)
                 stns = dyn
 
         elif static_features is not None:
@@ -613,13 +615,26 @@ class Camels(Datasets):
             are catchment/station ids.
 
         """
+
         stations = check_attributes(stations, self.stations())
-        q = self.fetch_stations_features(
-            stations,
-            dynamic_features=self._mmd_feature_name,
-            as_dataframe=True)
-        q.index = q.index.get_level_values(0)
-        return q
+        
+        if self._mmd_feature_name is None:
+            q = self.fetch_stations_features(stations,
+                                            dynamic_features=self._q_name,
+                                            as_dataframe=True)
+            q.index = q.index.get_level_values(0)
+            area_m2 = self.area(stations) * 1e6  # area in m2
+            q = (q / area_m2) * 86400  # cms to m/day
+            return q  * 1e3  # to mm/day
+        
+        else:
+
+            q = self.fetch_stations_features(
+                stations,
+                dynamic_features=self._mmd_feature_name,
+                as_dataframe=True)
+            q.index = q.index.get_level_values(0)
+            return q
 
     def stn_coords(
             self,
@@ -662,3 +677,15 @@ class Camels(Datasets):
         stations = check_attributes(stations, self.stations())
 
         return df.loc[stations, :]
+
+
+def _handle_dynamic(dyn, as_dataframe:bool):
+    if as_dataframe and isinstance(dyn, dict) and isinstance(list(dyn.values())[0], pd.DataFrame):
+        # if the dyn is a dictionary of key, DataFames, we will return a MultiIndex
+        # dataframe instead of a dictionary        
+        dyn = xr.Dataset(dyn).to_dataframe(['time', 'dynamic_features'])  # todo wiered that we have to first convert to xr.Dataset and then to DataFrame
+    elif isinstance(dyn, dict) and isinstance(list(dyn.values())[0], pd.DataFrame):
+        # dyn is a dictionary of key, DataFames and we have to return xr Dataset
+        #dyn = pd.concat(dyn, axis=0, keys=dyn.keys())
+        dyn = xr.Dataset(dyn)
+    return dyn

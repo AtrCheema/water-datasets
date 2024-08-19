@@ -257,7 +257,7 @@ class Datasets(object):
             path:str = None,
             verbosity:int = 1,
             processes:int = None,
-            remove_zip:bool = True
+            remove_zip:bool = False
     ):
         """
         Arguments:
@@ -375,7 +375,7 @@ class Datasets(object):
     
     def remove_zip_files(self):
         for f in os.listdir(self.path):
-            if f.endswith('.zip'):
+            if f.endswith('.zip') or f.endswith(".gz"):
                 os.remove(os.path.join(self.path, f))
         return
 

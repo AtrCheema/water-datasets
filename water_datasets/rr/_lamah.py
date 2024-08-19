@@ -1059,7 +1059,7 @@ class LamaHIce(LamaH):
         """
         stations = check_attributes(stations, self.stations())
 
-        cpus = self.processes or max(get_cpus(), 16)
+        cpus = self.processes or min(get_cpus(), 16)
 
         if cpus == 1 or len(stations) <=10:
             qs = []

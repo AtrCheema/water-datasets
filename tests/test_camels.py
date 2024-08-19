@@ -22,6 +22,7 @@ from water_datasets import CAMELS_CL, CAMELS_US, LamaH, HYSETS, HYPE
 from water_datasets import WaterBenchIowa
 from water_datasets import CAMELS_DE
 from water_datasets import LamaHIce
+from water_datasets import GRDCCaravan
 
 
 gscad_path = '/mnt/datawaha/hyex/atr/gscad_database/raw'
@@ -36,6 +37,12 @@ logger = logging.getLogger(__name__)
 def test_dynamic_data(dataset, stations, num_stations, stn_data_len, as_dataframe=False):
     logger.info(f"test_dynamic_data for {dataset.name}")
 
+    if stations is None and len(dataset.stations()) > 500:
+        # randomly select 1000 stations
+        stations = random.sample(dataset.stations(), 500)
+        logger.info(f"randomly selected {len(stations)} stations for {dataset.name}")
+        num_stations = len(stations)
+
     df = dataset.fetch(stations=stations, static_features=None, as_dataframe=as_dataframe)
 
     logger.info(f"fetched data for {stations} stations for {dataset.name}")
@@ -49,6 +56,11 @@ def test_dynamic_data(dataset, stations, num_stations, stn_data_len, as_datafram
 
 
 def test_all_data(dataset, stations, stn_data_len, as_dataframe=False):
+
+    if as_dataframe:
+        logger.info(f"test_all_data for {dataset.name} with as_dataframe=True")
+    else:
+        logger.info(f"test_all_data for {dataset.name}")
 
     if len(dataset.static_features) > 0:
         df = dataset.fetch(stations, static_features='all', as_ts=False, as_dataframe=as_dataframe)
@@ -102,7 +114,11 @@ def check_dataset(dataset, xds, num_stations, data_len):
 
 
 def test_static_data(dataset, stations, target):
-    logger.info(f"test_static_data for {dataset.name}")
+    if stations is None:
+        logger.info(f"test_static_data for {dataset.name} for all stations expected {target}")
+    else:
+        logger.info(f"test_static_data for {dataset.name} for {stations} stations expected {target}")
+
     if len(dataset.static_features)>0:
         df = dataset.fetch(stations=stations, dynamic_features=None, static_features='all')
         assert isinstance(df, pd.DataFrame)
@@ -322,6 +338,8 @@ def test_area(dataset):
 
 
 def test_q_mmd(dataset):
+
+    logger.info(f"testing q_mmd for {dataset.name}")
     stations = dataset.stations()
 
     df = dataset.q_mmd(stations[0])  # returns q of station
@@ -387,6 +405,8 @@ def test_dataset(dataset, num_stations, dyn_data_len, num_static_attrs, num_dyn_
 
     test_q_mmd(dataset)
 
+    logger.info(f"** Finished testing {dataset.name} **")
+
     return
 
 
@@ -401,7 +421,7 @@ class TestCamels(unittest.TestCase):
 
     def test_aus(self):
         ds_aus = CAMELS_AUS(path=os.path.join(gscad_path, 'CAMELS'))
-        test_dataset(ds_aus, 222, 23376, 161, 26)
+        test_dataset(ds_aus, 222, 23376, 166, 26)
         return
 
     def test_hype(self):
@@ -574,6 +594,11 @@ class TestCamels(unittest.TestCase):
                 dataset = LamaHIce(path=gscad_path, time_step=time_step, data_type=data_type)
 
                 test_dataset(dataset, 111, 26298, 154, 35)
+        return
+
+    def test_grdccaravan(self):
+        dataset = GRDCCaravan(path=gscad_path)
+        test_dataset(dataset, 5357, 26801, 211, 39)
         return
 
 

@@ -3,15 +3,17 @@ import os
 import json
 import glob
 import warnings
-from typing import Union, List
+import concurrent.futures as cf
+from typing import Union, List, Dict
 
 import numpy as np
 import pandas as pd
 
 from .camels import Camels
+from ..utils import get_cpus
 from ..utils import check_attributes, download, sanity_check, _unzip, plot_shapefile
 
-from .._backend import netCDF4
+from .._backend import netCDF4, xarray as xr
 
 # directory separator
 SEP = os.sep
@@ -745,7 +747,7 @@ class CAMELS_AUS(Camels):
     # with ``static`` and ``dyanic`` keys.
     >>> data = dataset.fetch(stations='224214A', static_features="all", as_dataframe=True)
     >>> data['static'].shape, data['dynamic'].shape
-    >>> ((1, 161), (550784, 1))
+    >>> ((1, 166), (550784, 1))
     """
 
     url = 'https://doi.pangaea.de/10.1594/PANGAEA.921850'
@@ -820,10 +822,9 @@ class CAMELS_AUS(Camels):
                 if verbosity > 0:
                     print(f"Downloading {_file} from {url+ _file}")
                 download(url + _file, outdir=self.path, fname=_file,)
+                #_unzip(self.path)
             elif verbosity > 0:
                 print(f"{_file} at {self.path} already exists")
-
-        _unzip(self.path)
 
         if netCDF4 is None:
             to_netcdf = False
@@ -1174,7 +1175,7 @@ class CAMELS_CL(Camels):
             fpath = os.path.join(self.path, _file)
             if not os.path.exists(fpath):
                 download(url + _file, fpath)
-        _unzip(self.path)
+                _unzip(self.path)
 
         self.dyn_fname = os.path.join(self.path, 'camels_cl_dyn.nc')
         self._maybe_to_netcdf('camels_cl_dyn')
@@ -2148,3 +2149,276 @@ class CAMELS_DE(Camels):
         """Observed catchment-specific discharge (converted to millimetres per day
         using catchment areas"""
         return 'discharge_spec'
+
+
+class GRDCCaravan(Camels):
+    """
+    This is a dataset of ~5357 catchments following the works of 
+    `Faerber et al., 2023 <https://zenodo.org/records/10074416>`_ .
+
+    if xarray+netCDF4 is installed then netcdf files will be downloaded
+    otherwise csv files will be downloaded and used.
+
+    """
+
+    url = {
+        'caravan-grdc-extension-nc.tar.gz': 
+            "https://zenodo.org/records/10074416/files/caravan-grdc-extension-nc.tar.gz?download=1",
+        'caravan-grdc-extension-csv.tar.gz': 
+            "https://zenodo.org/records/10074416/files/caravan-grdc-extension-csv.tar.gz?download=1"
+    }
+    def __init__(
+            self,
+            path=None,
+            overwrite:bool = False,
+            verbsity: int = 1,
+            **kwargs
+    ):
+        
+        if xr is None:
+            self.ftype == 'csv'
+            if "caravan-grdc-extension-nc.tar.gz" in self.url:
+                self.url.pop("caravan-grdc-extension-nc.tar.gz")
+        else:
+            self.ftype = 'netcdf'
+            if "caravan-grdc-extension-csv.tar.gz" in self.url:
+                self.url.pop("caravan-grdc-extension-csv.tar.gz")
+        
+        super().__init__(path=path, verbosity=verbsity, **kwargs)
+
+        for _file, url in self.url.items():
+            fpath = os.path.join(self.path, _file)
+            if not os.path.exists(fpath):
+                if self.verbosity > 0:
+                    print(f"Downloading {_file} from {url+ _file}")
+                download(url + _file, outdir=self.path, fname=_file,)
+                _unzip(self.path)        
+            elif self.verbosity > 0:
+                print(f"{_file} at {self.path} already exists")                
+
+        # so that we dont have to read the files again and again
+        self._stations = self.other_attributes().index.to_list()
+        self._static_attributes = self.static_data().columns.tolist()
+        self._dynamic_attributes = self._read_dynamic_for_stn(self.stations()[0]).columns.tolist()
+
+        self.dyn_fname = ''
+
+    @property
+    def static_features(self):
+        return self._static_attributes
+
+    @property
+    def dynamic_features(self):
+        return self._dynamic_attributes
+    
+    @property
+    def attrs_path(self):
+        if self.ftype == 'csv':
+            return os.path.join(self.path, 'GRDC-Caravan-extension-csv', 
+                                'attributes', 'grdc')
+        return os.path.join(self.path, 'GRDC-Caravan-extension-nc', 
+                            'attributes', 'grdc')
+    
+    @property
+    def ts_path(self)->os.PathLike:
+        if self.ftype == 'csv':
+            return os.path.join(self.path, 'GRDC-Caravan-extension-csv', 
+                                'timeseries', 'grdc')
+
+        return os.path.join(self.path, 'GRDC-Caravan-extension-nc', 
+                            'timeseries', self.ftype, 'grdc')
+
+    def stations(self)->List[str]:
+        return self._stations
+
+    @property
+    def _coords_name(self)->List[str]:
+        return ['gauge_lat', 'gauge_lon']
+
+    @property
+    def _area_name(self) ->str:
+        return 'area'    
+
+    @property
+    def start(self):
+        return pd.Timestamp("19500102")
+
+    @property
+    def end(self):
+        return pd.Timestamp("20230519")
+
+    @property
+    def _q_name(self) ->str:
+        return 'streamflow'
+        
+    def other_attributes(self)->pd.DataFrame:
+        return pd.read_csv(os.path.join(self.attrs_path, 'attributes_other_grdc.csv'), index_col='gauge_id')
+    
+    def hydroatlas_attributes(self)->pd.DataFrame:
+        return pd.read_csv(os.path.join(self.attrs_path, 'attributes_hydroatlas_grdc.csv'), index_col='gauge_id')
+    
+    def caravan_attributes(self)->pd.DataFrame:
+        return pd.read_csv(os.path.join(self.attrs_path, 'attributes_caravan_grdc.csv'), index_col='gauge_id')
+    
+    def static_data(self)->pd.DataFrame:
+        return pd.concat([
+            self.other_attributes(),
+            self.hydroatlas_attributes(),
+            self.caravan_attributes(),
+        ], axis=1)
+
+    def fetch_station_features(
+            self,
+            station: str,
+            dynamic_features: Union[str, list, None] = 'all',
+            static_features: Union[str, list, None] = None,
+            as_ts: bool = False,
+            st: Union[str, None] = None,
+            en: Union[str, None] = None,
+            **kwargs
+    ) -> Dict[str, pd.DataFrame]:
+        """
+        Fetches features for one station.
+
+        Parameters
+        -----------
+            station :
+                station id/gauge id for which the data is to be fetched.
+            dynamic_features : str/list, optional
+                names of dynamic features/attributes to fetch
+            static_features :
+                names of static features/attributes to be fetches
+            as_ts : bool
+                whether static features are to be converted into a time
+                series or not. If yes then the returned time series will be of
+                same length as that of dynamic attribtues.
+            st : str,optional
+                starting point from which the data to be fetched. By default,
+                the data will be fetched from where it is available.
+            en : str, optional
+                end point of data to be fetched. By default the dat will be fetched
+
+        Returns
+        -------
+        Dict
+            dataframe if as_ts is True else it returns a dictionary of static and
+            dynamic features for a station/gauge_id
+
+        Examples
+        --------
+            >>> from ai4water.datasets import GRDCCaravan
+            >>> dataset = GRDCCaravan()
+            >>> dataset.fetch_station_features('912101A')
+
+        """
+
+        if self.ftype == "netcdf":
+            fpath = os.path.join(self.ts_path, f'{station}.nc')
+            df = xr.open_dataset(fpath).to_dataframe()
+        else:
+            fpath = os.path.join(self.ts_path, f'{station}.csv')
+            df = pd.read_csv(fpath, index_col='date', parse_dates=True)
+
+        if static_features is not None:
+            static = self.fetch_static_features(station, static_features)
+        
+        return {'static': static, 'dynamic': df[self.dynamic_features]}
+
+    def fetch_static_features(
+            self,
+            stn_id: Union[str, list] = None,
+            features: Union[str, list] = None
+    )->pd.DataFrame:
+        """
+
+        Returns static features of one or more stations.
+
+        Parameters
+        ----------
+            stn_id : str
+                name/id of station/stations of which to extract the data
+            features : list/str, optional (default="all")
+                The name/names of features to fetch. By default, all available
+                static features are returned.
+
+        Returns
+        -------
+        pd.DataFrame
+            a pandas dataframe of shape (stations, features)
+
+        Examples
+        ---------
+        >>> from water_datasets import GRDCCaravan
+        >>> dataset = GRDCCaravan()
+        get all static data of all stations
+        >>> static_data = dataset.fetch_static_features(stns)
+        >>> static_data.shape
+           (1555, 111)
+        get static data of one station only
+        >>> static_data = dataset.fetch_static_features('DE110010')
+        >>> static_data.shape
+           (1, 111)
+        get the names of static features
+        >>> dataset.static_features
+        get only selected features of all stations
+        >>> static_data = dataset.fetch_static_features(stns, ['p_mean', 'p_seasonality', 'frac_snow'])
+        >>> static_data.shape
+           (1555, 3)
+        >>> data = dataset.fetch_static_features('DE110000', features=['p_mean', 'p_seasonality', 'frac_snow'])
+        >>> data.shape
+           (1, 3)
+        """
+        stations = check_attributes(stn_id, self.stations())
+
+        df = self.static_data()
+        features = check_attributes(features, df.columns.tolist(),
+                                    "static features")
+        return df.loc[stations, features]
+
+    def _read_dynamic_from_csv(
+            self, 
+            stations, 
+            dynamic_features, 
+            st=None,
+            en=None)->dict:
+
+        dynamic_features = check_attributes(dynamic_features, self.dynamic_features)
+        stations = check_attributes(stations, self.stations())
+
+        if len(stations) > 10:
+            cpus = self.processes or min(get_cpus(), 64)
+            with  cf.ProcessPoolExecutor(max_workers=cpus) as executor:
+                results = executor.map(
+                    self._read_dynamic_for_stn,
+                    stations,
+                )
+            dyn = {stn:data.loc[st:en, dynamic_features] for stn, data in zip(stations, results)}
+        else:
+            dyn = {
+                stn: self._read_dynamic_for_stn(stn).loc[st: en, dynamic_features] for stn in stations
+            }
+
+        return dyn
+
+    def _read_dynamic_for_stn(self, stn_id)->pd.DataFrame:
+        if self.ftype == "netcdf":
+            fpath = os.path.join(self.ts_path, f'{stn_id}.nc')
+            df = xr.load_dataset(fpath).to_dataframe()
+        else:
+            fpath = os.path.join(self.ts_path, f'{stn_id}.csv')
+            df = pd.read_csv(fpath, index_col='date', parse_dates=True)
+        df.index.name = 'time'
+        df.columns.name = 'dynamic_features'
+        return df
+
+
+class CAMELS_SE(Camels):
+    """
+    `Teutschbein et al., 2024 < https://doi.org/10.1002/gdj3.239>`_ dataset of 50 catchments in Sweden.
+    """
+
+    url = {
+        'catchment properties.zip': "https://snd.se/sv/catalogue/download/dataset/2023-173/1?principal=user.uu.se&filename=catchment+properties.zip",
+        'catchment time series.zip': 'https://snd.se/sv/catalogue/download/dataset/2023-173/1?principal=user.uu.se&filename=catchment+time+series.zip',
+        'catchment_GIS_shapefiles.zip': "https://snd.se/sv/catalogue/download/dataset/2023-173/2?principal=user.uu.se&filename=catchment_GIS_shapefiles.zip",
+    }

@@ -156,3 +156,12 @@ CAMELS_DE
    :show-inheritance:
 
    .. automethod:: __init__
+
+
+GRDCCaravan
+=============
+.. autoclass:: water_datasets.rr.GRDCCaravan
+   :members:
+   :show-inheritance:
+
+   .. automethod:: __init__

@@ -56,11 +56,12 @@ def download(
         outdir:os.PathLike=None,
         fname:str = None
         )->os.PathLike:
-    """High level function, which downloads URL into tmp file in current
+    """
+    High level function, which downloads URL into tmp file in current
     directory and then moves and/or renames it to outdir/fname
 
     :param url:
-    :param outdir: output filename or directory
+    :param outdir: output directory
     :param fname: filename to save the downloaded file. If not given, then autodetected from either URL
         or HTTP headers.
     :return:    filepath] where URL is downloaded to
@@ -347,7 +348,9 @@ def download_and_unzip(
             print(f"downloading {url}")
 
             if 'zenodo' in url:
-                download_from_zenodo(path, url, include=include,
+                download_from_zenodo(path, 
+                                     doi=url, 
+                                     include=include,
                                      files_to_check=files_to_check,
                                      **kwargs)
             else:
@@ -360,7 +363,9 @@ def download_and_unzip(
             print(f"downloading {fname}")
 
             if 'zenodo' in url:
-                download_from_zenodo(path, doi=url, include=include,
+                download_from_zenodo(path, 
+                                     doi=url, 
+                                     include=include,
                                      files_to_check=files_to_check,
                                      **kwargs)
             else:
@@ -377,6 +382,9 @@ def download_and_unzip(
 
 def _unzip(ds_dir, dirname=None):
     """unzip all the zipped files in a directory"""
+
+    print(f"unzipping files in {ds_dir}")
+
     if dirname is None:
         dirname = ds_dir
 
