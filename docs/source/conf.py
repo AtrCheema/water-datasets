@@ -45,6 +45,7 @@ intersphinx_mapping = {
     'numpy': ('https://docs.scipy.org/doc/numpy/', None),
     'pandas': ('https://pandas.pydata.org/docs/', None),
     'python': ('https://docs.python.org/3/', None),
+    'xarray': ('https://docs.xarray.dev/en/stable/', None),
 }
 
 # Don't add .txt suffix to source files:

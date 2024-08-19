@@ -822,7 +822,7 @@ class CAMELS_AUS(Camels):
                 if verbosity > 0:
                     print(f"Downloading {_file} from {url+ _file}")
                 download(url + _file, outdir=self.path, fname=_file,)
-                #_unzip(self.path)
+                _unzip(self.path)
             elif verbosity > 0:
                 print(f"{_file} at {self.path} already exists")
 
@@ -1407,7 +1407,7 @@ class CAMELS_CL(Camels):
 class CAMELS_CH(Camels):
     """
     Rainfall runoff dataset of Swiss catchments. It consists of 331 catchments
-    `Hoege et al., 2023 <https://doi.org/10.5194/essd-15-5755-2023>` .
+    `Hoege et al., 2023 <https://doi.org/10.5194/essd-15-5755-2023>`_ .
 
     Examples
     ---------
@@ -1872,41 +1872,41 @@ class CAMELS_DE(Camels):
     >>> df = df.unstack() # the returned dataframe is a multi-indexed dataframe so we have to unstack it
     >>> df.shape
        
-    ... # get name of all stations as list
+    get name of all stations as list
     >>> stns = dataset.stations()
     >>> len(stns)
        1555
-    ... # get data of 10 % of stations as dataframe
+    get data of 10 % of stations as dataframe
     >>> df = dataset.fetch(0.1, as_dataframe=True)
     >>> df.shape
 
-    ... # The returned dataframe is a multi-indexed data
+    The returned dataframe is a multi-indexed data
     >>> df.index.names == ['time', 'dynamic_features']
         True
-    ... # get data by station id
+    get data by station id
     >>> df = dataset.fetch(stations='DE110260', as_dataframe=True).unstack()
     >>> df.shape
 
-    ... # get names of available dynamic features
+    get names of available dynamic features
     >>> dataset.dynamic_features
-    ... # get only selected dynamic features
+    get only selected dynamic features
     >>> data = dataset.fetch(1, as_dataframe=True,
     ...  dynamic_features=['tmax_AWAP', 'precipitation_AWAP', 'et_morton_actual_SILO', 'streamflow_MLd']).unstack()
     >>> data.shape
 
-    ... # get names of available static features
+    get names of available static features
     >>> dataset.static_features
-    ... # get data of 10 random stations
+    get data of 10 random stations
     >>> df = dataset.fetch(10, as_dataframe=True)
     >>> df.shape  # remember this is a multiindexed dataframe
 
-    # when we get both static and dynamic data, the returned data is a dictionary
-    # with ``static`` and ``dyanic`` keys.
+    when we get both static and dynamic data, the returned data is a dictionary
+    with ``static`` and ``dyanic`` keys.
     >>> data = dataset.fetch(stations='DE110260', static_features="all", as_dataframe=True)
     >>> data['static'].shape, data['dynamic'].shape
 
     >>> dataset.stn_coords() # returns coordinates of all stations
-    >>> dataset.stn_coords('DE110250')  # returns coordinates of station whose id is 912101A
+    >>> dataset.stn_coords('DE110250')  # returns coordinates of station whose id is DE110250
     >>> dataset.stn_coords(['DE110250', 'DE110260'])  # returns coordinates of two stations
     """
     url = "https://zenodo.org/record/12733968"
@@ -2153,11 +2153,61 @@ class CAMELS_DE(Camels):
 
 class GRDCCaravan(Camels):
     """
-    This is a dataset of ~5357 catchments following the works of 
-    `Faerber et al., 2023 <https://zenodo.org/records/10074416>`_ .
+    This is a dataset of 5357 catchments following the works of 
+    `Faerber et al., 2023 <https://zenodo.org/records/10074416>`_ . The dataset consists of 39
+    dynamic (timeseries) features and 211 static features. The dynamic (timeseries) data
+    spands from 1950-01-02 to 2019-05-19. 
 
     if xarray+netCDF4 is installed then netcdf files will be downloaded
     otherwise csv files will be downloaded and used.
+
+    Examples
+    --------
+    >>> from water_datasets import GRDCCaravan
+    >>> dataset = GRDCCaravan()
+    >>> df = dataset.fetch(stations=1, as_dataframe=True)
+    >>> df = df.unstack() # the returned dataframe is a multi-indexed dataframe so we have to unstack it
+    >>> df.shape
+       (26801, 39)
+    get name of all stations as list
+    >>> stns = dataset.stations()
+    >>> len(stns)
+       5357
+    get data of 10 % of stations as dataframe
+    >>> df = dataset.fetch(0.1, as_dataframe=True)
+    >>> df.shape
+       (1045239, 535)
+    The returned dataframe is a multi-indexed data
+    >>> df.index.names == ['time', 'dynamic_features']
+        True
+    get data by station id
+    >>> df = dataset.fetch(stations='GRDC_3664802', as_dataframe=True).unstack()
+    >>> df.shape
+         (26800, 39)
+    get names of available dynamic features
+    >>> dataset.dynamic_features
+    get only selected dynamic features
+    >>> data = dataset.fetch(1, as_dataframe=True,
+    ...  dynamic_features=['total_precipitation_sum', 'potential_evaporation_sum', 'temperature_2m_mean', 'streamflow']).unstack()
+    >>> data.shape
+        (26800, 4)
+    get names of available static features
+    >>> dataset.static_features
+    ... # get data of 10 random stations
+    >>> df = dataset.fetch(10, as_dataframe=True)
+    >>> df.shape  # remember this is a multiindexed dataframe
+        (1045239, 10)
+    when we get both static and dynamic data, the returned data is a dictionary
+    with ``static`` and ``dyanic`` keys.
+    >>> data = dataset.fetch(stations='GRDC_3664802', static_features="all", as_dataframe=True)
+    >>> data['static'].shape, data['dynamic'].shape
+        ((1, 211), (1045200, 1))
+    >>> coords = dataset.stn_coords() # returns coordinates of all stations
+    >>> coords.shape
+        (5357, 2)
+    >>> dataset.stn_coords('GRDC_3664802')  # returns coordinates of station whose id is GRDC_3664802
+        -26.2271	-51.0771
+    >>> dataset.stn_coords(['GRDC_3664802', 'GRDC_1159337'])  # returns coordinates of two stations
 
     """
 
