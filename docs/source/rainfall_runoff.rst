@@ -35,7 +35,7 @@ Rainfall Runoff
      - `Loritz et al., 2024 <https://essd.copernicus.org/preprints/essd-2024-318/>`_
    * - CAMELS_SE
      - 50
-     - `Teutschbein et al., 2024 < https://doi.org/10.1002/gdj3.239>`_
+     - `Teutschbein et al., 2024 <https://doi.org/10.1002/gdj3.239>`_
    * - LamaH
      - 859
      - `Klingler et al., 2021 <https://doi.org/10.5194/essd-13-4529-2021>`_
@@ -62,7 +62,10 @@ Rainfall Runoff
      - `Almagro et al., 2021 <https://doi.org/10.5194/hess-25-3105-2021>`_ 
    * - HYPE
      - 561
-     - 
+     - `Arciniega-Esparza and Birkel et al., 2020 <https://zenodo.org/records/4029572>`_
+   * - Simbi
+     - 24
+     - `Bathelemy et al., 2024 <doi: 10.5194/essd-16-2073-2024>`_
 
 
 Camels
@@ -73,6 +76,7 @@ Camels
    :show-inheritance:
 
    .. automethod:: __init__
+
 
 CAMELS_AUS
 ==========
@@ -91,6 +95,7 @@ CAMELS_GB
    :show-inheritance:
 
    .. automethod:: __init__
+
 
 CAMELS_BR
 ==========
@@ -127,15 +132,6 @@ CAMELS_DK
    .. automethod:: __init__
 
 
-WaterBenchIowa
-===============
-.. autoclass:: water_datasets.rr.WaterBenchIowa
-   :members:
-   :show-inheritance:
-
-   .. automethod:: __init__
-
-
 LamaH
 ======
 .. autoclass:: water_datasets.rr.LamaH
@@ -143,6 +139,7 @@ LamaH
    :show-inheritance:
 
    .. automethod:: __init__
+
 
 LamaHIce
 ========
@@ -152,6 +149,7 @@ LamaHIce
 
    .. automethod:: __init__
 
+
 HYSETS
 ======
 .. autoclass:: water_datasets.rr.HYSETS
@@ -160,18 +158,10 @@ HYSETS
 
    .. automethod:: __init__
 
+
 HYPE
 ====
 .. autoclass:: water_datasets.rr.HYPE
-   :members:
-   :show-inheritance:
-
-   .. automethod:: __init__
-
-
-RRLuleaSweden
-=============
-.. autoclass:: water_datasets.RRLuleaSweden
    :members:
    :show-inheritance:
 
@@ -194,7 +184,6 @@ CABra
    :show-inheritance:
 
    .. automethod:: __init__
-
 
 
 CAMELS_CH
@@ -232,3 +221,31 @@ CAMELS_SE
    :show-inheritance:
 
    .. automethod:: __init__
+
+
+WaterBenchIowa
+===============
+.. autoclass:: water_datasets.rr.WaterBenchIowa
+   :members:
+   :show-inheritance:
+
+   .. automethod:: __init__
+
+
+Simbi
+=============
+.. autoclass:: water_datasets.rr.Simbi
+   :members:
+   :show-inheritance:
+
+   .. automethod:: __init__
+
+
+RRLuleaSweden
+=============
+.. autoclass:: water_datasets.RRLuleaSweden
+   :members:
+   :show-inheritance:
+
+   .. automethod:: __init__
+

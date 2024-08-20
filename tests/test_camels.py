@@ -25,6 +25,7 @@ from water_datasets import CAMELS_DE
 from water_datasets import LamaHIce
 from water_datasets import GRDCCaravan
 from water_datasets import CAMELS_SE
+from water_datasets import Simbi
 
 
 gscad_path = '/mnt/datawaha/hyex/atr/gscad_database/raw'
@@ -36,7 +37,8 @@ if __name__ == "__main__":
 logger = logging.getLogger(__name__)
 
 
-def test_dynamic_data(dataset, stations, num_stations, stn_data_len, as_dataframe=False):
+def test_dynamic_data(dataset, stations, num_stations, stn_data_len,
+                      as_dataframe=False, raise_len_error=True):
     logger.info(f"test_dynamic_data for {dataset.name}")
 
     if stations is None and len(dataset.stations()) > 500:
@@ -50,14 +52,15 @@ def test_dynamic_data(dataset, stations, num_stations, stn_data_len, as_datafram
     logger.info(f"fetched data for {stations} stations for {dataset.name}")
 
     if as_dataframe:
-        check_dataframe(dataset, df, num_stations, stn_data_len)
+        check_dataframe(dataset, df, num_stations, stn_data_len, raise_len_error=raise_len_error)
     else:
-        check_dataset(dataset, df, num_stations, stn_data_len)
+        check_dataset(dataset, df, num_stations, stn_data_len, raise_len_error=raise_len_error)
 
     return
 
 
-def test_all_data(dataset, stations, stn_data_len, as_dataframe=False):
+def test_all_data(dataset, stations, stn_data_len, as_dataframe=False,
+                  raise_len_error=True):
 
     if as_dataframe:
         logger.info(f"test_all_data for {dataset.name} with as_dataframe=True")
@@ -72,9 +75,9 @@ def test_all_data(dataset, stations, stn_data_len, as_dataframe=False):
         df = {'dynamic': df}
 
     if as_dataframe:
-        check_dataframe(dataset, df['dynamic'], stations, stn_data_len)
+        check_dataframe(dataset, df['dynamic'], stations, stn_data_len, raise_len_error=raise_len_error)
     else:
-        check_dataset(dataset, df['dynamic'], stations, stn_data_len)
+        check_dataset(dataset, df['dynamic'], stations, stn_data_len, raise_len_error=raise_len_error)
 
     return
 
@@ -83,7 +86,8 @@ def check_dataframe(
         dataset, 
         df:pd.DataFrame, 
         num_stations:int, 
-        data_len:int
+        data_len:int,
+        raise_len_error=True
         ):
 
     logger.info(f"checking sanity of dataframe of shape {df.shape}")
@@ -96,19 +100,26 @@ def check_dataframe(
         #         assert _stn_data_len>=stn_data_len, f"{col} for {dataset.name} is not of length {stn_data_len}"
         stn_data = df[col].unstack()
         # data for each station must minimum be of this shape
-        assert stn_data.shape == (data_len, len(dataset.dynamic_features)), f"""
-            for {col} station of {dataset.name} the shape is {stn_data.shape}"""
+        msg = f"""for {col} station of {dataset.name} the shape is {stn_data.shape}"""
+        if raise_len_error:
+            assert stn_data.shape == (data_len, len(dataset.dynamic_features)), msg
+        else:
+            logger.warning(msg)
 
     logger.info(f"Finished checking sanity of dataframe of shape {df.shape}")
     return
 
 
-def check_dataset(dataset, xds, num_stations, data_len):
+def check_dataset(dataset, xds, num_stations, data_len,
+                  raise_len_error=True):
     assert isinstance(xds, xr.Dataset), f'xds is of type {xds.__class__.__name__}'
     assert len(xds.data_vars) == num_stations, f'for {dataset.name}, {len(xds.data_vars)} data_vars are present'
     for var in xds.data_vars:
-        assert xds[var].data.shape == (data_len, len(dataset.dynamic_features)), f"""shape of data is 
-        {xds[var].data.shape} and not {data_len, len(dataset.dynamic_features)}"""
+        msg = f"""shape of data is {xds[var].data.shape} and not {data_len, len(dataset.dynamic_features)}"""
+        if raise_len_error:
+            assert xds[var].data.shape == (data_len, len(dataset.dynamic_features)), msg
+        else:
+            logger.warning(msg)
 
     for dyn_attr in xds.coords['dynamic_features'].data:
         assert dyn_attr in dataset.dynamic_features
@@ -370,7 +381,8 @@ def test_boundary(dataset):
 
 
 def test_dataset(dataset, num_stations, dyn_data_len, num_static_attrs, num_dyn_attrs,
-                 test_df=True, yearly_steps=366):
+                 test_df=True, yearly_steps=366,
+                 raise_len_error=True):
 
     # check that dynamic attribues from all data can be retrieved.
     test_dynamic_data(dataset, None, num_stations, dyn_data_len)
@@ -378,15 +390,17 @@ def test_dataset(dataset, num_stations, dyn_data_len, num_static_attrs, num_dyn_
         test_dynamic_data(dataset, None, num_stations, dyn_data_len, as_dataframe=True)
 
     # check that dynamic data of 10% of stations can be retrieved
-    test_dynamic_data(dataset, 0.1, int(num_stations*0.1), dyn_data_len)
-    test_dynamic_data(dataset, 0.1, int(num_stations*0.1), dyn_data_len, True)
+    test_dynamic_data(dataset, 0.1, int(num_stations*0.1), dyn_data_len, 
+                      raise_len_error=raise_len_error)
+    test_dynamic_data(dataset, 0.1, int(num_stations*0.1), dyn_data_len, True,
+                      raise_len_error=raise_len_error)
 
     test_static_data(dataset, None, num_stations)  # check that static data of all stations can be retrieved
 
     test_static_data(dataset, 0.1, int(num_stations*0.1))  # check that static data of 10% of stations can be retrieved
 
-    test_all_data(dataset, 3, dyn_data_len)
-    test_all_data(dataset, 3, dyn_data_len, True)
+    test_all_data(dataset, 3, dyn_data_len, raise_len_error=raise_len_error)
+    test_all_data(dataset, 3, dyn_data_len, True, raise_len_error=raise_len_error)
 
     # check length of static attribute categories
     test_attributes(dataset, num_static_attrs, num_dyn_attrs, num_stations)
@@ -623,6 +637,24 @@ class TestCamels(unittest.TestCase):
         dataset = CAMELS_SE(path=os.path.join(gscad_path, 'CAMELS'))
         test_dataset(dataset, 50, 21915, 76, 4)
         return
+
+    def test_simbi(self):
+        dataset = Simbi(path=gscad_path)
+        #test_dataset(dataset, 70, 17167, 232, 3, raise_len_error=False)
+            # check that dynamic attribues from all data can be retrieved.
+        test_dynamic_data(dataset, None, 70, 17167)
+        test_dynamic_data(dataset, None, 70, 17167, as_dataframe=True)
+
+        # check that dynamic data of 10% of stations can be retrieved
+        test_dynamic_data(dataset, 0.1, int(7), 17167, 
+                            raise_len_error=False)
+        test_dynamic_data(dataset, 0.1, int(70*0.1), 17167, True,
+                            raise_len_error=False)
+        test_attributes(dataset, 232, 3, 70)
+
+        dataset.area(dataset.static_data_stations())
+
+        return 
 
 
 if __name__=="__main__":

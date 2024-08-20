@@ -22,3 +22,4 @@ from ._lamah import LamaHIce
 from ._camels import CAMELS_DE
 from ._camels import GRDCCaravan
 from ._camels import CAMELS_SE
+from ._simbi import Simbi

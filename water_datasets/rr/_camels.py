@@ -2765,7 +2765,6 @@ class CAMELS_SE(Camels):
         df.columns.name = 'dynamic_features'
         return df
 
-
     def fetch_static_features(
             self,
             stn_id: Union[str, list] = None,
