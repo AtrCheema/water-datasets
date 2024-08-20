@@ -93,6 +93,16 @@ class LamaH(Camels):
         self.dyn_fname = os.path.join(self.path,
                                       f'lamah_{data_type}_{time_step}_dyn.nc')
 
+        self._create_boundary_id_map(self.boundary_file, 0)
+        
+
+    @property
+    def boundary_file(self):
+        return os.path.join(self.path,
+                                "CAMELS_AT1",
+                                "A_basins_total_upstrm",
+                                "3_shapefiles", "Upstrm_area_total.shp")
+    
     def _maybe_to_netcdf(self, fdir: str):
         # since data is very large, saving all the data in one file
         # consumes a lot of memory, which is impractical for most of the personal
@@ -720,6 +730,8 @@ class LamaHIce(LamaH):
 
         self._download(overwrite=overwrite)
 
+        self._create_boundary_id_map(self.boundary_file, 0)
+
         # assert time_step in self.time_steps, f"invalid time_step {time_step} given"
         # assert data_type in self._data_types, f"invalid data_type {data_type} given."
 
@@ -782,6 +794,14 @@ class LamaHIce(LamaH):
 
     #                 gc.collect()
     #     return
+
+    @property
+    def boundary_file(self):
+        return os.path.join(self.path,
+                                "lamah_ice",
+                                "lamah_ice",
+                                "A_basins_total_upstrm",
+                                "3_shapefiles", "Basins_A.shp")
 
     @property
     def start(self):

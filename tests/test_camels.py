@@ -9,6 +9,7 @@ import unittest
 wd_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 site.addsitedir(wd_dir)
 
+import numpy as np
 import pandas as pd
 import xarray as xr
 import matplotlib.pyplot as plt
@@ -251,6 +252,7 @@ def test_selected_dynamic_features(dataset):
 
 
 def test_hysets():
+
     hy = HYSETS(path=os.path.join(gscad_path, "HYSETS"))
 
     # because it takes very long time, we don't test with all the data
@@ -285,6 +287,8 @@ def test_hysets():
     test_area(hy)
 
     test_q_mmd(hy)
+
+    test_boundary(hy)
 
     return
 
@@ -354,6 +358,17 @@ def test_q_mmd(dataset):
     return
 
 
+def test_boundary(dataset):
+
+    logger.info(f"testing get_boundary for {dataset.name}")
+
+    boundary = dataset.get_boundary(dataset.stations()[0])
+
+    assert isinstance(boundary, np.ndarray)
+
+    return
+
+
 def test_dataset(dataset, num_stations, dyn_data_len, num_static_attrs, num_dyn_attrs,
                  test_df=True, yearly_steps=366):
 
@@ -405,6 +420,8 @@ def test_dataset(dataset, num_stations, dyn_data_len, num_static_attrs, num_dyn_
     test_area(dataset)
 
     test_q_mmd(dataset)
+
+    test_boundary(dataset)
 
     logger.info(f"** Finished testing {dataset.name} **")
 
@@ -600,6 +617,11 @@ class TestCamels(unittest.TestCase):
     def test_grdccaravan(self):
         dataset = GRDCCaravan(path=gscad_path)
         test_dataset(dataset, 5357, 26801, 211, 39)
+        return
+
+    def test_camels_se(self):
+        dataset = CAMELS_SE(path=os.path.join(gscad_path, 'CAMELS'))
+        test_dataset(dataset, 50, 21915, 76, 4)
         return
 
 

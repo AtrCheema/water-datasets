@@ -90,6 +90,19 @@ class CAMELS_DK(Camels):
 
         if to_netcdf:
             self._maybe_to_netcdf('camelsdk_dyn')
+        
+        self.boundary_file = os.path.join(
+        path,
+        "CAMELS_DK",
+        "Caravan_extension_DK",
+        "Caravan_extension_DK",
+        "Caravan_extension_DK",
+        "shapefiles",
+        "camelsdk",
+        "camelsdk_basin_shapes.shp"
+    )
+        
+        self._create_boundary_id_map(self.boundary_file, 3)
 
     @property
     def csv_path(self):

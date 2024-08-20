@@ -7,7 +7,9 @@ import numpy as np
 import pandas as pd
 
 from .camels import Camels
+from .._backend import shapefile
 from .._backend import xarray as xr
+from ..utils import merge_shapefiles
 from ..utils import check_attributes, dateandtime_now
 
 
@@ -100,6 +102,22 @@ class CCAM(Camels):
         if to_netcdf:
             self._maybe_to_netcdf('ccam_dyn')
             self._maybe_meteo_to_nc()
+        
+        shp_path = os.path.join(path,
+                                "7_HydroMLYR",
+                                "7_HydroMLYR",
+                                "0_basin_boundary", 'boundaries.shp')
+
+        self.boundary_file = os.path.join(shp_path, 'boundaries.shp')
+        files = [file for file in os.listdir(shp_path) if file.endswith('.shp')]
+        shp_files = [os.path.join(shp_path, shp_file) for shp_file in files]
+        boundaries = os.path.join(shp_path, "boundaries")
+
+        if shapefile is not None:
+            merge_shapefiles(shp_files, boundaries, add_new_field=True,
+                                ignore_previous_fields=True)
+
+            self._create_boundary_id_map(self.boundary_file, 2)
 
     @property
     def meteo_path(self):

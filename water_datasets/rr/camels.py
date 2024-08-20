@@ -68,6 +68,8 @@ class Camels(Datasets):
     def __init__(
             self,
             path:str = None,
+            boundary_file:Union[str, os.PathLike] = None,
+            id_idx_in_bndry_shape:int = None,
             verbosity:int = 1,
             **kwargs
     ):
@@ -80,6 +82,8 @@ class Camels(Datasets):
                 from this directory. If provided and the directory does not exist,
                 then the data will be downloaded in this directory. If not provided,
                 then the data will be downloaded in the default directory.
+            boundary_file : str/path
+                path to boundary shape file. It must be complete path of .shp or .geojson file.
             verbosity : int
                 0: no message will be printed
             kwargs : dict
@@ -87,6 +91,61 @@ class Camels(Datasets):
         """
         super(Camels, self).__init__(path=path, verbosity=verbosity, **kwargs)
 
+        self.bndry_id_map = {}
+    
+    def _create_boundary_id_map(self, boundary_file, id_idx_in_bndry_shape):
+
+        if boundary_file is None:
+            return
+        
+        from shapefile import Reader
+
+        if self.verbosity>1:
+            print(f"loading boundary file {boundary_file}")
+
+        assert os.path.exists(boundary_file), f"{boundary_file} does not exist"
+        bndry_sf = Reader(boundary_file)
+
+        # shapefile of chille contains spanish characters which can not be
+        # decoded with utf-8
+        if os.path.basename(bndry_sf.shapeName) in [
+            'catchments_camels_cl_v1_3',
+            "WKMSBSN",
+            'estreams_catchments',
+            'CAMELS_DE_catchments',
+        ]:
+            bndry_sf.encoding = 'ISO-8859-1'
+
+        self.bndry_id_map = self._get_map(bndry_sf,
+                                        id_index=id_idx_in_bndry_shape,
+                                        name="bndry_shape")
+        
+        bndry_sf.close()
+        return
+
+    @staticmethod
+    def _get_map(sf_reader, id_index=None, name:str='')->dict:
+
+
+        fieldnames = [f[0] for f in sf_reader.fields[1:]]
+
+        if len(fieldnames) > 1:
+            if id_index is None:
+                raise ValueError(f"""
+                more than one fileds are present in {name} shapefile 
+                i.e: {fieldnames}. 
+                Please provide a value for id_idx_in_{name} that must be
+                less than {len(fieldnames)}
+                """)
+        else:
+            id_index = 0
+
+        catch_ids_map = {
+            str(rec[id_index]): idx for idx, rec in enumerate(sf_reader.iterRecords())
+        }
+
+        return catch_ids_map
+            
     def stations(self)->List[str]:
         raise NotImplementedError
 
@@ -213,24 +272,6 @@ class Camels(Datasets):
         """Directory where all camels datasets will be saved. This will under
          datasets directory"""
         return os.path.join(self.base_ds_dir, "CAMELS")
-
-    # @property
-    # def path(self):
-    #     """Directory where a particular dataset will be saved. """
-    #     return self._path
-
-    # @path.setter
-    # def path(self, x):
-    #     if x is None:
-    #         # path is not given dataset is not downloaded yet
-    #         x = os.path.join(self.camels_dir, self.__class__.__name__)
-    #         assert not os.path.exists(x), f"The path {x} already exists. Please provide a new path"
-    #         os.makedirs(x)
-    #     else:
-    #         assert os.path.exists(x), f"The path {x} does not exist"
-    #         x = os.path.join(x, self.__class__.__name__)
-    #     # sanity_check(self.name, x)
-    #     self._path = x
 
     def fetch(self,
               stations: Union[str, list, int, float, None] = None,
@@ -677,6 +718,107 @@ class Camels(Datasets):
         stations = check_attributes(stations, self.stations())
 
         return df.loc[stations, :]
+
+    def transform_coords(self, xyz:np.ndarray)->np.ndarray:
+        """
+        transforms coordinates from projected to geographic
+
+        must be implemented in base classes
+        """
+        return xyz
+
+    def get_boundary(
+            self,
+            catchment_id: str,
+            as_type: str = 'numpy'
+    ):
+        """
+        returns boundary of a catchment in a required format
+
+        Parameters
+        ----------
+        catchment_id : str
+            name/id of catchment
+        as_type : str
+            'numpy' or 'geopandas'
+        
+        Examples
+        --------
+        >>> from water_datasets import CAMELS_SE
+        >>> dataset = CAMELS_SE()
+        >>> dataset.get_boundary(dataset.stations()[0])
+        """
+
+        from shapefile import Reader
+
+        bndry_sf = Reader(self.boundary_file)
+        bndry_shp = bndry_sf.shape(self.bndry_id_map[catchment_id])
+
+        bndry_sf.close()
+
+        xyz = np.array(bndry_shp.points)
+
+        xyz = self.transform_coords(xyz)
+
+        return xyz
+
+    def plot_catchment(
+            self,
+            catchment_id: str,
+            ax: plt_Axes = None,
+            show: bool = True,
+            **kwargs
+    )->plt.Axes:
+        """
+        plots catchment boundaries
+
+        Parameters
+        ----------
+        ax : plt.Axes
+            matplotlib axes to draw the plot. If not given, then
+            new axes will be created.
+        show : bool
+        **kwargs
+
+        Returns
+        -------
+        plt.Axes
+
+        Examples
+        --------
+        >>> from ai4water.datasets import CAMELS_AUS
+        >>> dataset = CAMELS_AUS()
+        >>> dataset.plot_catchment()
+        >>> dataset.plot_catchment(marker='o', ms=0.3)
+        >>> ax = dataset.plot_catchment(marker='o', ms=0.3, show=False)
+        >>> ax.set_title("Catchment Boundaries")
+        >>> plt.show()
+
+        """
+        catchment = self.get_boundary(catchment_id)
+
+        if isinstance(catchment, np.ndarray):
+            if catchment.ndim == 2:
+                ax = easy_mpl.plot(catchment[:, 0], catchment[:, 1],
+                        show=False, ax=ax, **kwargs)
+            else:
+                raise NotImplementedError
+        # elif isinstance(catchment, geojson.geometry.Polygon):
+        #     coords = catchment['coordinates']
+        #     x = [i for i, j in coords[0]]
+        #     y = [j for i, j in coords[0]]
+        #     ax = plot(x, y, show=False, ax=ax, **kwargs)
+        # elif isinstance(catchment, SPolygon):
+        #     x, y = catchment.exterior.xy
+        #     ax = plot(x, y, show=False, ax=ax, **kwargs)
+        # elif isinstance(catchment, SMultiPolygon):
+        #     raise NotImplementedError
+        else:
+            raise NotImplementedError
+
+        if show:
+            plt.show()
+        return ax
 
 
 def _handle_dynamic(dyn, as_dataframe:bool):

@@ -13,6 +13,7 @@ from .camels import Camels
 from ..utils import get_cpus
 from ..utils import check_attributes, download, sanity_check, _unzip, plot_shapefile
 
+from .._backend import shapefile
 from .._backend import netCDF4, xarray as xr
 
 # directory separator
@@ -478,6 +479,16 @@ class CAMELS_GB(Camels):
 
         self._maybe_to_netcdf('camels_gb_dyn')
 
+        self.boundary_file = os.path.join(
+        path,
+        "CAMELS_GB",
+        "data",
+        "CAMELS_GB_catchment_boundaries",
+        "CAMELS_GB_catchment_boundaries.shp"
+    )
+        
+        self._create_boundary_id_map(self.boundary_file, 0)
+
     @property
     def path(self):
         """Directory where a particular dataset will be saved. """
@@ -833,6 +844,17 @@ class CAMELS_AUS(Camels):
         if to_netcdf:
             self._maybe_to_netcdf('camels_aus_dyn')
 
+        self.boundary_file = os.path.join(
+        path,
+        "CAMELS_AUS",
+        "02_location_boundary_area",
+        "02_location_boundary_area",
+        "shp",
+        "CAMELS_AUS_Boundaries_adopted.shp"
+    )
+        
+        self._create_boundary_id_map(self.boundary_file, 0)
+
     @property
     def start(self):
         return "19500101"
@@ -1181,6 +1203,16 @@ class CAMELS_CL(Camels):
         self.dyn_fname = os.path.join(self.path, 'camels_cl_dyn.nc')
         self._maybe_to_netcdf('camels_cl_dyn')
 
+        self.boundary_file = os.path.join(
+        path,
+        "CAMELS_CL",
+        "CAMELScl_catchment_boundaries",
+        "CAMELScl_catchment_boundaries",
+        "catchments_camels_cl_v1_3.shp"
+    )
+        
+        self._create_boundary_id_map(self.boundary_file, 0)
+
     @property
     def _all_dirs(self):
         """All the folders in the dataset_directory"""
@@ -1484,6 +1516,17 @@ class CAMELS_CH(Camels):
 
         if to_netcdf:
             self._maybe_to_netcdf('camels_ch_dyn')
+        
+        self.boundary_file = os.path.join(
+        path,
+        'CAMELS_CH',
+        'camels_ch',
+        'camels_ch',
+        'catchment_delineations',
+        'CAMELS_CH_catchments.shp'
+    )
+        
+        self._create_boundary_id_map(self.boundary_file, 9)
 
     @property
     def camels_path(self)->Union[str, os.PathLike]:
@@ -1953,6 +1996,11 @@ class CAMELS_DE(Camels):
         if to_netcdf:
             self._maybe_to_netcdf('camels_de_dyn')
 
+        self.boundary_file = os.path.join(path, "CAMELS_DE", "camels_de", 
+                                          "CAMELS_DE_catchment_boundaries",
+                                          "catchments", "CAMELS_DE_catchments.shp")
+        self._create_boundary_id_map(self.boundary_file, 0)
+
     @property
     def ts_dir(self)->str:
         return os.path.join(self.path, 'camels_de', 'timeseries')
@@ -2250,6 +2298,12 @@ class GRDCCaravan(Camels):
             elif self.verbosity > 0:
                 print(f"{_file} at {self.path} already exists")                
 
+        self.boundary_file = os.path.join(
+            self.shapefiles_path, 
+            'grdc_basin_shapes.shp'
+            )
+        self._create_boundary_id_map(self.boundary_file, 0)
+
         # so that we dont have to read the files again and again
         self._stations = self.other_attributes().index.to_list()
         self._static_attributes = self.static_data().columns.tolist()
@@ -2264,7 +2318,15 @@ class GRDCCaravan(Camels):
     @property
     def dynamic_features(self):
         return self._dynamic_attributes
-    
+
+    @property
+    def shapefiles_path(self):
+        if self.ftype == 'csv':
+            return os.path.join(self.path, 'GRDC-Caravan-extension-csv', 
+                                'shapefiles', 'grdc')
+        return os.path.join(self.path, 'GRDC-Caravan-extension-nc', 
+                            'shapefiles', 'grdc')
+
     @property
     def attrs_path(self):
         if self.ftype == 'csv':
@@ -2543,11 +2605,6 @@ class CAMELS_SE(Camels):
                 data will be downloaded.
             to_netcdf :
         """
-        if path is not None:
-            assert isinstance(path, str), f'path must be string like but it is "{path}" of type {path.__class__.__name__}'
-            if not os.path.exists(path) or len(os.listdir(path)) < 2:
-                raise FileNotFoundError(f"The path {path} does not exist")
-
         super().__init__(path=path, verbosity=verbosity, **kwargs)
 
         for _file, url in self.url.items():
@@ -2559,6 +2616,13 @@ class CAMELS_SE(Camels):
                 _unzip(self.path)
             else:
                 if self.verbosity> 0: print(f"{_file} at {self.path} already exists")
+
+        self.boundary_file = os.path.join(self.path, 
+                                                  'catchment_GIS_shapefiles', 
+                                                  'catchment_GIS_shapefiles', 
+                                                  'Sweden_catchments_50_boundaries_WGS84.shp')
+
+        self._create_boundary_id_map(self.boundary_file, 0)
 
         self._static_features = list(set(self.static_data().columns.tolist()))
         self._stations = self.physical_properties().index.to_list()
