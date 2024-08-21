@@ -193,7 +193,7 @@ class CAMELS_BR(Camels):
         #area_m2 = self.area(stations) * 1e6  # area in m2
         #q = (q / area_m2) * 86400  # cms to m/day
         return q  # * 1e3  # to mm/day
-
+    
     def area(
             self,
             stations: Union[str, List[str]] = None,
@@ -593,42 +593,46 @@ class CABra(Camels):
         q = (q / area_m2) * 86400  # cms to m/day
         return q  * 1e3  # to mm/day
 
-    def area(
-            self,
-            stations: Union[str, List[str]] = None
-    ) ->pd.Series:
-        """
-        Returns area (Km2) of all catchments as pandas series
+    @property
+    def _area_name(self)->str:
+        return 'catch_area'
 
-        parameters
-        ----------
-        stations : str/list
-            name/names of stations. Default is None, which will return
-            area of all stations
+    # def area(
+    #         self,
+    #         stations: Union[str, List[str]] = None
+    # ) ->pd.Series:
+    #     """
+    #     Returns area (Km2) of all catchments as pandas series
 
-        Returns
-        --------
-        pd.Series
-            a pandas series whose indices are catchment ids and values
-            are areas of corresponding catchments.
+    #     parameters
+    #     ----------
+    #     stations : str/list
+    #         name/names of stations. Default is None, which will return
+    #         area of all stations
 
-        Examples
-        ---------
-        >>> from water_datasets import CABra
-        >>> dataset = CABra()
-        >>> dataset.area()  # returns area of all stations
-        >>> dataset.stn_coords('92')  # returns area of station whose id is 912101A
-        >>> dataset.stn_coords(['92', '142'])  # returns area of two stations
-        """
+    #     Returns
+    #     --------
+    #     pd.Series
+    #         a pandas series whose indices are catchment ids and values
+    #         are areas of corresponding catchments.
 
-        stations = check_attributes(stations, self.stations())
+    #     Examples
+    #     ---------
+    #     >>> from water_datasets import CABra
+    #     >>> dataset = CABra()
+    #     >>> dataset.area()  # returns area of all stations
+    #     >>> dataset.stn_coords('92')  # returns area of station whose id is 912101A
+    #     >>> dataset.stn_coords(['92', '142'])  # returns area of two stations
+    #     """
 
-        df = self.topology_attrs()
+    #     stations = check_attributes(stations, self.stations())
 
-        s = df['catch_area']
-        s.index = s.index.astype(str)
-        s.name = 'area'
-        return s.loc[stations]
+    #     df = self.topology_attrs()
+
+    #     s = df['catch_area']
+    #     s.index = s.index.astype(str)
+    #     s.name = 'area'
+    #     return s.loc[stations]
 
     def stn_coords(
             self,

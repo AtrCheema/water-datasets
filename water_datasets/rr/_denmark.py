@@ -203,47 +203,50 @@ class CAMELS_DK(Camels):
         q = (q / area_m2) * 86400  # cms to m/day
         return q * 1e3  # to mm/day
 
-    def area(
-            self,
-            stations: Union[str, List[str]] = None
-    ) ->pd.Series:
-        """
-        Returns area (Km2) of all catchments as pandas series
+    def _area_name(self, stn:str)->str:
+        return "area"
 
-        parameters
-        ----------
-        stations : str/list
-            name/names of stations. Default is None, which will return
-            area of all stations
+    # def area(
+    #         self,
+    #         stations: Union[str, List[str]] = None
+    # ) ->pd.Series:
+    #     """
+    #     Returns area (Km2) of all catchments as pandas series
 
-        Returns
-        --------
-        pd.Series
-            a pandas series whose indices are catchment ids and values
-            are areas of corresponding catchments.
+    #     parameters
+    #     ----------
+    #     stations : str/list
+    #         name/names of stations. Default is None, which will return
+    #         area of all stations
 
-        Examples
-        ---------
-        >>> from water_datasets import CAMELS_DK
-        >>> dataset = CAMELS_DK()
-        >>> dataset.area()  # returns area of all stations
-        >>> dataset.stn_coords('100010')  # returns area of station whose id is 912101A
-        >>> dataset.stn_coords(['100010', '210062'])  # returns area of two stations
-        """
+    #     Returns
+    #     --------
+    #     pd.Series
+    #         a pandas series whose indices are catchment ids and values
+    #         are areas of corresponding catchments.
 
-        stations = check_attributes(stations, self.stations())
+    #     Examples
+    #     ---------
+    #     >>> from water_datasets import CAMELS_DK
+    #     >>> dataset = CAMELS_DK()
+    #     >>> dataset.area()  # returns area of all stations
+    #     >>> dataset.stn_coords('100010')  # returns area of station whose id is 912101A
+    #     >>> dataset.stn_coords(['100010', '210062'])  # returns area of two stations
+    #     """
 
-        df = pd.read_csv(self.other_attr_fpath,
-                         dtype={"gauge_id": str,
-                                'gauge_lat': float,
-                                'gauge_lon': float,
-                                'area': float,
-                                'gauge_name': str,
-                                'country': str
-                                })
-        df.index = [name.split('camelsdk_')[1] for name in df['gauge_id']]
+    #     stations = check_attributes(stations, self.stations())
 
-        return df.loc[stations, 'area']
+    #     df = pd.read_csv(self.other_attr_fpath,
+    #                      dtype={"gauge_id": str,
+    #                             'gauge_lat': float,
+    #                             'gauge_lon': float,
+    #                             'area': float,
+    #                             'gauge_name': str,
+    #                             'country': str
+    #                             })
+    #     df.index = [name.split('camelsdk_')[1] for name in df['gauge_id']]
+
+    #     return df.loc[stations, 'area']
 
     def stn_coords(
             self,

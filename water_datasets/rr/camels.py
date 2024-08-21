@@ -225,7 +225,6 @@ class Camels(Datasets):
             name/names of stations. Default is None, which will return
             area of all stations
 
-
         Returns
         --------
         pd.Series

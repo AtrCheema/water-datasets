@@ -63,15 +63,15 @@ class LamaH(Camels):
         --------
         >>> from water_datasets import LamaH
         >>> dataset = LamaH(time_step='daily', data_type='total_upstrm')
-        # The daily dataset is from 859 with 61 static and 22 dynamic features
+        # The daily dataset is from 859 with 80 static and 22 dynamic features
         >>> len(dataset.stations()), len(dataset.static_features), len(dataset.dynamic_features)
-        (859, 61, 22)
+        (859, 80, 22)
         >>> df = dataset.fetch(3, as_dataframe=True)
         >>> df.shape
         (313368, 3)
         >>> dataset = LamaH(time_step='hourly', data_type='total_upstrm')
         >>> len(dataset.stations()), len(dataset.static_features), len(dataset.dynamic_features)
-        (859, 61, 17)
+        (859, 80, 17)
         """
 
         assert time_step in self.time_steps, f"invalid time_step {time_step} given"
@@ -83,6 +83,8 @@ class LamaH(Camels):
         super().__init__(path=path, **kwargs)
 
         _data_types = self._data_types if self.time_step == 'daily' else ['total_upstrm']
+
+        self._static_features = self.static_data().columns.to_list()
 
         if netCDF4 is None:
             to_netcdf = False
@@ -121,7 +123,7 @@ class LamaH(Camels):
                 dyn_fname = os.path.join(fdir, f"{feature}.nc")
 
                 if not os.path.exists(dyn_fname):
-                    print(f'Saving {feature} to disk')
+                    print(f'Saving {feature} as {dyn_fname}')
                     data = self.fetch(static_features=None, dynamic_features=feature)
 
                     data_vars = {}
@@ -163,11 +165,11 @@ class LamaH(Camels):
         return cols
 
     @property
-    def static_features(self) -> list:
-        fname = os.path.join(self.data_type_dir,
-                             f'1_attributes{SEP}Catchment_attributes.csv')
-        df = pd.read_csv(fname, sep=';', index_col='ID')
-        return df.columns.to_list()
+    def static_features(self) -> List[str]:
+        # fname = os.path.join(self.data_type_dir,
+        #                      f'1_attributes{SEP}Catchment_attributes.csv')
+        # df = pd.read_csv(fname, sep=';', index_col='ID')
+        return self._static_features
 
     @property
     def data_type_dir(self):
@@ -286,121 +288,41 @@ class LamaH(Camels):
             raise ValueError
 
         return stns
+    
+    @property
+    def _q_name(self)->str:
+        return 'q_cms'
+    
+    @property
+    def _area_name(self)->str:
+        # todo : difference between area_calc and area_gov?
+        return 'area_calc'
 
-    def q_mmd(
-            self,
-            stations: Union[str, List[str]] = None
-    )->pd.DataFrame:
-        """
-        returns streamflow in the units of milimeter per day. This is obtained
-        by diving q_cms/area
+    @property
+    def _coords_name(self)->List[str]:
+        return ['lat', 'lon']
 
-        parameters
-        ----------
-        stations : str/list
-            name/names of stations. Default is None, which will return
-            area of all stations
-
-        Returns
-        --------
-        pd.DataFrame
-            a pandas DataFrame whose indices are time-steps and columns
-            are catchment/station ids.
-
-        """
-        stations = check_attributes(stations, self.stations())
-        q = self.fetch_stations_features(stations,
-                                           dynamic_features='q_cms',
-                                           as_dataframe=True)
-        q.index = q.index.get_level_values(0)
-        area_m2 = self.area(stations) * 1e6  # area in m2
-        q = (q / area_m2) * 86400  # cms to m/day
-        return q * 1e3  # to mm/day
-
-    def area(
-            self,
-            stations: Union[str, List[str]] = None
-    ) ->pd.Series:
-        """
-        Returns area_gov (Km2) of all catchments as pandas series
-        ``area_gov`` is Catchment area obtained from the administration.
-
-        parameters
-        ----------
-        stations : str/list
-            name/names of stations. Default is None, which will return
-            area of all stations
-
-        Returns
-        --------
-        pd.Series
-            a pandas series whose indices are catchment ids and values
-            are areas of corresponding catchments.
-
-        Examples
-        ---------
-        >>> from water_datasets import LamaH
-        >>> dataset = LamaH(time_step="daily")
-        >>> dataset.area()  # returns area of all stations
-        >>> dataset.area('1')  # returns area of station whose id is 912101A
-        >>> dataset.area(['1', '2'])  # returns area of two stations
-        """
-        stations = check_attributes(stations, self.stations())
-
+    def gauge_attributes(self)->pd.DataFrame:
         fname = os.path.join(self.path,
                              'CAMELS_AT1',
                              'D_gauges',
-                             '1_attributes',
+                             '1_attributes', 
                              'Gauge_attributes.csv')
         df = pd.read_csv(fname, sep=';', index_col='ID')
 
         df.index = df.index.astype(str)
+        return df
 
-        s = df.loc[stations, 'area_gov']
-        s.name = 'area'
-        return s
+    def catchment_attributes(self)->pd.DataFrame:
+        fname = os.path.join(self.data_type_dir,
+                             f'1_attributes{SEP}Catchment_attributes.csv')
 
-    def stn_coords(
-            self,
-            stations:Union[str, List[str]] = None
-    ) ->pd.DataFrame:
-        """
-         returns coordinates of stations as DataFrame
-         with ``long`` and ``lat`` as columns.
-
-         Parameters
-         ----------
-         stations :
-             name/names of stations. If not given, coordinates
-             of all stations will be returned.
-
-         Returns
-         -------
-         coords :
-             pandas DataFrame with ``long`` and ``lat`` columns.
-             The length of dataframe will be equal to number of stations
-             wholse coordinates are to be fetched.
-
-         Examples
-         --------
-         >>> dataset = LamaH(time_step="daily")
-         >>> dataset.stn_coords() # returns coordinates of all stations
-         >>> dataset.stn_coords('1')  # returns coordinates of station whose id is 912101A
-         >>> dataset.stn_coords(['1', '2'])  # returns coordinates of two stations
-
-         """
-        fname = os.path.join(self.path,
-                             'CAMELS_AT1',
-                             'D_gauges',
-                             '1_attributes', 'Gauge_attributes.csv')
         df = pd.read_csv(fname, sep=';', index_col='ID')
-
         df.index = df.index.astype(str)
-        df = df[['lon', 'lat']]
-        df.columns = ['long', 'lat']
-        stations = check_attributes(stations, self.stations())
-
-        return df.loc[stations, :]
+        return df
+    
+    def static_data(self)->pd.DataFrame:
+        return pd.concat([self.catchment_attributes(), self.gauge_attributes()], axis=1)
 
     def _read_dynamic_from_csv1(
             self,
@@ -484,12 +406,12 @@ class LamaH(Camels):
             >>> dataset.fetch_static_features('99',
             >>> features=['area_calc', 'elev_mean', 'agr_fra', 'sand_fra'])  # (1, 4)
         """
-        fname = os.path.join(self.data_type_dir,
-                             f'1_attributes{SEP}Catchment_attributes.csv')
+        # fname = os.path.join(self.data_type_dir,
+        #                      f'1_attributes{SEP}Catchment_attributes.csv')
 
-        df = pd.read_csv(fname, sep=';', index_col='ID')
+        df = self.static_data()
 
-        static_features = check_attributes(features, self.static_features)
+        static_features = check_attributes(features, self.static_features, 'static features')
         stations = check_attributes(stn_id, self.stations())
 
         df = df[static_features]
@@ -747,12 +669,6 @@ class LamaHIce(LamaH):
         # if not self.all_ncs_exist and to_netcdf:
         #    self._maybe_to_netcdf(fdir = f"{data_type}_{time_step}")
 
-        basin = self.basin_attributes()
-        gauge = self.gauge_attributes()
-
-        # better to read once instead of reading again and again
-        self._static_features = pd.concat([basin, gauge], axis=1).columns.to_list()
-
     # def _maybe_to_netcdf(self, fdir: str):
     #     # since data is very large, saving all the data in one file
     #     # consumes a lot of memory, which is impractical for most of the personal
@@ -816,6 +732,14 @@ class LamaHIce(LamaH):
         return "20211231"
 
     @property
+    def _coords_name(self)->List[str]:
+        return ['lat_gauge', 'lon_gauge']
+
+    @property
+    def _area_name(self)->str:
+        return 'area_calc_basin'
+    
+    @property
     def gauges_path(self):
         """returns the path where gauge data files are located"""
         if self.time_step == "hourly":
@@ -834,6 +758,12 @@ class LamaHIce(LamaH):
         returns names of stations as a list
         """
         return [fname.split('.')[0].split('_')[1] for fname in os.listdir(self.q_path)]
+
+    def static_data(self)->pd.DataFrame:
+        """
+        returns static data of all stations
+        """
+        return pd.concat([self.basin_attributes(), self.gauge_attributes()], axis=1)
 
     def gauge_attributes(self)->pd.DataFrame:
         """
@@ -862,80 +792,6 @@ class LamaHIce(LamaH):
         df.columns = [col + "_gauge" for col in df.columns]
 
         return df
-
-    def stn_coords(
-            self,
-            stations:Union[str, List[str]] = None
-    ) ->pd.DataFrame:
-        """
-         returns coordinates of stations as DataFrame
-         with ``long`` and ``lat`` as columns.
-
-         Parameters
-         ----------
-         stations :
-             name/names of stations. If not given, coordinates
-             of all stations will be returned.
-
-         Returns
-         -------
-         coords :
-             pandas DataFrame with ``long`` and ``lat`` columns.
-             The length of dataframe will be equal to number of stations
-             wholse coordinates are to be fetched.
-
-         Examples
-         --------
-         >>> dataset = LamaHIce(time_step="daily")
-         >>> dataset.stn_coords() # returns coordinates of all stations
-         >>> dataset.stn_coords('1')  # returns coordinates of station whose id is 912101A
-         >>> dataset.stn_coords(['1', '2'])  # returns coordinates of two stations
-
-         """
-        g_attr_fpath = os.path.join(self.gauges_path, "1_attributes", "Gauge_attributes.csv")
-
-        df = pd.read_csv(g_attr_fpath, sep=';', index_col='id')
-        df.index = df.index.astype(str)
-        df = df[['lon', 'lat']]
-        df.columns = ['long', 'lat']
-        stations = check_attributes(stations, self.stations())
-
-        return df.loc[stations, :]
-
-    def area(
-            self,
-            stations: Union[str, List[str]] = None
-    ) ->pd.Series:
-        """
-        Returns area_gov (Km2) of all catchments as pandas series
-        ``area_gov`` is Catchment area obtained from the administration.
-
-        parameters
-        ----------
-        stations : str/list
-            name/names of stations. Default is None, which will return
-            area of all stations
-
-        Returns
-        --------
-        pd.Series
-            a pandas series whose indices are catchment ids and values
-            are areas of corresponding catchments.
-
-        Examples
-        ---------
-        >>> from water_datasets import LamaHIce
-        >>> dataset = LamaHIce(time_step="daily")
-        >>> dataset.area()  # returns area of all stations
-        >>> dataset.area('1')  # returns area of station whose id is 912101A
-        >>> dataset.area(['1', '2'])  # returns area of two stations
-        """
-        stations = check_attributes(stations, self.stations())
-
-        df = self.catchment_attributes()
-        s = df.loc[stations, 'area_calc']
-        s.name = 'area'
-        return s
 
     def _catch_attr_path(self)->os.PathLike:
         return os.path.join(self.data_type_dir, "1_attributes")
@@ -1015,7 +871,7 @@ class LamaHIce(LamaH):
         df = pd.concat([basin, gauge], axis=1)
         df.index = df.index.astype(str)
 
-        static_features = check_attributes(features, self.static_features)
+        static_features = check_attributes(features, self.static_features, 'static features')
         stations = check_attributes(stn_id, self.stations())
 
         df = df.loc[stations, static_features]
@@ -1161,6 +1017,10 @@ class LamaHIce(LamaH):
         """
         fpath = os.path.join(self._clim_ts_path(), f"ID_{stn}.csv")
 
+        if not os.path.exists(fpath):
+            ts = {'hourly': 'H', 'daily': 'D'}
+            return pd.DataFrame(index=pd.date_range(self.start, self.end, freq=ts[self.time_step]))
+
         dtypes = {
             "YYYY": np.int32,
             "DD": np.int32,
@@ -1222,10 +1082,6 @@ class LamaHIce(LamaH):
         cols = df.columns.to_list()
         [cols.remove(val) for val in ['DOY', 'checked', 'HOD']  if val in cols ]
         return cols
-
-    @property
-    def static_features(self) -> List[str]:
-        return self._static_features
 
     def _read_dynamic_from_csv(
             self,

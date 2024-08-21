@@ -103,10 +103,10 @@ class CCAM(Camels):
             self._maybe_to_netcdf('ccam_dyn')
             self._maybe_meteo_to_nc()
         
-        shp_path = os.path.join(path,
+        shp_path = os.path.join(self.path,
                                 "7_HydroMLYR",
                                 "7_HydroMLYR",
-                                "0_basin_boundary", 'boundaries.shp')
+                                "0_basin_boundary")
 
         self.boundary_file = os.path.join(shp_path, 'boundaries.shp')
         files = [file for file in os.listdir(shp_path) if file.endswith('.shp')]

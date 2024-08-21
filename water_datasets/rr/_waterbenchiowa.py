@@ -66,6 +66,10 @@ class WaterBenchIowa(Camels):
         return ['travel_time', 'area', 'slope', 'loam', 'silt',
                 'sandy_clay_loam', 'silty_clay_loam']
 
+    @property
+    def _area(self)->str:
+        return 'area'
+
     def fetch_station_attributes(
             self,
             station: str,
