@@ -13,7 +13,6 @@ from .camels import Camels
 from ..utils import get_cpus
 from ..utils import check_attributes, download, sanity_check, _unzip, plot_shapefile
 
-from .._backend import shapefile
 from .._backend import netCDF4, xarray as xr
 
 # directory separator
@@ -2422,7 +2421,7 @@ class GRDCCaravan(Camels):
 
         Examples
         --------
-            >>> from ai4water.datasets import GRDCCaravan
+            >>> from water_datasets import GRDCCaravan
             >>> dataset = GRDCCaravan()
             >>> dataset.fetch_station_features('912101A')
 
@@ -2815,3 +2814,335 @@ class CAMELS_SE(Camels):
         features = check_attributes(features, self.static_features,
                                     "static features")
         return df.loc[stations, features]        
+
+
+class CAMELS_DK(Camels):
+    """
+    This is an updated version of CAMELS_DK0 dataset which is available on 
+    `zenodo <https://zenodo.org/record/7962379>`_ . This dataset was presented
+    by `Liu et al., 2024 <https://doi.org/10.5194/essd-2024-292>`_ and data is 
+    available at `dataverse <https://dataverse.geus.dk/dataset.xhtml?persistentId=doi:10.22008/FK2/AZXSYP>`_ .
+    This dataset consists of static and dynamic features from 304 danish catchments. 
+    There are 13 dynamic (time series) features from 1989-01-02 to 2023-12-31 with daily timestep
+    and 119 static features for each of 304 catchments.
+
+    Examples
+    ---------
+    >>> from water_datasets import CAMELS_DK
+    >>> dataset = CAMELS_DK()
+    >>> data = dataset.fetch(0.1, as_dataframe=True)
+    >>> data.shape
+    (166166, 30)  # 30 represents number of stations
+    Since data is a multi-index dataframe, we can get data of one station as below
+    >>> data['54130033'].unstack().shape
+    (12782, 13)
+    If we don't set as_dataframe=True, then the returned data will be a xarray Dataset
+    >>> data = dataset.fetch(0.1)
+    >>> type(data)
+        xarray.core.dataset.Dataset
+    >>> data.dims
+    FrozenMappingWarningOnValuesAccess({'time': 12782, 'dynamic_features': 13})
+    >>> len(data.data_vars)
+        30
+    >>> df = dataset.fetch(stations=1, as_dataframe=True)  # get data of only one random station
+    >>> df = df.unstack() # the returned dataframe is a multi-indexed dataframe so we have to unstack it
+    >>> df.shape
+    (12782, 13)
+    # get name of all stations as list
+    >>> stns = dataset.stations()
+    >>> len(stns)
+    304
+    # get data by station id
+    >>> df = dataset.fetch(stations='54130033', as_dataframe=True).unstack()
+    >>> df.shape
+    (12782, 13)
+    # get names of available dynamic features
+    >>> dataset.dynamic_features
+    # get only selected dynamic features
+    >>> df = dataset.fetch(1, as_dataframe=True,
+    ... dynamic_features=['Abstraction', 'pet', 'temperature', 'precipitation', 'Qobs']).unstack()
+    >>> df.shape
+    (12782, 5)
+    # get names of available static features
+    >>> dataset.static_features
+    # get data of 10 random stations
+    >>> df = dataset.fetch(10, as_dataframe=True)
+    >>> df.shape
+    (166166, 10)  # remember this is multi-indexed DataFrame
+    # when we get both static and dynamic data, the returned data is a dictionary
+    # with ``static`` and ``dyanic`` keys.
+    >>> data = dataset.fetch(stations='54130033', static_features="all", as_dataframe=True)
+    >>> data['static'].shape, data['dynamic'].shape
+    ((1, 119), (166166, 1))
+    >>> coords = dataset.stn_coords() # returns coordinates of all stations
+    >>> coords.shape
+        (304, 2)
+    >>> dataset.stn_coords('54130033')  # returns coordinates of station whose id is GRDC_3664802
+        6131379.493	559057.7232
+    >>> dataset.stn_coords(['54130033', '13210113'])  # returns coordinates of two stations    
+    """
+
+    url = {
+        'CAMELS_DK_304_gauging_catchment_boundaries.cpg': 'https://dataverse.geus.dk/api/access/datafile/83017',
+        'CAMELS_DK_304_gauging_catchment_boundaries.prj': 'https://dataverse.geus.dk/api/access/datafile/83019',
+        'CAMELS_DK_304_gauging_catchment_boundaries.shp': 'https://dataverse.geus.dk/api/access/datafile/83021',
+        'CAMELS_DK_304_gauging_catchment_boundaries.dbf': 'https://dataverse.geus.dk/api/access/datafile/83020',
+        'CAMELS_DK_304_gauging_catchment_boundaries.shx': 'https://dataverse.geus.dk/api/access/datafile/83018',
+        'CAMELS_DK_304_gauging_stations.cpg': 'https://dataverse.geus.dk/api/access/datafile/83008',
+        'CAMELS_DK_304_gauging_stations.dbf': 'https://dataverse.geus.dk/api/access/datafile/83010',
+        'CAMELS_DK_304_gauging_stations.prj': 'https://dataverse.geus.dk/api/access/datafile/83009',
+        'CAMELS_DK_304_gauging_stations.shp': 'https://dataverse.geus.dk/api/access/datafile/83011',
+        'CAMELS_DK_304_gauging_stations.shx': 'https://dataverse.geus.dk/api/access/datafile/83007',
+        'CAMELS_DK_climate.csv': 'https://dataverse.geus.dk/api/access/datafile/83123',
+        'CAMELS_DK_geology.csv': 'https://dataverse.geus.dk/api/access/datafile/83124',
+        'CAMELS_DK_georegion.dbf': 'https://dataverse.geus.dk/api/access/datafile/83030',
+        'CAMELS_DK_georegion.prj': 'https://dataverse.geus.dk/api/access/datafile/83026',
+        'CAMELS_DK_georegion.sbn': 'https://dataverse.geus.dk/api/access/datafile/83027',
+        'CAMELS_DK_georegion.sbx': 'https://dataverse.geus.dk/api/access/datafile/83028',
+        'CAMELS_DK_georegion.shp': 'https://dataverse.geus.dk/api/access/datafile/83029',
+        'CAMELS_DK_georegion.shx': 'https://dataverse.geus.dk/api/access/datafile/83031',
+        'CAMELS_DK_landuse.csv': 'https://dataverse.geus.dk/api/access/datafile/83125',
+        'CAMELS_DK_script.py': 'https://dataverse.geus.dk/api/access/datafile/83135',
+        'CAMELS_DK_signature_obs_based.csv': 'https://dataverse.geus.dk/api/access/datafile/83131',
+        'CAMELS_DK_signature_sim_based.csv': 'https://dataverse.geus.dk/api/access/datafile/83132',
+        'CAMELS_DK_soil.csv': 'https://dataverse.geus.dk/api/access/datafile/83126',
+        'CAMELS_DK_topography.csv': 'https://dataverse.geus.dk/api/access/datafile/83127',
+        'Data_description.pdf': 'https://dataverse.geus.dk/api/access/datafile/83138',
+        'Gauged_catchments.zip': 'https://dataverse.geus.dk/api/access/datafile/83022',
+        'Ungauged_catchments.zip': 'https://dataverse.geus.dk/api/access/datafile/83025',
+    }
+
+    def __init__(self,
+                 path=None,
+                 overwrite=False,
+                 to_netcdf:bool = True,
+                 **kwargs):
+        """
+        Parameters
+        ----------
+        path : str
+            If the data is alredy downloaded then provide the complete
+            path to it. If None, then the data will be downloaded.
+            The data is downloaded once and therefore susbsequent
+            calls to this class will not download the data unless
+            ``overwrite`` is set to True.
+        overwrite : bool
+            If the data is already down then you can set it to True,
+            to make a fresh download.
+        to_netcdf : bool
+            whether to convert all the data into one netcdf file or not.
+            This will fasten repeated calls to fetch etc but will
+            require netcdf5 package as well as xarry.
+        """
+        super(CAMELS_DK, self).__init__(path=path, **kwargs)
+        #self.path = path
+        self._download(overwrite=overwrite)
+
+        #self.dyn_fname = os.path.join(self.path, 'camelsdk_dyn.nc')
+        self._static_features = self.static_data().columns.to_list()
+        self._dynamic_features = self._read_csv(self.stations()[0]).columns.to_list()
+
+        if to_netcdf:
+            self._maybe_to_netcdf('camels_dk_dyn')
+        
+        self.boundary_file = os.path.join(
+        self.path,
+        "CAMELS_DK_304_gauging_catchment_boundaries.shp"
+    )
+        
+        self._create_boundary_id_map(self.boundary_file, 0)
+
+    @property
+    def gaug_catch_path(self):
+        return os.path.join(self.path, "Gauged_catchments", "Gauged_catchments")
+    
+    @property
+    def climate_fpath(self):
+        return os.path.join(self.path, "CAMELS_DK_climate.csv")
+    
+    @property
+    def geology_fpath(self):
+        return os.path.join(self.path, "CAMELS_DK_geology.csv")
+    
+    @property
+    def landuse_fpath(self):
+        return os.path.join(self.path, "CAMELS_DK_landuse.csv")
+    
+    @property
+    def soil_fpath(self):
+        return os.path.join(self.path, "CAMELS_DK_soil.csv")
+    
+    @property
+    def topography_fpath(self):
+        return os.path.join(self.path, "CAMELS_DK_topography.csv")
+    
+    @property
+    def signature_obs_fpath(self):
+        return os.path.join(self.path, "CAMELS_DK_signature_obs_based.csv")
+    
+    @property
+    def signature_sim_fpath(self):
+        return os.path.join(self.path, "CAMELS_DK_signature_sim_based.csv")
+    
+    def climate_data(self):
+        df = pd.read_csv(self.climate_fpath, index_col=0)
+        df.index = df.index.astype(str)
+        return df
+    
+    def geology_data(self):
+        df = pd.read_csv(self.geology_fpath, index_col=0)
+        df.index = df.index.astype(str)
+        return df
+    
+    def landuse_data(self):
+        df = pd.read_csv(self.landuse_fpath, index_col=0)
+        df.index = df.index.astype(str)
+        return df
+    
+    def soil_data(self):
+        df = pd.read_csv(self.soil_fpath, index_col=0)
+        df.index = df.index.astype(str)
+        return df
+    
+    def topography_data(self):
+        df = pd.read_csv(self.topography_fpath, index_col=0)
+        df.index = df.index.astype(str)
+        return df
+    
+    def signature_obs_data(self):
+        df = pd.read_csv(self.signature_obs_fpath, index_col=0)
+        df.index = df.index.astype(str)
+        return df
+    
+    def signature_sim_data(self):
+        df = pd.read_csv(self.signature_sim_fpath, index_col=0)
+        df.index = df.index.astype(str)
+        return df
+    
+    def static_data(self)->pd.DataFrame:
+        """combination of topographic + soil + landuse + geology + climate features
+
+        Returns
+        -------
+        pd.DataFrame
+            a pandas DataFrame of static features of all catchments of shape (3330, 119)
+        """
+        return pd.concat([self.climate_data(),
+                          self.geology_data(),
+                          self.landuse_data(),
+                          self.soil_data(),
+                          self.topography_data()
+                          ], axis=1)
+
+    def stations(self)->List[str]:
+        return [fname.split(".csv")[0].split('_')[4] for fname in os.listdir(self.gaug_catch_path)]
+
+    def _read_csv(self, stn:str)->pd.DataFrame:
+        fpath = os.path.join(self.gaug_catch_path, f"CAMELS_DK_obs_based_{stn}.csv")
+        df = pd.read_csv(os.path.join(fpath), parse_dates=True, index_col='time')
+        df.columns.name = 'dynamic_features'
+        df.pop('catch_id')
+        return df.astype(np.float32)
+
+    @property
+    def dynamic_features(self)->List[str]:
+        """returns names of dynamic features"""
+        return self._dynamic_features
+
+    @property
+    def static_features(self)->List[str]:
+        """returns static features for Denmark catchments"""
+        return self._static_features
+
+    @property
+    def _coords_name(self)->List[str]:
+        return ['catch_outlet_lat', 'catch_outlet_lon']
+
+    @property
+    def _area_name(self) ->str:
+        return 'catch_area' 
+
+    @property
+    def _q_name(self)->str:
+        return 'Qobs'
+    
+    @property
+    def start(self)->pd.Timestamp:  # start of data
+        return pd.Timestamp('1989-01-02 00:00:00')
+
+    @property
+    def end(self)->pd.Timestamp:  # end of data
+        return pd.Timestamp('2023-12-31 00:00:00')
+
+    def _read_dynamic_from_csv(
+            self,
+            stations,
+            dynamic_features,
+            st=None,
+            en=None)->dict:
+
+        features = check_attributes(dynamic_features, self.dynamic_features)
+
+        dyn = {stn: self._read_csv(stn)[features] for stn in stations}
+
+        return dyn
+
+    def fetch_static_features(
+            self,
+            stn_id: Union[str, List[str]] = None,
+            features:Union[str, List[str]]=None
+    ) -> pd.DataFrame:
+        """
+        Returns static features of one or more stations.
+
+        Parameters
+        ----------
+            stn_id : str
+                name/id of station/stations of which to extract the data
+            features : list/str, optional (default="all")
+                The name/names of features to fetch. By default, all available
+                static features are returned.
+
+        Returns
+        -------
+        pd.DataFrame
+            a pandas dataframe of shape (stations, features)
+
+        Examples
+        ---------
+        >>> from water_datasets import CAMELS_DK
+        >>> dataset = CAMELS_DK()
+        get the names of stations
+        >>> stns = dataset.stations()
+        >>> len(stns)
+            304
+        get all static data of all stations
+        >>> static_data = dataset.fetch_static_features(stns)
+        >>> static_data.shape
+           (304, 119)
+        get static data of one station only
+        >>> static_data = dataset.fetch_static_features('42600042')
+        >>> static_data.shape
+           (1, 119)
+        get the names of static features
+        >>> dataset.static_features
+        get only selected features of all stations
+        >>> static_data = dataset.fetch_static_features(stns, ['slope_mean', 'aridity'])
+        >>> static_data.shape
+           (304, 2)
+        >>> data = dataset.fetch_static_features('42600042', features=['slope_mean', 'aridity'])
+        >>> data.shape
+           (1, 2)
+
+        """
+        stations = check_attributes(stn_id, self.stations())
+        features = check_attributes(features, self.static_features)
+        df = self.static_data()
+        return df.loc[stations, features]
+    
+    def transform_coords(self, coords):
+        """
+        Transforms the coordinates to the required format.
+        """
+        # from EPSG:25832 - ETRS89 / UTM zone 32N to WGS84
+        return coords

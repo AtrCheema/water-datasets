@@ -17,6 +17,7 @@ import matplotlib.pyplot as plt
 from water_datasets import CABra
 from water_datasets import CCAM
 from water_datasets import CAMELS_DK
+from water_datasets.rr import CAMELS_DK0
 from water_datasets import CAMELS_CH
 from water_datasets import CAMELS_GB, CAMELS_BR, CAMELS_AUS
 from water_datasets import CAMELS_CL, CAMELS_US, LamaH, HYSETS, HYPE
@@ -512,8 +513,8 @@ class TestCamels(unittest.TestCase):
         return
 
     def test_dk(self):
-        ds_us = CAMELS_DK(path=os.path.join(gscad_path, 'CAMELS'))
-        test_dataset(ds_us, 308, 14609, 211, 39)
+        ds_dk = CAMELS_DK0(path=os.path.join(gscad_path, 'CAMELS'))
+        test_dataset(ds_dk, 308, 14609, 211, 39)
         return
 
     def test_ccam(self):
@@ -584,7 +585,7 @@ class TestCamels(unittest.TestCase):
 
     def test_camels_dk_docs(self):
 
-        dataset = CAMELS_DK(path= os.path.join(gscad_path, 'CAMELS'))
+        dataset = CAMELS_DK0(path= os.path.join(gscad_path, 'CAMELS'))
 
         assert len(dataset.stations()) == 308
         assert dataset.fetch_static_features(dataset.stations()).shape == (308, 211)
@@ -655,6 +656,11 @@ class TestCamels(unittest.TestCase):
         dataset.area(dataset.static_data_stations())
 
         return 
+
+    def test_camels_dk():
+        dataset = CAMELS_DK(path=os.path.join(gscad_path, 'CAMELS'))
+        test_dataset(dataset, 304, 12782, 119, 13)
+        return
 
 
 if __name__=="__main__":

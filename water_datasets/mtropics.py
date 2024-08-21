@@ -151,7 +151,7 @@ class MtropicsLaos(Datasets):
 
         Examples
         --------
-            >>> from ai4water.datasets import MtropicsLaos
+            >>> from water_datasets import MtropicsLaos
             >>> laos = MtropicsLaos()
             >>> suro = laos.fetch_suro()
         """
@@ -204,7 +204,7 @@ class MtropicsLaos(Datasets):
 
         Examples
         --------
-        >>> from ai4water.datasets import MtropicsLaos
+        >>> from water_datasets import MtropicsLaos
         >>> laos = MtropicsLaos()
         >>> phy_chem = laos.fetch_physiochem('T_deg')
         >>> phy_chem.shape
@@ -347,7 +347,7 @@ class MtropicsLaos(Datasets):
 
         Examples
         --------
-            >>> from ai4water.datasets import MtropicsLaos
+            >>> from water_datasets import MtropicsLaos
             >>> laos = MtropicsLaos()
             >>> rg = laos.fetch_rain_gauges()
 
@@ -733,7 +733,7 @@ class MtropicsLaos(Datasets):
 
         Example
         -------
-            >>> from ai4water.datasets import MtropicsLaos
+            >>> from water_datasets import MtropicsLaos
             >>> laos = MtropicsLaos()
             >>> df = laos.make_classification()
         """
@@ -809,7 +809,7 @@ class MtropicsLaos(Datasets):
 
         Example
         -------
-            >>> from ai4water.datasets import MtropicsLaos
+            >>> from water_datasets import MtropicsLaos
             >>> laos = MtropicsLaos()
             >>> ins = ['pcp', 'air_temp']
             >>> out = ['Ecoli_mpn100']
@@ -1070,7 +1070,7 @@ def ecoli_mekong(
 
     Examples
     --------
-        >>> from ai4water.datasets import ecoli_mekong
+        >>> from water_datasets import ecoli_mekong
         >>> ecoli_data = ecoli_mekong()
         >>> ecoli_data.shape
         (1602, 10)
@@ -1111,7 +1111,7 @@ def ecoli_mekong_2016(
 
     Examples
     --------
-        >>> from ai4water.datasets import ecoli_mekong_2016
+        >>> from water_datasets import ecoli_mekong_2016
         >>> ecoli = ecoli_mekong_2016()
         >>> ecoli.shape
         (58, 10)
@@ -1167,7 +1167,7 @@ def ecoli_houay_pano(
 
     Examples
     --------
-        >>> from ai4water.datasets import ecoli_houay_pano
+        >>> from water_datasets import ecoli_houay_pano
         >>> ecoli = ecoli_houay_pano()
         >>> ecoli.shape
         (413, 10)
@@ -1211,7 +1211,7 @@ def ecoli_mekong_laos(
 
     Examples
     --------
-        >>> from ai4water.datasets import ecoli_mekong_laos
+        >>> from water_datasets import ecoli_mekong_laos
         >>> ecoli = ecoli_mekong_laos()
         >>> ecoli.shape
         (1131, 10)

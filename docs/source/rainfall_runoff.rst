@@ -25,8 +25,8 @@ Rainfall Runoff
      - 516
      - `Alvarez-Garreton et al., 2018 <https://doi.org/10.5194/hess-22-5817-2018>`_
    * - CAMELS_DK
-     - 308
-     - 
+     - 304
+     - `Liu et al., 2024 <https://doi.org/10.5194/essd-2024-292>`_
    * - CAMELS_CH
      - 331
      - `Hoege et al., 2023 <https://doi.org/10.5194/essd-15-5755-2023>`_
@@ -68,8 +68,7 @@ Rainfall Runoff
      - `Bathelemy et al., 2024 <doi: 10.5194/essd-16-2073-2024>`_
 
 
-Camels
-======
+
 .. autoclass:: water_datasets.rr.Camels
    :members:
    :undoc-members:
@@ -78,8 +77,6 @@ Camels
    .. automethod:: __init__
 
 
-CAMELS_AUS
-==========
 .. autoclass:: water_datasets.rr.CAMELS_AUS
    :members:
    :show-inheritance:
@@ -87,8 +84,6 @@ CAMELS_AUS
    .. automethod:: __init__
 
 
-CAMELS_GB
-==========
 .. autoclass:: water_datasets.rr.CAMELS_GB
    :members:
    :undoc-members:
@@ -97,16 +92,13 @@ CAMELS_GB
    .. automethod:: __init__
 
 
-CAMELS_BR
-==========
 .. autoclass:: water_datasets.rr.CAMELS_BR
    :members:
    :show-inheritance:
 
    .. automethod:: __init__
 
-CAMELS_US
-==========
+
 .. autoclass:: water_datasets.rr.CAMELS_US
    :members:
    :show-inheritance:
@@ -114,8 +106,6 @@ CAMELS_US
    .. automethod:: __init__
 
 
-CAMELS_CL
-==========
 .. autoclass:: water_datasets.rr.CAMELS_CL
    :members:
    :show-inheritance:
@@ -123,8 +113,6 @@ CAMELS_CL
    .. automethod:: __init__
 
 
-CAMELS_DK
-==========
 .. autoclass:: water_datasets.rr.CAMELS_DK
    :members:
    :show-inheritance:
@@ -132,8 +120,6 @@ CAMELS_DK
    .. automethod:: __init__
 
 
-LamaH
-======
 .. autoclass:: water_datasets.rr.LamaH
    :members:
    :show-inheritance:
@@ -141,8 +127,6 @@ LamaH
    .. automethod:: __init__
 
 
-LamaHIce
-========
 .. autoclass:: water_datasets.rr.LamaHIce
    :members:
    :show-inheritance:
@@ -150,8 +134,6 @@ LamaHIce
    .. automethod:: __init__
 
 
-HYSETS
-======
 .. autoclass:: water_datasets.rr.HYSETS
    :members:
    :show-inheritance:
@@ -159,8 +141,6 @@ HYSETS
    .. automethod:: __init__
 
 
-HYPE
-====
 .. autoclass:: water_datasets.rr.HYPE
    :members:
    :show-inheritance:
@@ -168,8 +148,6 @@ HYPE
    .. automethod:: __init__
 
 
-CCAM
-=============
 .. autoclass:: water_datasets.rr.CCAM
    :members:
    :show-inheritance:
@@ -177,8 +155,6 @@ CCAM
    .. automethod:: __init__
 
 
-CABra
-=============
 .. autoclass:: water_datasets.rr.CABra
    :members:
    :show-inheritance:
@@ -186,8 +162,6 @@ CABra
    .. automethod:: __init__
 
 
-CAMELS_CH
-=============
 .. autoclass:: water_datasets.rr.CAMELS_CH
    :members:
    :show-inheritance:
@@ -195,9 +169,6 @@ CAMELS_CH
    .. automethod:: __init__
 
 
-
-CAMELS_DE
-=============
 .. autoclass:: water_datasets.rr.CAMELS_DE
    :members:
    :show-inheritance:
@@ -205,8 +176,6 @@ CAMELS_DE
    .. automethod:: __init__
 
 
-GRDCCaravan
-=============
 .. autoclass:: water_datasets.rr.GRDCCaravan
    :members:
    :show-inheritance:
@@ -214,8 +183,6 @@ GRDCCaravan
    .. automethod:: __init__
 
 
-CAMELS_SE
-=============
 .. autoclass:: water_datasets.rr.CAMELS_SE
    :members:
    :show-inheritance:
@@ -223,8 +190,6 @@ CAMELS_SE
    .. automethod:: __init__
 
 
-WaterBenchIowa
-===============
 .. autoclass:: water_datasets.rr.WaterBenchIowa
    :members:
    :show-inheritance:
@@ -232,8 +197,6 @@ WaterBenchIowa
    .. automethod:: __init__
 
 
-Simbi
-=============
 .. autoclass:: water_datasets.rr.Simbi
    :members:
    :show-inheritance:
@@ -241,11 +204,15 @@ Simbi
    .. automethod:: __init__
 
 
-RRLuleaSweden
-=============
 .. autoclass:: water_datasets.RRLuleaSweden
    :members:
    :show-inheritance:
 
    .. automethod:: __init__
 
+
+.. autoclass:: water_datasets.rr._denmark.CAMELS_DK
+   :members:
+   :show-inheritance:
+
+   .. automethod:: __init__

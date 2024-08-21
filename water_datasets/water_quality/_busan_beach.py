@@ -65,7 +65,7 @@ def busan_beach(
 
     Examples
     --------
-        >>> from ai4water.datasets import busan_beach
+        >>> from water_datasets import busan_beach
         >>> dataframe = busan_beach()
         >>> dataframe.shape
         (1446, 14)

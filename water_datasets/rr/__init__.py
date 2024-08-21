@@ -12,7 +12,7 @@ from ._brazil import CAMELS_BR
 from ._brazil import CABra
 from ._hysets import HYSETS
 from ._hype import HYPE
-from ._denmark import CAMELS_DK
+from ._camels import CAMELS_DK
 from ._waterbenchiowa import WaterBenchIowa
 from ._gsha import GSHA
 from ._ccam import CCAM
@@ -23,3 +23,4 @@ from ._camels import CAMELS_DE
 from ._camels import GRDCCaravan
 from ._camels import CAMELS_SE
 from ._simbi import Simbi
+from ._denmark import CAMELS_DK as CAMELS_DK0

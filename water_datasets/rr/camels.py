@@ -175,7 +175,7 @@ class Camels(Datasets):
 
         Examples
         --------
-            >>> from ai4water.datasets import CAMELS_AUS
+            >>> from water_datasets import CAMELS_AUS
             >>> camels = CAMELS_AUS()
             >>> camels.fetch_static_features('224214A')
             >>> camels.static_features
@@ -234,7 +234,7 @@ class Camels(Datasets):
 
         Examples
         ---------
-        >>> from ai4water.datasets import CAMELS_CH
+        >>> from water_datasets import CAMELS_CH
         >>> dataset = CAMELS_CH()
         >>> dataset.area()  # returns area of all stations
         >>> dataset.area('2004')  # returns area of station whose id is 2004
@@ -312,7 +312,7 @@ class Camels(Datasets):
 
         Examples
         --------
-        >>> from ai4water.datasets import CAMELS_AUS
+        >>> from water_datasets import CAMELS_AUS
         >>> dataset = CAMELS_AUS()
         >>> # get data of 10% of stations
         >>> df = dataset.fetch(stations=0.1, as_dataframe=True)  # returns a multiindex dataframe
@@ -431,7 +431,7 @@ class Camels(Datasets):
 
         Examples
         --------
-            >>> from ai4water.datasets import CAMELS_AUS
+            >>> from water_datasets import CAMELS_AUS
             >>> dataset = CAMELS_AUS()
             ... # find out station ids
             >>> dataset.stations()
@@ -500,7 +500,7 @@ class Camels(Datasets):
 
         Examples
         --------
-            >>> from ai4water.datasets import CAMELS_AUS
+            >>> from water_datasets import CAMELS_AUS
             >>> camels = CAMELS_AUS()
             >>> camels.fetch_dynamic_features('224214A', as_dataframe=True).unstack()
             >>> camels.dynamic_features
@@ -559,7 +559,7 @@ class Camels(Datasets):
 
         Examples
         --------
-            >>> from ai4water.datasets import CAMELS_AUS
+            >>> from water_datasets import CAMELS_AUS
             >>> dataset = CAMELS_AUS()
             >>> dataset.fetch_station_features('912101A')
 
@@ -614,7 +614,7 @@ class Camels(Datasets):
 
         Examples
         --------
-        >>> from ai4water.datasets import CAMELS_AUS
+        >>> from water_datasets import CAMELS_AUS
         >>> dataset = CAMELS_AUS()
         >>> dataset.plot_stations()
         >>> dataset.plot_stations(['1', '2', '3'])
@@ -700,13 +700,13 @@ class Camels(Datasets):
 
         Examples
         --------
-        >>> from ai4water.datasets import CAMELS_CH
+        >>> from water_datasets import CAMELS_CH
         >>> dataset = CAMELS_CH()
         >>> dataset.stn_coords() # returns coordinates of all stations
         >>> dataset.stn_coords('2004')  # returns coordinates of station whose id is 2004
         >>> dataset.stn_coords(['2004', '6004'])  # returns coordinates of two stations
 
-        >>> from ai4water.datasets import CAMELS_AUS
+        >>> from water_datasets import CAMELS_AUS
         >>> dataset = CAMELS_AUS()
         >>> dataset.stn_coords() # returns coordinates of all stations
         >>> dataset.stn_coords('912101A')  # returns coordinates of station whose id is 912101A
@@ -786,7 +786,7 @@ class Camels(Datasets):
 
         Examples
         --------
-        >>> from ai4water.datasets import CAMELS_AUS
+        >>> from water_datasets import CAMELS_AUS
         >>> dataset = CAMELS_AUS()
         >>> dataset.plot_catchment()
         >>> dataset.plot_catchment(marker='o', ms=0.3)

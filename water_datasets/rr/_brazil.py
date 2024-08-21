@@ -23,7 +23,7 @@ class CAMELS_BR(Camels):
 
     Examples
     --------
-    >>> from ai4water.datasets import CAMELS_BR
+    >>> from water_datasets import CAMELS_BR
     >>> dataset = CAMELS_BR()
     >>> df = dataset.fetch(stations=1, as_dataframe=True)
     >>> df = df.unstack() # the returned dataframe is a multi-indexed dataframe so we have to unstack it
@@ -218,7 +218,7 @@ class CAMELS_BR(Camels):
 
         Examples
         ---------
-        >>> from ai4water.datasets import CAMELS_BR
+        >>> from water_datasets import CAMELS_BR
         >>> dataset = CAMELS_BR()
         >>> dataset.area()  # returns area of all stations
         >>> dataset.stn_coords('65100000')  # returns area of station whose id is 912101A
@@ -432,7 +432,7 @@ class CABra(Camels):
 
     Examples
     ---------
-    >>> from ai4water.datasets import CABra
+    >>> from water_datasets import CABra
     >>> dataset = CABra()
     >>> data = dataset.fetch(0.1, as_dataframe=True)
     >>> data.shape
@@ -614,7 +614,7 @@ class CABra(Camels):
 
         Examples
         ---------
-        >>> from ai4water.datasets import CABra
+        >>> from water_datasets import CABra
         >>> dataset = CABra()
         >>> dataset.area()  # returns area of all stations
         >>> dataset.stn_coords('92')  # returns area of station whose id is 912101A
@@ -1040,7 +1040,7 @@ class CABra(Camels):
 
         Examples
         ---------
-        >>> from ai4water.datasets import CABra
+        >>> from water_datasets import CABra
         >>> dataset = CABra()
         get the names of stations
         >>> stns = dataset.stations()

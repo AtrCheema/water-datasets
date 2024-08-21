@@ -62,7 +62,7 @@ class RRLuleaSweden(Datasets):
 
         Examples
         --------
-            >>> from ai4water.datasets import RRLuleaSweden
+            >>> from water_datasets import RRLuleaSweden
             >>> dataset = RRLuleaSweden()
             >>> flow = dataset.fetch_flow()
             >>> flow.shape
@@ -95,7 +95,7 @@ class RRLuleaSweden(Datasets):
 
         Examples
         --------
-            >>> from ai4water.datasets import RRLuleaSweden
+            >>> from water_datasets import RRLuleaSweden
             >>> dataset = RRLuleaSweden()
             >>> pcp = dataset.fetch_pcp()
             >>> pcp.shape

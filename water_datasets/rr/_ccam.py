@@ -31,7 +31,7 @@ class CCAM(Camels):
 
     Examples
     ---------
-    >>> from ai4water.datasets import CCAM
+    >>> from water_datasets import CCAM
     >>> dataset = CCAM()
     >>> data = dataset.fetch(0.1, as_dataframe=True)
     >>> data.shape
@@ -279,7 +279,7 @@ class CCAM(Camels):
         """
         fetches meteorological data of 4902 chinese catchments
 
-        >>> from ai4water.datasets import CCAM
+        >>> from water_datasets import CCAM
         >>> dataset = CCAM()
         >>> dynamic_features = ['PRE', 'TEM', 'PRS', 'RHU', 'EVP', 'WIN', 'PET']
         >>> st = '1999-01-01'
@@ -360,7 +360,7 @@ class CCAM(Camels):
 
         Examples
         ---------
-        >>> from ai4water.datasets import CAMELS_DK
+        >>> from water_datasets import CAMELS_DK
         >>> dataset = CAMELS_DK()
         get the names of stations
         >>> stns = dataset.stations()

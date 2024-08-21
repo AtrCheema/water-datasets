@@ -10,15 +10,21 @@ from ..utils import check_attributes
 
 class CAMELS_DK(Camels):
     """
-    Reads Caravan extension Denmark - Danish dataset for large-sample hydrology.
+    Reads Caravan extension Denmark - Danish dataset for large-sample hydrology
+    following the works of `Koch and Schneider 2022 <https://doi.org/10.34194/geusb.v49.829>`_ .
     The dataset is downloaded from https://zenodo.org/record/7962379 . This dataset
     consists of static and dynamic features from 308 danish catchments. There are 38
     dynamic (time series) features from 1981-01-02 to 2020-12-31 with daily timestep
     and 211 static features for each of 308 catchments.
 
+    Please note that there is an updated version of this dataset following the works
+    of `Liu et al., 2024 <https://doi.org/10.5194/essd-2024-292>`_ . This dataset
+    is associated with the CAMELS_DK class which can be imported as follows:
+    >>> from water_datasets import CAMELS_DK
+
     Examples
     ---------
-    >>> from ai4water.datasets import CAMELS_DK
+    >>> from water_datasets.rr._denmark import CAMELS_DK
     >>> dataset = CAMELS_DK()
     >>> data = dataset.fetch(0.1, as_dataframe=True)
     >>> data.shape
@@ -52,7 +58,7 @@ class CAMELS_DK(Camels):
     >>> df.shape
     (569751, 10)  # remember this is multi-indexed DataFrame
     # when we get both static and dynamic data, the returned data is a dictionary
-    # with ``static`` and ``dyanic`` keys.
+    # with ``static`` and ``dynamic`` keys.
     >>> data = dataset.fetch(stations='80001', static_features="all", as_dataframe=True)
     >>> data['static'].shape, data['dynamic'].shape
     ((1, 211), (569751, 1))
@@ -210,7 +216,6 @@ class CAMELS_DK(Camels):
             name/names of stations. Default is None, which will return
             area of all stations
 
-
         Returns
         --------
         pd.Series
@@ -219,7 +224,7 @@ class CAMELS_DK(Camels):
 
         Examples
         ---------
-        >>> from ai4water.datasets import CAMELS_DK
+        >>> from water_datasets import CAMELS_DK
         >>> dataset = CAMELS_DK()
         >>> dataset.area()  # returns area of all stations
         >>> dataset.stn_coords('100010')  # returns area of station whose id is 912101A
@@ -321,7 +326,7 @@ class CAMELS_DK(Camels):
 
         Examples
         ---------
-        >>> from ai4water.datasets import CAMELS_DK
+        >>> from water_datasets import CAMELS_DK
         >>> dataset = CAMELS_DK()
         get the names of stations
         >>> stns = dataset.stations()

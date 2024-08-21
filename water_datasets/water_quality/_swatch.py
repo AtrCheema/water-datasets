@@ -131,7 +131,7 @@ class Swatch(Datasets):
 
         Examples
         --------
-        >>> from ai4water.datasets import Swatch
+        >>> from water.datasets import Swatch
         >>> ds = Swatch()
         >>> df = ds.fetch()
         """

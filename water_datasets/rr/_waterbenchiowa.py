@@ -18,7 +18,7 @@ class WaterBenchIowa(Camels):
 
     Examples
     --------
-    >>> from ai4water.datasets import WaterBenchIowa
+    >>> from water_datasets import WaterBenchIowa
     >>> ds = WaterBenchIowa()
     ... # fetch static and dynamic features of 5 stations
     >>> data = ds.fetch(5, as_dataframe=True)
@@ -81,7 +81,7 @@ class WaterBenchIowa(Camels):
 
         Examples
         --------
-            >>> from ai4water.datasets import WaterBenchIowa
+            >>> from water_datasets import WaterBenchIowa
             >>> dataset = WaterBenchIowa()
             >>> data = dataset.fetch_station_attributes('666')
         """
@@ -109,7 +109,7 @@ class WaterBenchIowa(Camels):
 
         Examples
         ---------
-        >>> from ai4water.datasets import WaterBenchIowa
+        >>> from water_datasets import WaterBenchIowa
         >>> dataset = WaterBenchIowa()
         get the names of stations
         >>> stns = dataset.stations()
