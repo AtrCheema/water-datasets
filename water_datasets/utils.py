@@ -180,9 +180,10 @@ def check_attributes(
     else:
         assert isinstance(attributes, list), f'unknown attributes {attributes}'
 
-    assert all(elem in check_against for elem in attributes), f"""
-    The names of some {attribute_name} are not valid/allowed
-    """
+    if not all(elem in check_against for elem in attributes):
+        print(f"Allowed {attribute_name} are {check_against}")
+        print(f"Given {attribute_name} are {attributes}")
+        raise ValueError(f"The names of some {attribute_name} are not valid/allowed")
 
     return attributes
 
@@ -382,33 +383,39 @@ def download_and_unzip(
     return
 
 
-def _unzip(ds_dir, dirname=None):
+def _unzip(path:Union[str, os.PathLike], 
+           overwrite:bool=False, 
+           verbosity=1):
     """unzip all the zipped files in a directory"""
 
-    print(f"unzipping files in {ds_dir}")
+    if verbosity>0: print(f"unzipping files in {path}")
 
-    if dirname is None:
-        dirname = ds_dir
+    all_zip_files = glob.glob(f"{path}/*.zip")
 
-    all_files = glob.glob(f"{dirname}/*.zip")
-    for f in all_files:
-        src = os.path.join(dirname, f)
-        trgt = os.path.join(dirname, f.split('.zip')[0])
-        if not os.path.exists(trgt):
-            print(f"unzipping {src} to {trgt}")
-            with zipfile.ZipFile(os.path.join(dirname, f), 'r') as zip_ref:
+    for zip_file_path in all_zip_files:
+
+        src = os.path.basename(zip_file_path)
+        trgt = src.split('.zip')[0]
+
+        if not os.path.exists(os.path.join(path, trgt)):
+
+            if verbosity>0: print(f"unzipping {src} to {trgt}")
+
+            with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
                 try:
-                    zip_ref.extractall(os.path.join(dirname, f.split('.zip')[0]))
+                    zip_ref.extractall(os.path.join(path, trgt))
                 except OSError:
                     filelist = zip_ref.filelist
                     for _file in filelist:
                         if '.txt' in _file.filename or '.csv' in _file.filename or '.xlsx' in _file.filename:
                             zip_ref.extract(_file)
+        else:
+            if verbosity>0: print(f"{trgt} already exists")
 
     # extracting tar.gz files todo, check if zip files can also be unpacked by the following oneliner
-    gz_files = glob.glob(f"{ds_dir}/*.gz")
-    for f in gz_files:
-        shutil.unpack_archive(f, ds_dir)
+    gz_files = glob.glob(f"{path}/*.gz")
+    for gz_file in gz_files:
+        shutil.unpack_archive(gz_file, path)
 
     return
 
