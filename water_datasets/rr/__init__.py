@@ -24,3 +24,4 @@ from ._camels import GRDCCaravan
 from ._camels import CAMELS_SE
 from ._simbi import Simbi
 from ._denmark import CAMELS_DK as CAMELS_DK0
+from ._bull import Bull

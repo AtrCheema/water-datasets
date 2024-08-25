@@ -48,6 +48,9 @@ Rainfall Runoff
    * - GRDCCaravan
      - 5357
      - `Faerber et al., 2023 <https://zenodo.org/records/10074416>`_
+   * - Bull
+     - 484
+     - `Aparicio et al., 2024 <https://doi.org/10.1038/s41597-024-03594-5>`_    
    * - WaterBenchIowa
      - 125
      - `Demir et al., 2022 <https://doi.org/10.5194/essd-14-5605-2022>`_
@@ -62,7 +65,7 @@ Rainfall Runoff
      - `Almagro et al., 2021 <https://doi.org/10.5194/hess-25-3105-2021>`_ 
    * - HYPE
      - 561
-     - `Arciniega-Esparza and Birkel et al., 2020 <https://zenodo.org/records/4029572>`_
+     - `Arciniega-Esparza and Birkel, 2020 <https://zenodo.org/records/4029572>`_
    * - Simbi
      - 24
      - `Bathelemy et al., 2024 <doi: 10.5194/essd-16-2073-2024>`_

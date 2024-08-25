@@ -336,6 +336,7 @@ class Datasets(object):
         return
 
     def _download_and_unzip(self):
+        # todo : this function should not exist, we should always call _download
         download_and_unzip(self.path, self.url)
         return
 

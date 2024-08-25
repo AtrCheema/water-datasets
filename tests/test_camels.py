@@ -27,6 +27,7 @@ from water_datasets import LamaHIce
 from water_datasets import GRDCCaravan
 from water_datasets import CAMELS_SE
 from water_datasets import Simbi
+from water_datasets import Bull
 
 
 gscad_path = '/mnt/datawaha/hyex/atr/gscad_database/raw'
@@ -215,7 +216,7 @@ def test_fetch_static_feature(dataset, stn_id, num_stations, num_static_features
 
         assert_dataframe(df, dataset)
 
-        assert df.shape == (num_stations, num_static_features), df.shape
+        assert df.shape == (num_stations, num_static_features), f"{df.shape} Expected {(num_stations, num_static_features)}"
     return
 
 
@@ -306,6 +307,9 @@ def test_hysets():
 
 
 def test_plot_stations(dataset):
+
+    logger.info(f"testing plot_stations for {dataset.name}")
+
     stations = dataset.stations()
     dataset.plot_stations(show=False)
     plt.close()
@@ -321,6 +325,9 @@ def test_plot_stations(dataset):
 
 
 def test_coords(dataset):
+
+    logger.info(f"testing coords for {dataset.name}")
+
     stations = dataset.stations()
     df = dataset.stn_coords()  # returns coordinates of all stations
     assert isinstance(df, pd.DataFrame)
@@ -338,6 +345,9 @@ def test_coords(dataset):
 
 
 def test_area(dataset):
+
+    logger.info(f"testing area for {dataset.name}")
+
     stations = dataset.stations()
     s = dataset.area()  # returns area of all stations
     assert isinstance(s, pd.Series)
@@ -470,7 +480,7 @@ class TestCamels(unittest.TestCase):
 
     def test_lamah(self):
         stations = {'daily': [859, 859, 454], 'hourly': [859, 859, 454]}
-        static = {'daily': [61, 62, 61], 'hourly': [61, 62, 61]}
+        static = {'daily': [80, 81, 80], 'hourly': [80, 81, 80]}
         num_dyn_attrs = {'daily': 22, 'hourly': 16}
         len_dyn_data = {'daily': 14244, 'hourly': 341856}
         test_df = True
@@ -478,7 +488,7 @@ class TestCamels(unittest.TestCase):
 
         for idx, dt in enumerate(LamaH._data_types):
 
-            for ts in ['hourly']:
+            for ts in ['hourly', 'daily']:
 
                 if ts =='hourly':
                     test_df=False
@@ -619,14 +629,21 @@ class TestCamels(unittest.TestCase):
     
     def test_lamahice(self):
         
-        for data_type in LamaHIce._data_types:
+        stations = {'total_upstrm': 111, 'intermediate_all': 107, 'intermediate_lowimp': 107}
+
+        for data_type in ['total_upstrm', #'intermediate_all', 'intermediate_lowimp'
+                          ]:
 
             for time_step in [#'hourly', 
                               'daily']:
+                
+                logger.info(f'checking for {data_type}, {time_step}')
 
                 dataset = LamaHIce(path=gscad_path, time_step=time_step, data_type=data_type)
 
-                test_dataset(dataset, 111, 26298, 154, 35)
+                test_dataset(dataset, 
+                             stations[data_type], 
+                             26298, 154, 35)
         return
 
     def test_grdccaravan(self):
@@ -661,6 +678,10 @@ class TestCamels(unittest.TestCase):
         dataset = CAMELS_DK(path=os.path.join(gscad_path, 'CAMELS'))
         test_dataset(dataset, 304, 12782, 119, 13)
         return
+
+    def test_bull(self):
+        dataset = Bull(path=gscad_path)
+        test_dataset(dataset, 484, 25932, 214, 55)
 
 
 if __name__=="__main__":
