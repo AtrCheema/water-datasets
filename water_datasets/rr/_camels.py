@@ -665,7 +665,7 @@ class CAMELS_AUS(Camels):
             self._maybe_to_netcdf('camels_aus_dyn')
 
         self.boundary_file = os.path.join(
-        path,
+        self.path,
         "CAMELS_AUS",
         "02_location_boundary_area",
         "02_location_boundary_area",
