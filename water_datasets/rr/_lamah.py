@@ -72,6 +72,7 @@ class LamaH(Camels):
         >>> dataset = LamaH(time_step='hourly', data_type='total_upstrm')
         >>> len(dataset.stations()), len(dataset.static_features), len(dataset.dynamic_features)
         (859, 80, 17)
+        >>> dataset.fetch_dynamic_features('1', features = ['q_cms'])
         """
 
         assert time_step in self.time_steps, f"invalid time_step {time_step} given"
@@ -375,7 +376,7 @@ class LamaH(Camels):
         dyns = []
         for f in dynamic_features:
             dyn_fpath = os.path.join(self.path, f"{self.data_type}_{self.time_step}", f'{f}.nc')
-            dyn = xr.load_dataset(dyn_fpath)  # daataset
+            dyn = xr.open_dataset(dyn_fpath)  # daataset
             dyns.append(dyn[stations].sel(time=slice(st, en)))
 
         return xr.concat(dyns, dim='dynamic_features')  # dataset
