@@ -383,9 +383,11 @@ def download_and_unzip(
     return
 
 
-def _unzip(path:Union[str, os.PathLike], 
-           overwrite:bool=False, 
-           verbosity=1):
+def _unzip(
+        path:Union[str, os.PathLike], 
+        overwrite:bool=False, 
+        verbosity=1
+        ):
     """unzip all the zipped files in a directory"""
 
     if verbosity>0: print(f"unzipping files in {path}")

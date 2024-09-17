@@ -456,10 +456,8 @@ def test_dataset(dataset, num_stations, dyn_data_len, num_static_attrs, num_dyn_
 class TestCamels(unittest.TestCase):
 
     def test_gb(self):
-        path = os.path.join(gscad_path, 'CAMELS')
-        if os.path.exists(path):
-            ds_gb = CAMELS_GB(path=path)
-            test_dataset(ds_gb, 671, 16436, 290, 10)
+        ds_gb = CAMELS_GB(path=os.path.join(gscad_path, 'CAMELS'))
+        test_dataset(ds_gb, 671, 16436, 145, 10)
         return
 
     def test_aus(self):

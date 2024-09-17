@@ -2,6 +2,7 @@
 import os
 import json
 import glob
+import shutil
 import warnings
 import concurrent.futures as cf
 from typing import Union, List, Dict
@@ -298,16 +299,13 @@ class CAMELS_US(Camels):
 
 class CAMELS_GB(Camels):
     """
-    This is a dataset of 671 catchments with 290 static features
+    This is a dataset of 671 catchments with 145 static features
     and 10 dyanmic features for each catchment following the work of
     `Coxon et al., 2020 <https://doi.org/10.5194/essd-12-2459-2020>`_.
-    The dyanmic features are
-    timeseries from 1957-01-01 to 2018-12-31. This dataset must be manually
-    downloaded by the user. The path of the downloaded folder must be provided
-    while initiating this class.
+    The dyanmic features are timeseries from 1970-10-01 to 2015-09-30.
 
     >>> from water_datasets import CAMELS_GB
-    >>> dataset = CAMELS_GB("path/to/CAMELS_GB")
+    >>> dataset = CAMELS_GB()
     >>> data = dataset.fetch(0.1, as_dataframe=True)
     >>> data.shape
      (164360, 67)
@@ -361,36 +359,50 @@ class CAMELS_GB(Camels):
         """
         super().__init__(name="CAMELS_GB", path=path, **kwargs)
 
+        if not os.path.exists(self.path):
+            os.makedirs(self.path)
+
+        if not os.path.exists(os.path.join(self.path, 'camels_gb')):
+            download(
+                outdir=self.path,
+                url = "https://data-package.ceh.ac.uk/data/8344e4f3-d2ea-44f5-8afa-86d2987543a9.zip",
+                fname="camels_gb.zip"
+            )
+            if self.verbosity>0:
+                print("unzipping the downloaded file")
+            _unzip(self.path, verbosity=self.verbosity)
+
+            # rename the folder camels_gb/8344e4f3-d2ea-44f5-8afa-86d2987543a9 to camels_gb/caemls_gb
+            shutil.move(
+                os.path.join(self.path, 'camels_gb', '8344e4f3-d2ea-44f5-8afa-86d2987543a9'), 
+                os.path.join(self.path, 'camels_gb', 'camels_gb')
+                )
+        else:
+            if self.verbosity>0:
+                print(f"dataset is already available at {self.path}")
+
         self._maybe_to_netcdf('camels_gb_dyn')
 
         self.boundary_file = os.path.join(
-        path,
-        "CAMELS_GB",
-        "data",
-        "CAMELS_GB_catchment_boundaries",
-        "CAMELS_GB_catchment_boundaries.shp"
+            self.data_path,
+            "CAMELS_GB_catchment_boundaries",
+            "CAMELS_GB_catchment_boundaries.shp"
     )
+        
+        if not os.path.exists(self.boundary_file):
+            _unzip(self.data_path)
         
         self._create_boundary_id_map(self.boundary_file, 0)
 
     @property
-    def path(self):
-        """Directory where a particular dataset will be saved. """
-        return self._path
-
-    @path.setter
-    def path(self, x):
-        if x is not None:
-            x = os.path.join(x, 'CAMELS_GB')
-        sanity_check('CAMELS-GB', x)
-        self._path = x
+    def data_path(self):
+        return os.path.join(self.path, 'camels_gb', 'camels_gb', 'data')
 
     @property
     def static_attribute_categories(self) -> list:
         features = []
-        path = os.path.join(self.path, 'data')
-        for f in os.listdir(path):
-            if os.path.isfile(os.path.join(path, f)) and f.endswith('csv'):
+        for f in os.listdir(self.data_path):
+            if os.path.isfile(os.path.join(self.data_path, f)) and f.endswith('csv'):
                 features.append(f.split('_')[2])
 
         return features
@@ -405,7 +417,7 @@ class CAMELS_GB(Camels):
 
     @property
     def static_features(self):
-        files = glob.glob(f"{os.path.join(self.path, 'data')}/*.csv")
+        files = glob.glob(f"{self.data_path}/*.csv")
         cols = []
         for f in files:
             if 'static_features.csv' not in f:
@@ -415,7 +427,7 @@ class CAMELS_GB(Camels):
 
     def stations(self, to_exclude=None):
         # CAMELS_GB_hydromet_timeseries_StationID_number
-        path = os.path.join(self.path, f'data{SEP}timeseries')
+        path = os.path.join(self.data_path, 'timeseries')
         gauge_ids = []
         for f in os.listdir(path):
             gauge_ids.append(f.split('_')[4])
@@ -445,12 +457,15 @@ class CAMELS_GB(Camels):
         dyn = {}
         for stn_id in stations:
             # making one separate dataframe for one station
-            path = os.path.join(self.path, f"data{SEP}timeseries")
+            path = os.path.join(self.data_path, f"timeseries")
             fname = f"CAMELS_GB_hydromet_timeseries_{stn_id}_19701001-20150930.csv"
 
             df = pd.read_csv(os.path.join(path, fname), index_col='date')
             df.index = pd.to_datetime(df.index)
             df.index.freq = pd.infer_freq(df.index)
+
+            df.columns.name = 'dynamic_features'
+            df.index.name = 'time'
 
             dyn[stn_id] = df
 
@@ -484,11 +499,11 @@ class CAMELS_GB(Camels):
         get all static data of all stations
         >>> static_data = dataset.fetch_static_features(stns)
         >>> static_data.shape
-           (671, 290)
+           (671, 145)
         get static data of one station only
         >>> static_data = dataset.fetch_static_features('85004')
         >>> static_data.shape
-           (1, 290)
+           (1, 145)
         get the names of static features
         >>> dataset.static_features
         get only selected features of all stations
@@ -499,15 +514,16 @@ class CAMELS_GB(Camels):
 
         features = check_attributes(features, self.static_features)
         static_fname = 'static_features.csv'
-        static_fpath = os.path.join(self.path, 'data', static_fname)
+        static_fpath = os.path.join(self.data_path, static_fname)
         if os.path.exists(static_fpath):
             static_df = pd.read_csv(static_fpath, index_col='gauge_id')
         else:
-            files = glob.glob(f"{os.path.join(self.path, 'data')}/*.csv")
-            static_df = pd.DataFrame()
+            files = glob.glob(f"{self.data_path}/*.csv")
+            static_dfs = []
             for f in files:
                 _df = pd.read_csv(f, index_col='gauge_id')
-                static_df = pd.concat([static_df, _df], axis=1)
+                static_dfs.append(_df)
+            static_df = pd.concat(static_dfs, axis=1)
             static_df.to_csv(static_fpath)
 
         if stn_id == "all":
