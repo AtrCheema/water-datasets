@@ -399,6 +399,10 @@ def _unzip(
         src = os.path.basename(zip_file_path)
         trgt = src.split('.zip')[0]
 
+        if os.path.exists(os.path.join(path, trgt)) and overwrite:
+            if verbosity>0: print(f"removing pre-existing {trgt}")
+            shutil.rmtree(os.path.join(path, trgt))
+
         if not os.path.exists(os.path.join(path, trgt)):
 
             if verbosity>0: print(f"unzipping {src} to {trgt}")

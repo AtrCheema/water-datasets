@@ -257,7 +257,8 @@ class Datasets(object):
             path:str = None,
             verbosity:int = 1,
             processes:int = None,
-            remove_zip:bool = False
+            remove_zip:bool = False,
+            overwrite:bool = False
     ):
         """
         Arguments:
@@ -287,6 +288,7 @@ class Datasets(object):
         self.verbosity = verbosity
         self.path = path
         self.remove_zip = remove_zip
+        self.overwrite = overwrite
 
     @property
     def url(self):

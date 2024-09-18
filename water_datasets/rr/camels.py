@@ -70,6 +70,7 @@ class Camels(Datasets):
             path:str = None,
             boundary_file:Union[str, os.PathLike] = None,
             id_idx_in_bndry_shape:int = None,
+            overwrite:bool = False,
             verbosity:int = 1,
             **kwargs
     ):
@@ -89,7 +90,7 @@ class Camels(Datasets):
             kwargs : dict
                 Any other keyword arguments for the Datasets class
         """
-        super(Camels, self).__init__(path=path, verbosity=verbosity, **kwargs)
+        super(Camels, self).__init__(path=path, verbosity=verbosity, overwrite=overwrite, **kwargs)
 
         self.bndry_id_map = {}
     
@@ -362,7 +363,7 @@ class Camels(Datasets):
 
     def _maybe_to_netcdf(self, fname: str):
         self.dyn_fname = os.path.join(self.path, f'{fname}.nc')
-        if not os.path.exists(self.dyn_fname):
+        if not os.path.exists(self.dyn_fname) or self.overwrite:
             # saving all the data in netCDF file using xarray
             print(f'converting data to netcdf format for faster io operations')
             data = self.fetch(static_features=None)

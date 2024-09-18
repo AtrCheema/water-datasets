@@ -461,7 +461,7 @@ class TestCamels(unittest.TestCase):
         return
 
     def test_aus(self):
-        ds_aus = CAMELS_AUS(path=os.path.join(gscad_path, 'CAMELS'))
+        ds_aus = CAMELS_AUS(path=os.path.join(gscad_path, 'CAMELS'), version=1)
         test_dataset(ds_aus, 222, 23376, 166, 26)
 
         ds_aus = CAMELS_AUS(path=os.path.join(gscad_path, 'CAMELS'), version=2)

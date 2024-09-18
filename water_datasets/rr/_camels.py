@@ -720,6 +720,7 @@ class CAMELS_AUS(Camels):
             fpath = os.path.join(self.path, _file)
             
             if os.path.exists(fpath) and overwrite:
+                os.remove(fpath)
                 if verbosity > 0: print(f"Re-downloading {_file} from {url+ _file} at {fpath}")                
                 download(url + _file, outdir=self.path, fname=_file)
 
@@ -732,7 +733,7 @@ class CAMELS_AUS(Camels):
             
             # maybe the .zip file has been downloaded previously but not unzipped
             #if _file.endswith('.zip') and not os.path.exists(fpath.replace('.zip', '')):
-        _unzip(self.path, verbosity=verbosity)
+        _unzip(self.path, verbosity=verbosity, overwrite=overwrite)
 
         if netCDF4 is None:
             to_netcdf = False
@@ -742,7 +743,7 @@ class CAMELS_AUS(Camels):
 
         self.boundary_file = os.path.join(
         self.path,
-        "CAMELS_AUS" if self.version==1 else "",
+       # "CAMELS_AUS" if self.version==1 else "",
         "02_location_boundary_area",
         "02_location_boundary_area",
         "shp",
