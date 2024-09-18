@@ -3,7 +3,7 @@ Rainfall Runoff
 
 
 .. list-table:: Stations per Source
-   :widths: 25 30 30 30
+   :widths: 25 20 20 30
    :header-rows: 1
 
    * - Source Name
@@ -11,7 +11,7 @@ Rainfall Runoff
      - Number of Hourly Stations
      - Reference
    * - CAMELS_AUS
-     - 222
+     - 222, 561
      - 
      - `Flower et al., 2021 <https://doi.org/10.5194/essd-13-3847-2021>`_
    * - CAMELS_GB

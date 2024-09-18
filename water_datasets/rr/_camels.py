@@ -718,10 +718,15 @@ class CAMELS_AUS(Camels):
 
         for _file, url in self.urls[version].items():
             fpath = os.path.join(self.path, _file)
-            if not os.path.exists(fpath) and not overwrite:
+            
+            if os.path.exists(fpath) and overwrite:
+                if verbosity > 0: print(f"Re-downloading {_file} from {url+ _file} at {fpath}")                
+                download(url + _file, outdir=self.path, fname=_file)
+
+            elif not os.path.exists(fpath):
                 if verbosity > 0:
-                    print(f"Downloading {_file} from {url+ _file}")
-                download(url + _file, outdir=self.path, fname=_file,)
+                    print(f"Downloading {_file} from {url+ _file} at {fpath}")
+                download(url + _file, outdir=self.path, fname=_file)
             elif verbosity > 0:
                 print(f"{_file} already exists at {self.path}")
             
