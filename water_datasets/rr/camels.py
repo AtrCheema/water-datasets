@@ -9,6 +9,7 @@ import pandas as pd
 
 from .._datasets import Datasets
 from .._backend import netCDF4
+from .._backend import shapefile
 from .._backend import xarray as xr, plt, easy_mpl, plt_Axes
 from ..utils import check_attributes, dateandtime_now
 
@@ -753,6 +754,9 @@ class Camels(Datasets):
         >>> dataset = CAMELS_SE()
         >>> dataset.get_boundary(dataset.stations()[0])
         """
+
+        if shapefile is None:
+            raise ModuleNotFoundError("shapefile module is not installed. Please install it to use boundary file")
 
         from shapefile import Reader
 

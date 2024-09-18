@@ -25,7 +25,7 @@ print_info()
 
 # %%
 
-dataset = CAMELS_AUS(overwrite=True, version=1)
+dataset = CAMELS_AUS(version=1)
 
 # %%
 dataset.start
@@ -33,10 +33,10 @@ dataset.start
 # %%
 dataset.end
 
-# # %%
+# %%
 
-# stations = dataset.stations()
-# len(stations)
+stations = dataset.stations()
+len(stations)
 
 # # %%
 
