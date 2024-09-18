@@ -1,6 +1,7 @@
 
 import os
 import random
+import warnings
 from typing import Union, List
 
 import numpy as np
@@ -99,6 +100,10 @@ class Camels(Datasets):
         if boundary_file is None:
             return
         
+        if shapefile is None:
+            warnings.warn("shapefile module is not installed. Please install it to use boundary file")
+            return
+
         from shapefile import Reader
 
         if self.verbosity>1:

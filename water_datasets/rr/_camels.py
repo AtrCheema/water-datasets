@@ -731,8 +731,7 @@ class CAMELS_AUS(Camels):
             elif verbosity > 0:
                 print(f"{_file} already exists at {self.path}")
             
-            # maybe the .zip file has been downloaded previously but not unzipped
-            #if _file.endswith('.zip') and not os.path.exists(fpath.replace('.zip', '')):
+        # maybe the .zip file has been downloaded previously but not unzipped
         _unzip(self.path, verbosity=verbosity, overwrite=overwrite)
 
         if netCDF4 is None:
@@ -743,7 +742,6 @@ class CAMELS_AUS(Camels):
 
         self.boundary_file = os.path.join(
         self.path,
-       # "CAMELS_AUS" if self.version==1 else "",
         "02_location_boundary_area",
         "02_location_boundary_area",
         "shp",
