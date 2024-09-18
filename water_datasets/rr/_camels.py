@@ -545,11 +545,15 @@ class CAMELS_GB(Camels):
 
 class CAMELS_AUS(Camels):
     """
-    This is a dataset of 222 Australian catchments with 161 static features
+    This is a dataset of 561 Australian catchments with 187 static features and 
+    26 dyanmic features for each catchment. The dyanmic features are timeseries 
+    from 1950-01-01 to 2022-03-31. This class Reads CAMELS-AUS dataset of 
+    `Fowler et al., 2024 <https://doi.org/10.5194/essd-2024-263>`_ .
+
+    If ``version`` is 1 then this class reads data following `Fowler et al., 2020 <https://doi.org/10.5194/essd-13-3847-2021>`_
+    which is a dataset of 222 Australian catchments with 161 static features
     and 26 dyanmic features for each catchment. The dyanmic features are
-    timeseries from 1957-01-01 to 2018-12-31. This class Reads CAMELS-AUS dataset of
-    `Fowler et al., 2020 <https://doi.org/10.5194/essd-13-3847-2021>`_
-    dataset.
+    timeseries from 1957-01-01 to 2018-12-31.
 
     Examples
     --------
@@ -595,7 +599,8 @@ class CAMELS_AUS(Camels):
     """
 
     url = 'https://doi.pangaea.de/10.1594/PANGAEA.921850'
-    urls = {
+    url_v2 = "https://zenodo.org/records/13350616"
+    urls = {1: {
         "01_id_name_metadata.zip": "https://download.pangaea.de/dataset/921850/files/",
         "02_location_boundary_area.zip": "https://download.pangaea.de/dataset/921850/files/",
         "03_streamflow.zip": "https://download.pangaea.de/dataset/921850/files/",
@@ -604,9 +609,18 @@ class CAMELS_AUS(Camels):
         "CAMELS_AUS_Attributes&Indices_MasterTable.csv": "https://download.pangaea.de/dataset/921850/files/",
         #"Units_01_TimeseriesData.pdf": "https://download.pangaea.de/dataset/921850/files/",
         #"Units_02_AttributeMasterTable.pdf": "https://download.pangaea.de/dataset/921850/files/",
+    },
+    2: {
+        "01_id_name_metadata.zip": "https://zenodo.org/records/13350616/files/",
+        "02_location_boundary_area.zip": "https://zenodo.org/records/13350616/files/",
+        "03_streamflow.zip": "https://zenodo.org/records/13350616/files/",
+        "04_attributes.zip": "https://zenodo.org/records/13350616/files/",
+        "05_hydrometeorology.zip": "https://zenodo.org/records/13350616/files/",
+        "CAMELS_AUS_Attributes&Indices_MasterTable.csv": "https://zenodo.org/records/13350616/files/",
+    }
     }
 
-    folders = {
+    folders = {1: {
         'streamflow_MLd': f'03_streamflow{SEP}03_streamflow{SEP}streamflow_MLd',
         'streamflow_MLd_inclInfilled': f'03_streamflow{SEP}03_streamflow{SEP}streamflow_MLd_inclInfilled',
         'streamflow_mmd': f'03_streamflow{SEP}03_streamflow{SEP}streamflow_mmd',
@@ -637,11 +651,46 @@ class CAMELS_AUS(Camels):
         'tmin_SILO': f'05_hydrometeorology{SEP}05_hydrometeorology{SEP}03_Other{SEP}SILO{SEP}tmin_SILO',
         'vp_deficit_SILO': f'05_hydrometeorology{SEP}05_hydrometeorology{SEP}03_Other{SEP}SILO{SEP}vp_deficit_SILO',
         'vp_SILO': f'05_hydrometeorology{SEP}05_hydrometeorology{SEP}03_Other{SEP}SILO{SEP}vp_SILO',
+    },
+    2: {
+        'streamflow_MLd': f'03_streamflow{SEP}03_streamflow',
+        'streamflow_MLd_inclInfilled': f'03_streamflow{SEP}03_streamflow',
+        'streamflow_mmd': f'03_streamflow{SEP}03_streamflow',
+
+        'et_morton_actual_SILO': f'05_hydrometeorology{SEP}05_hydrometeorology{SEP}02_EvaporativeDemand_timeseries',
+        'et_morton_point_SILO': f'05_hydrometeorology{SEP}05_hydrometeorology{SEP}02_EvaporativeDemand_timeseries',
+        'et_morton_wet_SILO': f'05_hydrometeorology{SEP}05_hydrometeorology{SEP}02_EvaporativeDemand_timeseries',
+        'et_short_crop_SILO': f'05_hydrometeorology{SEP}05_hydrometeorology{SEP}02_EvaporativeDemand_timeseries',
+        'et_tall_crop_SILO': f'05_hydrometeorology{SEP}05_hydrometeorology{SEP}02_EvaporativeDemand_timeseries',
+        'evap_morton_lake_SILO': f'05_hydrometeorology{SEP}05_hydrometeorology{SEP}02_EvaporativeDemand_timeseries',
+        'evap_pan_SILO': f'05_hydrometeorology{SEP}05_hydrometeorology{SEP}02_EvaporativeDemand_timeseries',
+        'evap_syn_SILO': f'05_hydrometeorology{SEP}05_hydrometeorology{SEP}02_EvaporativeDemand_timeseries',
+
+        'precipitation_AGCD': f'05_hydrometeorology{SEP}05_hydrometeorology{SEP}01_precipitation_timeseries',
+        'precipitation_SILO': f'05_hydrometeorology{SEP}05_hydrometeorology{SEP}01_precipitation_timeseries',
+        'precipitation_var_AGCD': f'05_hydrometeorology{SEP}05_hydrometeorology{SEP}01_precipitation_timeseries',
+
+        #'solarrad_AWAP': f'05_hydrometeorology{SEP}05_hydrometeorology{SEP}03_Other{SEP}AGCD{SEP}solarrad_AWAP',
+        'tmax_AGCD': f'05_hydrometeorology{SEP}05_hydrometeorology{SEP}03_Other{SEP}AGCD',
+        'tmin_AGCD': f'05_hydrometeorology{SEP}05_hydrometeorology{SEP}03_Other{SEP}AGCD',
+        'vapourpres_h09_AGCD': f'05_hydrometeorology{SEP}05_hydrometeorology{SEP}03_Other{SEP}AGCD',
+        'vapourpres_h15_AGCD': f'05_hydrometeorology{SEP}05_hydrometeorology{SEP}03_Other{SEP}AGCD',
+
+        'mslp_SILO': f'05_hydrometeorology{SEP}05_hydrometeorology{SEP}03_Other{SEP}SILO',
+        'radiation_SILO': f'05_hydrometeorology{SEP}05_hydrometeorology{SEP}03_Other{SEP}SILO',
+        'rh_tmax_SILO': f'05_hydrometeorology{SEP}05_hydrometeorology{SEP}03_Other{SEP}SILO',
+        'rh_tmin_SILO': f'05_hydrometeorology{SEP}05_hydrometeorology{SEP}03_Other{SEP}SILO',
+        'tmax_SILO': f'05_hydrometeorology{SEP}05_hydrometeorology{SEP}03_Other{SEP}SILO',
+        'tmin_SILO': f'05_hydrometeorology{SEP}05_hydrometeorology{SEP}03_Other{SEP}SILO',
+        'vp_deficit_SILO': f'05_hydrometeorology{SEP}05_hydrometeorology{SEP}03_Other{SEP}SILO',
+        'vp_SILO': f'05_hydrometeorology{SEP}05_hydrometeorology{SEP}03_Other{SEP}SILO',        
+    }
     }
 
     def __init__(
             self,
             path: str = None,
+            version:int = 2,
             to_netcdf:bool = True,
             overwrite:bool = False,
             verbosity:int = 1,
@@ -652,6 +701,7 @@ class CAMELS_AUS(Camels):
             path: path where the CAMELS_AUS dataset has been downloaded. This path
                 must contain five zip files and one xlsx file. If None, then the
                 data will be downloaded.
+            version: version of the dataset to download. Allowed values are 1 and 2.
             to_netcdf :
         """
         if path is not None:
@@ -659,9 +709,14 @@ class CAMELS_AUS(Camels):
             if not os.path.exists(path) or len(os.listdir(path)) < 2:
                 raise FileNotFoundError(f"The path {path} does not exist")
 
+        self.version = version
+
         super().__init__(path=path, verbosity=verbosity, **kwargs)
 
-        for _file, url in self.urls.items():
+        if not os.path.exists(self.path):
+            os.makedirs(self.path)
+
+        for _file, url in self.urls[version].items():
             fpath = os.path.join(self.path, _file)
             if not os.path.exists(fpath) and not overwrite:
                 if verbosity > 0:
@@ -682,11 +737,11 @@ class CAMELS_AUS(Camels):
 
         self.boundary_file = os.path.join(
         self.path,
-        "CAMELS_AUS",
+        "CAMELS_AUS" if self.version==1 else "",
         "02_location_boundary_area",
         "02_location_boundary_area",
         "shp",
-        "CAMELS_AUS_Boundaries_adopted.shp"
+        "CAMELS_AUS_Boundaries_adopted.shp" if self.version==1 else "CAMELS_AUS_v2_Boundaries_adopted.shp"
     )
         
         self._create_boundary_id_map(self.boundary_file, 0)
@@ -697,7 +752,7 @@ class CAMELS_AUS(Camels):
 
     @property
     def end(self):
-        return "20181231"
+        return "20181231" if self.version==1 else "20220331"
 
     @property
     def location(self):
@@ -732,7 +787,7 @@ class CAMELS_AUS(Camels):
 
     @property
     def dynamic_features(self) -> list:
-        return list(self.folders.keys())
+        return list(self.folders[self.version].keys())
 
     def q_mmd(
             self,
@@ -793,7 +848,7 @@ class CAMELS_AUS(Camels):
         dyn_attrs = {}
         dyn = {}
         for _attr in dynamic_features:
-            _path = os.path.join(self.path, f'{self.folders[_attr]}.csv')
+            _path = os.path.join(self.path, f'{self.folders[self.version][_attr]}{SEP}{_attr}.csv')
             _df = pd.read_csv(_path, na_values=['-99.99'])
             _df.index = pd.to_datetime(_df[['year', 'month', 'day']])
             [_df.pop(col) for col in ['year', 'month', 'day']]
@@ -806,6 +861,9 @@ class CAMELS_AUS(Camels):
             for attr, attr_df in dyn_attrs.items():
                 if attr in dynamic_features:
                     stn_df[attr] = attr_df[stn]
+            
+            stn_df.index.name = 'time'
+            stn_df.columns.name = 'dynamic_features'
             dyn[stn] = stn_df
 
         return dyn

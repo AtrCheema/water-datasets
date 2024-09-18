@@ -463,6 +463,9 @@ class TestCamels(unittest.TestCase):
     def test_aus(self):
         ds_aus = CAMELS_AUS(path=os.path.join(gscad_path, 'CAMELS'))
         test_dataset(ds_aus, 222, 23376, 166, 26)
+
+        ds_aus = CAMELS_AUS(path=os.path.join(gscad_path, 'CAMELS'), version=2)
+        test_dataset(ds_aus, 561, 26388, 187, 26)
         return
 
     def test_hype(self):
