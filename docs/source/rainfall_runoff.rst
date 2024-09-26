@@ -90,7 +90,27 @@ Rainfall Runoff
      - 24
      -
      - `Bathelemy et al., 2024 <doi: 10.5194/essd-16-2073-2024>`_
+   * - CAMELS_IND
+     - 472
+     -
+     - `Mangukiya et al., 2024 <https://doi.org/10.5194/essd-2024-379>`_
 
+
+High Level API
+==============
+It consists of a unified interface to access all the datasets. The datasets are accessed by their names.
+
+.. autoclass:: water_datasets.rr.RainfallRunoff
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+   .. automethod:: __init__
+
+
+Low Level API
+=============
+The datasets can be accessed individually by their names.
 
 
 .. autoclass:: water_datasets.rr.Camels
@@ -241,6 +261,11 @@ Rainfall Runoff
 
    .. automethod:: __init__
 
+.. autoclass:: water_datasets.CAMELS_IND
+   :members:
+   :show-inheritance:
+
+   .. automethod:: __init__
 
 .. autoclass:: water_datasets.rr._denmark.CAMELS_DK
    :members:

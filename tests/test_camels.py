@@ -28,6 +28,8 @@ from water_datasets import GRDCCaravan
 from water_datasets import CAMELS_SE
 from water_datasets import Simbi
 from water_datasets import Bull
+from water_datasets import CAMELS_IND
+from water_datasets import RainfallRunoff
 
 
 gscad_path = '/mnt/datawaha/hyex/atr/gscad_database/raw'
@@ -683,6 +685,19 @@ class TestCamels(unittest.TestCase):
     def test_bull(self):
         dataset = Bull(path=gscad_path)
         test_dataset(dataset, 484, 25932, 214, 55)
+        return
+    
+    def test_india(self):
+
+        dataset = CAMELS_IND(path=os.path.join(gscad_path, 'CAMELS'))
+        test_dataset(dataset, 472, 14976, 210, 20)
+        return
+
+
+    def test_rainfallrunoff(self):
+        ds_aus = RainfallRunoff('CAMELS_AUS', path=os.path.join(gscad_path, 'CAMELS'), overwrite=True)
+        test_dataset(ds_aus, 561, 26388, 187, 26)
+        return
 
 
 if __name__=="__main__":

@@ -16,7 +16,7 @@ from tabulight import EDA
 import matplotlib.pyplot as plt
 from easy_mpl import scatter, hist
 from easy_mpl.utils import process_cbar
-from water_datasets import CAMELS_AUS
+from water_datasets import RainfallRunoff
 from water_datasets.utils import print_info
 
 # %%
@@ -25,7 +25,7 @@ print_info()
 
 # %%
 
-dataset = CAMELS_AUS(version=1)
+dataset = RainfallRunoff('CAMELS_AUS', version=1)
 
 # %%
 dataset.start
