@@ -84,10 +84,10 @@ class RainfallRunoff(object):
         ----------
         dataset: str
             dataset name. This must be one of the following:
-    
-             - `CAMELS_AUS`
-             - `CAMELS_CL`
-             - `CAMELS_GB`
+
+            - `CAMELS_AUS`
+            - `CAMELS_CL`
+            - `CAMELS_GB`
             - `CAMELS_US`
             - `LamaH`
             - `CAMELS_BR`

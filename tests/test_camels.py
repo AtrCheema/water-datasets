@@ -632,21 +632,30 @@ class TestCamels(unittest.TestCase):
     
     def test_lamahice(self):
         
-        stations = {'total_upstrm': 111, 'intermediate_all': 107, 'intermediate_lowimp': 107}
+        stations = {
+            'daily': [111, 107,  107],
+            'hourly': [76]
+            }
+        length = {'daily': 26298, 'hourly': 412825}
+        num_dynamic = {'daily': 35, 'hourly': 27}
+        yr_steps = {'daily': 366, 'hourly': 8784}
 
-        for data_type in ['total_upstrm', #'intermediate_all', 'intermediate_lowimp'
-                          ]:
+        for idx, data_type in enumerate(['total_upstrm', #'intermediate_all', 'intermediate_lowimp'
+                          ]):
 
-            for time_step in [#'hourly', 
-                              'daily']:
+            for time_step in ['hourly', 'daily']:
                 
                 logger.info(f'checking for {data_type}, {time_step}')
 
                 dataset = LamaHIce(path=gscad_path, time_step=time_step, data_type=data_type)
 
                 test_dataset(dataset, 
-                             stations[data_type], 
-                             26298, 154, 35)
+                             stations[time_step][idx], 
+                             length[time_step], 
+                             154, 
+                             num_dynamic[time_step],
+                             yearly_steps=yr_steps[time_step]
+                             )
         return
 
     def test_grdccaravan(self):
@@ -695,7 +704,8 @@ class TestCamels(unittest.TestCase):
 
 
     def test_rainfallrunoff(self):
-        ds_aus = RainfallRunoff('CAMELS_AUS', path=os.path.join(gscad_path, 'CAMELS'), overwrite=True)
+        ds_aus = RainfallRunoff('CAMELS_AUS', path=os.path.join(gscad_path, 'CAMELS'),
+                                 overwrite=True)
         test_dataset(ds_aus, 561, 26388, 187, 26)
         return
 
