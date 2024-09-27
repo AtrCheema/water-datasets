@@ -8,6 +8,12 @@ Welcome to water-datasets!
 
 .. toctree::
    :maxdepth: 2
+
+   installation
+
+
+.. toctree::
+   :maxdepth: 2
    :caption: API
 
    rainfall_runoff

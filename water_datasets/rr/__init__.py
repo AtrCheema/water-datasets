@@ -152,9 +152,11 @@ class RainfallRunoff(object):
         return len(self.stations())
 
     def num_dynamic(self)->int:
+        """number of dynamic features associated with the dataset"""
         return len(self.dynamic_features)
 
     def num_static(self)->int:
+        """number of static features associated with the dataset"""
         return len(self.static_features)
 
     @property
@@ -167,21 +169,34 @@ class RainfallRunoff(object):
     @property
     def path(self)->str:
         """
-        returns path of dataset
+        returns path where the data is stored. The default path is
+        ~../water_datasets/data
         """
         return self.dataset.path
 
     @property
     def static_features(self)->List[str]:
         """
-        returns names of static features
+        returns names of static features as python list of strings
+
+        Examples
+        --------
+        >>> from water_datasets import RainfallRunoff
+        >>> dataset = RainfallRunoff('CAMELS_AUS')
+        >>> dataset.static_features
         """
         return self.dataset.static_features
     
     @property
     def dynamic_features(self)->List[str]:
         """
-        returns names of dynamic features
+        returns names of dynamic features as python list of strings
+
+        Examples
+        --------
+        >>> from water_datasets import RainfallRunoff
+        >>> dataset = RainfallRunoff('CAMELS_AUS')
+        >>> dataset.dynamic_features
         """
         return self.dataset.dynamic_features
 
@@ -283,9 +298,11 @@ class RainfallRunoff(object):
         as_dataframe : 
             whether to return dynamic attributes as pandas
             dataframe or as xarray dataset.
-        kwargs : keyword arguments to read the files
+        kwargs : 
+            keyword arguments to read the files
 
-        returns:
+        returns
+        -------
             If both static  and dynamic features are obtained then it returns a
             dictionary whose keys are station/gauge_ids and values are the
             attributes and dataframes.
@@ -333,21 +350,23 @@ class RainfallRunoff(object):
         stations : 
             list of stations for which data is to be fetched.
         dynamic_features : 
-            list of dynamic attributes to be fetched.
-                if 'all', then all dynamic attributes will be fetched.
+            list of dynamic features to be fetched.
+                if 'all', then all dynamic features will be fetched.
         static_features : 
-            list of static attributes to be fetched.
-                If `all`, then all static attributes will be fetched. If None,
-                then no static attribute will be fetched.
+            list of static features to be fetched.
+            If `all`, then all static features will be fetched. If None,
+            then no static attribute will be fetched.
         st : 
             start of data to be fetched.
         en : 
             end of data to be fetched.
         as_dataframe : whether to return the data as pandas dataframe. default
                 is xr.Dataset object
-        kwargs dict: additional keyword arguments
+        kwargs dict: 
+            additional keyword arguments
 
-        Returns:
+        Returns
+        -------
             Dynamic and static features of multiple stations. Dynamic features
             are by default returned as xr.Dataset unless `as_dataframe` is True, in
             such a case, it is a pandas dataframe with multiindex. If xr.Dataset,
@@ -363,7 +382,8 @@ class RainfallRunoff(object):
             If both are not None, then the returned type is a dictionary with
             `static` and `dynamic` keys.
 
-        Raises:
+        Raises
+        ------
             ValueError, if both dynamic_features and static_features are None
 
         Examples

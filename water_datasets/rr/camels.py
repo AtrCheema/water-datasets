@@ -403,9 +403,11 @@ class Camels(Datasets):
         as_dataframe : 
             whether to return the dynamic data as pandas dataframe. default
             is xr.Dataset object
-        kwargs dict: additional keyword arguments
+        kwargs dict: 
+            additional keyword arguments
 
-        Returns:
+        Returns
+        -------
             Dynamic and static features of multiple stations. Dynamic features
             are by default returned as xr.Dataset unless `as_dataframe` is True, in
             such a case, it is a pandas dataframe with multiindex. If xr.Dataset,
