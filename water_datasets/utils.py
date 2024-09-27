@@ -288,11 +288,13 @@ def maybe_download(
             download_and_unzip(path, 
                                url=url, 
                                include=include, 
+                               verbosity=verbosity,
                                **kwargs)
         elif files_to_check:
             download_and_unzip(path, 
                                url=url,
                                files_to_check=files_to_check,
+                               verbosity=verbosity,
                                **kwargs)
         else:
             if verbosity:
@@ -302,7 +304,9 @@ def maybe_download(
         Use overwrite=True to remove previously saved files and download again""")
             sanity_check(name, path, url)
     else:
-        download_and_unzip(path, url=url, include=include, **kwargs)
+        download_and_unzip(path, url=url, include=include,
+                           verbosity=verbosity,
+                            **kwargs)
     return
 
 
@@ -311,6 +315,7 @@ def download_and_unzip(
         url:Union[str, List[str], dict],
         include:List[str]=None,
         files_to_check:List[str] = None,
+        verbosity:int = 1,
         **kwargs):
     """
 
@@ -334,7 +339,7 @@ def download_and_unzip(
     if not os.path.exists(path):
         os.makedirs(path)
     if isinstance(url, str):
-        print(f"downloading {url} to {path}")
+        if verbosity>0: print(f"downloading {url} to {path}")
         if 'zenodo' in url:
             download_from_zenodo(path, 
                                  doi=url, 
@@ -348,7 +353,7 @@ def download_and_unzip(
         print(f"downloading {len(url)} files to {path}")
 
         for url in url:
-            print(f"downloading {url}")
+            if verbosity>0: print(f"downloading {url}")
 
             if 'zenodo' in url:
                 download_from_zenodo(path, 
@@ -363,7 +368,7 @@ def download_and_unzip(
         print(f"downloading {len(url)} files to {path}")
 
         for fname, url in url.items():
-            print(f"downloading {fname}")
+            if verbosity>0: print(f"downloading {fname}")
 
             if 'zenodo' in url:
                 download_from_zenodo(path, 
@@ -375,7 +380,7 @@ def download_and_unzip(
                 if include is not None or files_to_check is not None:
                     raise ValueError("include and files_to_check are available only for zenodo")
                 download(url, path, fname)
-        _unzip(path)
+        _unzip(path, verbosity=verbosity)
 
     else:
         raise ValueError(f"Invalid url: {path}, {url}")

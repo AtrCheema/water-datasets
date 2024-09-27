@@ -354,9 +354,6 @@ class Camels(Datasets):
         else:
             raise TypeError(f"Unknown value provided for stations {stations}")
 
-        # if xr is None:
-        #     raise ModuleNotFoundError("modeule xarray must be installed to use `datasets` module")
-
         return self.fetch_stations_features(
             stations,
             dynamic_features,
@@ -373,48 +370,40 @@ class Camels(Datasets):
             # saving all the data in netCDF file using xarray
             print(f'converting data to netcdf format for faster io operations')
             data = self.fetch(static_features=None)
-            # data_vars = {}
-            # coords = {}
-            # for k, v in data.items():
-            #     data_vars[k] = (['time', 'dynamic_features'], v)
-            #     index = v.index
-            #     index.name = 'time'
-            #     coords = {
-            #         'dynamic_features': list(v.columns),
-            #         'time': index
-            #     }
-            # xds = xr.Dataset(
-            #     data_vars=data_vars,
-            #     coords=coords,
-            #     attrs={'date': f"created on {dateandtime_now()}"}
-            # )
+
             data.to_netcdf(self.dyn_fname)
         return
 
     def fetch_stations_features(
             self,
             stations: Union[str, List[str]],
-            dynamic_features='all',
-            static_features=None,
-            st=None,
-            en=None,
+            dynamic_features:Union[str, List[str]] = 'all',
+            static_features:Union[str, List[str]] = None,
+            st: Union[str, pd.Timestamp] = None,
+            en:Union[str, pd.Timestamp] = None,
             as_dataframe: bool = False,
             **kwargs
     ):
         """Reads attributes of more than one stations.
 
-        Arguments:
-            stations : list of stations for which data is to be fetched.
-            dynamic_features : list of dynamic attributes to be fetched.
-                if 'all', then all dynamic attributes will be fetched.
-            static_features : list of static attributes to be fetched.
-                If `all`, then all static attributes will be fetched. If None,
-                then no static attribute will be fetched.
-            st : start of data to be fetched.
-            en : end of data to be fetched.
-            as_dataframe : whether to return the data as pandas dataframe. default
-                is xr.Dataset object
-            kwargs dict: additional keyword arguments
+        parameters
+        ----------
+        stations : 
+            list of stations for which data is to be fetched.
+        dynamic_features : 
+            list of dynamic attributes to be fetched.
+            if ``all``, then all dynamic attributes will be fetched.
+        static_features : list of static attributes to be fetched.
+            If ``all``, then all static attributes will be fetched. If None,
+            `then no static attribute will be fetched.
+        st : 
+            start of data to be fetched.
+        en : 
+            end of data to be fetched.
+        as_dataframe : 
+            whether to return the dynamic data as pandas dataframe. default
+            is xr.Dataset object
+        kwargs dict: additional keyword arguments
 
         Returns:
             Dynamic and static features of multiple stations. Dynamic features
@@ -425,8 +414,8 @@ class Camels(Datasets):
             where `time` is defined by `st` and `en` i.e. length of `DataArray`.
             In case, when the returned object is pandas DataFrame, the first index
             is `time` and second index is `dyanamic_features`. Static attributes
-            are always returned as pandas DataFrame and have following shape
-            `(stations, static_features). If `dynamic_features` is None,
+            are always returned as pandas DataFrame and have shape
+            `(stations, static_features)`. If `dynamic_features` is None,
             then they are not returned and the returned value only consists of
             static features. Same holds true for `static_features`.
             If both are not None, then the returned type is a dictionary with
@@ -441,9 +430,14 @@ class Camels(Datasets):
             >>> dataset = CAMELS_AUS()
             ... # find out station ids
             >>> dataset.stations()
-            ... # get data of selected stations
+            ... # get data of selected stations as xarray Dataset
+            >>> dataset.fetch_stations_features(['912101A', '912105A', '915011A'])
+            ... # get data of selected stations as pandas DataFrame
             >>> dataset.fetch_stations_features(['912101A', '912105A', '915011A'],
             ...  as_dataframe=True)
+            ... # get both dynamic and static features of selected stations
+            >>> dataset.fetch_stations_features(['912101A', '912105A', '915011A'],
+            ... dynamic_features=['streamflow_mmd', 'tmax_AWAP'], static_features=['elev_mean'])
         """
         st, en = self._check_length(st, en)
 

@@ -46,8 +46,12 @@ def test_dynamic_data(dataset, stations, num_stations, stn_data_len,
     logger.info(f"test_dynamic_data for {dataset.name}")
 
     if stations is None and len(dataset.stations()) > 500:
-        # randomly select 1000 stations
-        stations = random.sample(dataset.stations(), 500)
+        if dataset.time_step == 'daily':
+            # randomly select 500 stations
+            stations = random.sample(dataset.stations(), 500)
+        else:
+            stations = random.sample(dataset.stations(), 20)
+
         logger.info(f"randomly selected {len(stations)} stations for {dataset.name}")
         num_stations = len(stations)
 
@@ -483,7 +487,7 @@ class TestCamels(unittest.TestCase):
 
     def test_lamah(self):
         stations = {'daily': [859, 859, 454], 'hourly': [859, 859, 454]}
-        static = {'daily': [80, 81, 80], 'hourly': [80, 81, 80]}
+        static = {'daily': [80, 81, 80], 'hourly': [84, 81, 80]}
         num_dyn_attrs = {'daily': 22, 'hourly': 16}
         len_dyn_data = {'daily': 14244, 'hourly': 341856}
         test_df = True

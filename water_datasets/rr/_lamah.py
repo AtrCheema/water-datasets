@@ -30,7 +30,12 @@ class LamaH(Camels):
     and 17 dynamic features. The temporal extent of data is from 1981-01-01
     to 2019-12-31.
     """
-    url = "https://zenodo.org/record/4609826#.YFNp59zt02w"
+    #url = "https://zenodo.org/record/4609826#.YFNp59zt02w"
+    url = {
+        '1_LamaH-CE_daily_hourly.tar.gz': 'https://zenodo.org/records/5153305/files/1_LamaH-CE_daily_hourly.tar.gz',
+        '2_LamaH-CE_daily.tar.gz': 'https://zenodo.org/records/5153305/files/2_LamaH-CE_daily.tar.gz'
+    }
+
     _data_types = ['total_upstrm', 'diff_upstrm_all', 'diff_upstrm_lowimp']
     time_steps = ['daily', 'hourly']
 
@@ -54,9 +59,9 @@ class LamaH(Camels):
             The data is downloaded once and therefore susbsequent
             calls to this class will not download the data unless
             ``overwrite`` is set to True.
-            time_step :
+        time_step :
                 possible values are ``daily`` or ``hourly``
-            data_type :
+        data_type :
                 possible values are ``total_upstrm``, ``diff_upstrm_all``
                 or ``diff_upstrm_lowimp``
 
@@ -86,6 +91,11 @@ class LamaH(Camels):
 
         _data_types = self._data_types if self.time_step == 'daily' else ['total_upstrm']
 
+        if time_step == "daily" and "1_LamaH-CE_daily_hourly.tar.gz" in self.url:
+            self.url.pop("1_LamaH-CE_daily_hourly.tar.gz")
+        if time_step == 'hourly' and '2_LamaH-CE_daily.tar.gz' in self.url:
+                    self.url.pop('2_LamaH-CE_daily.tar.gz')        
+
         self._download(overwrite=overwrite)
 
         self._static_features = self.static_data().columns.to_list()
@@ -104,10 +114,10 @@ class LamaH(Camels):
 
     @property
     def boundary_file(self):
-        return os.path.join(self.path,
-                                "CAMELS_AT1",
+        return os.path.join(self.ts_path,
+                                #"CAMELS_AT1",
                                 "A_basins_total_upstrm",
-                                "3_shapefiles", "Upstrm_area_total.shp")
+                                "3_shapefiles", "Basins_A.shp")
     
     def _maybe_to_netcdf(self, fdir: str):
         # since data is very large, saving all the data in one file
@@ -149,30 +159,34 @@ class LamaH(Camels):
         station = self.stations()[0]
         df = self.read_ts_of_station(station)  # this takes time
         cols = df.columns.to_list()
-        [cols.remove(val) for val in ['DOY', 'checked', 'HOD']  if val in cols ]
+        [cols.remove(val) for val in ['DOY', 'ckhs', 'HOD', 'qceq', 'qcol']  if val in cols ]
         return cols
 
     @property
-    def static_features(self) -> List[str]:
-        # fname = os.path.join(self.data_type_dir,
-        #                      f'1_attributes{SEP}Catchment_attributes.csv')
-        # df = pd.read_csv(fname, sep=';', index_col='ID')
+    def static_features(self) -> List[str]: 
         return self._static_features
 
     @property
-    def data_type_dir(self):
-        directory = 'CAMELS_AT'
+    def ts_path(self):
+        directory = f'2_LamaH-CE_daily{SEP}CAMELS_AT'
         if self.time_step == 'hourly':
-            directory = 'CAMELS_AT1' 
+            directory = f'1_LamaH-CE_daily_hourly'
+        return os.path.join(self.path, directory)
+
+    @property
+    def data_type_dir(self):
+        directory = f'2_LamaH-CE_daily{SEP}CAMELS_AT'
+        if self.time_step == 'hourly':
+            directory = f'1_LamaH-CE_daily_hourly'
         # self.path/CAMELS_AT/data_type_dir
-        f = [f for f in os.listdir(os.path.join(self.path, directory)) if self.data_type in f][0]
-        return os.path.join(self.path, f'{directory}{SEP}{f}')
+        f = [f for f in os.listdir(self.ts_path) if self.data_type in f][0]
+        return os.path.join(self.path, f'{self.ts_path}{SEP}{f}')
 
     @property
     def q_dir(self):
-        directory = 'CAMELS_AT'
+        directory = f'2_LamaH-CE_daily{SEP}CAMELS_AT'
         if self.time_step == 'hourly':
-            directory = 'CAMELS_AT1'
+            directory = f'1_LamaH-CE_daily_hourly'
         # self.path/CAMELS_AT/data_type_dir
         return os.path.join(self.path, f'{directory}', 'D_gauges', '2_timeseries')
 
@@ -291,8 +305,8 @@ class LamaH(Camels):
         return ['lat', 'lon']
 
     def gauge_attributes(self)->pd.DataFrame:
-        fname = os.path.join(self.path,
-                             'CAMELS_AT1',
+        fname = os.path.join(self.ts_path,
+                             #'CAMELS_AT1',
                              'D_gauges',
                              '1_attributes', 
                              'Gauge_attributes.csv')
@@ -394,8 +408,6 @@ class LamaH(Camels):
             >>> dataset.fetch_static_features('99',
             >>> features=['area_calc', 'elev_mean', 'agr_fra', 'sand_fra'])  # (1, 4)
         """
-        # fname = os.path.join(self.data_type_dir,
-        #                      f'1_attributes{SEP}Catchment_attributes.csv')
 
         df = self.static_data()
 
@@ -403,16 +415,6 @@ class LamaH(Camels):
         stations = check_attributes(stn_id, self.stations())
 
         df = df[static_features]
-
-        # if stn_id == "all":
-        #     stn_id = self.stations()
-
-        # if isinstance(stn_id, list):
-        #     stations = [str(i) for i in stn_id]
-        # elif isinstance(stn_id, int):
-        #     stations = str(stn_id)
-        # else:
-        #     stations = stn_id
 
         df.index = df.index.astype(str)
         df = df.loc[stations]
@@ -431,27 +433,30 @@ class LamaH(Camels):
         q_df = pd.DataFrame()
         if features is None:
             q_df = self._read_q_for_station(station)
-        elif features in ["q_cms", 'checked']:
+        elif features in ["q_cms", 'ckhs']:
             return self._read_q_for_station(station)
         if isinstance(features, list):
-            if len(features)==1 and features[0] in ['q_cms', 'checked']:
+            if len(features)==1 and features[0] in ['q_cms', 'ckhs']:
                 return self._read_q_for_station(station)
-            elif 'q_cms' in features or 'checked' in features:
+            elif 'q_cms' in features or 'ckhs' in features:
                 q_df = self._read_q_for_station(station)
 
 
         met_df = self._read_met_for_station(station, features)
 
         if features:
+            df = pd.concat([met_df, q_df], axis=1).loc[:, features]
+        else:
+            df =  pd.concat([met_df, q_df], axis=1)
 
-            return pd.concat([met_df, q_df], axis=1).loc[:, features]
-
-        return pd.concat([met_df, q_df], axis=1)
+        df.columns.name = "dynamic_features"
+        df.index.name = "time"
+        return df
 
     def _read_met_for_station(self, station, features):
         if isinstance(features, list):
             features = features.copy()
-            [features.remove(itm)for itm in ['q_cms', 'checked'] if itm in features]
+            [features.remove(itm)for itm in ['q_cms', 'ckhs'] if itm in features]
 
         met_fname = os.path.join(
             self.data_type_dir,
@@ -568,6 +573,9 @@ class LamaH(Camels):
         [q_df.pop(item) for item in ['YYYY', 'MM', 'DD', 'hh', 'mm'] if item in q_df]
         q_df.rename(columns={'qobs': 'q_cms'}, inplace=True)
 
+        q_df.columns.name = "dynamic_features"
+        q_df.index.name = "time"
+
         return q_df
 
     @property
@@ -635,16 +643,22 @@ class LamaHIce(LamaH):
         # don't download hourly data if time_step is daily
         if time_step == "daily" and "lamah_ice_hourly.zip" in self.url:
             self.url.pop("lamah_ice_hourly.zip")
-        if time_step == 'hourly':
-            for file in ['lamah_ice.zip', 'Caravan_extension_lamahice.zip']:
-                if file in self.url:
-                    self.url.pop(file)
+        if time_step == 'hourly' and 'Caravan_extension_lamahice.zip' in self.url:
+                    self.url.pop('Caravan_extension_lamahice.zip')
 
         super().__init__(path=path, time_step=time_step, data_type=data_type,
                          overwrite=overwrite,
                          to_netcdf=to_netcdf,
                           **kwargs)
 
+    @property
+    def q_dir(self):
+        directory = 'CAMELS_AT'
+        if self.time_step == 'hourly':
+            directory = 'CAMELS_AT1'
+        # self.path/CAMELS_AT/data_type_dir
+        return os.path.join(self.path, f'{directory}', 'D_gauges', '2_timeseries')
+    
     @property
     def boundary_file(self):
         return os.path.join(self.path,

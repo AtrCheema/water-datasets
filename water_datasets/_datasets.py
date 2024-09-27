@@ -329,12 +329,14 @@ class Datasets(object):
         **kwargs :
             any keyword arguments for maybe_download function
         """
-        maybe_download(self.path, 
-                       overwrite=overwrite,
-                       url=self.url, 
-                       name=self.name,
-                       verbosity=self.verbosity,
-                       **kwargs)
+        maybe_download(
+            self.path, 
+            overwrite=overwrite,
+            url=self.url, 
+            name=self.name,
+            verbosity=self.verbosity,
+            **kwargs
+            )
         return
 
     def _download_and_unzip(self):
