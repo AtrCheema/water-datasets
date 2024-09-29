@@ -10,7 +10,7 @@ from .rr import CAMELS_CL
 from .rr import CAMELS_BR
 from .rr import CAMELS_GB
 from .rr import CAMELS_US
-from .rr import LamaH
+from .rr import LamaHCE
 from .rr import HYSETS
 from .rr import HYPE
 from .rr import WaterBenchIowa

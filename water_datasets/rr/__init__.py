@@ -13,7 +13,7 @@ from ._camels import CAMELS_AUS
 from ._camels import CAMELS_CL
 from ._camels import CAMELS_GB
 from ._camels import CAMELS_US
-from ._lamah import LamaH
+from ._lamah import LamaHCE
 from ._brazil import CAMELS_BR
 from ._brazil import CABra
 from ._hysets import HYSETS
@@ -40,7 +40,7 @@ DATASETS = {
     "CAMELS_CL": CAMELS_CL,
     "CAMELS_GB": CAMELS_GB,
     "CAMELS_US": CAMELS_US,
-    "LamaH": LamaH,
+    "LamaHCE": LamaHCE,
     "CAMELS_BR": CAMELS_BR,
     "CABra": CABra,
     "HYSETS": HYSETS,
@@ -85,29 +85,29 @@ class RainfallRunoff(object):
         dataset: str
             dataset name. This must be one of the following:
 
-            - `CAMELS_AUS`
-            - `CAMELS_CL`
-            - `CAMELS_GB`
-            - `CAMELS_US`
-            - `LamaH`
-            - `CAMELS_BR`
-            - `CABra`
-            - `HYSETS`
-            - `HYPE`
-            - `CAMELS_DK`
-            - `WaterBenchIowa`
-            - `GSHA`
-            - `CCAM`
-            - `RRLuleaSweden`
-            - `CAMELS_CH`
-            - `LamaHIce`
-            - `CAMELS_DE`
-            - `GRDCCaravan`
-            - `CAMELS_SE`
-            - `Simbi`
-            - `CAMELS_DK0`
-            - `Bull`
-            - `CAMELS_IND`
+            - ``CAMELS_AUS``
+            - ``CAMELS_CL``
+            - ``CAMELS_GB``
+            - ``CAMELS_US``
+            - ``LamaHCE``
+            - ``CAMELS_BR``
+            - ``CABra``
+            - ``HYSETS``
+            - ``HYPE``
+            - ``CAMELS_DK``
+            - ``WaterBenchIowa``
+            - ``GSHA``
+            - ``CCAM``
+            - ``RRLuleaSweden``
+            - ``CAMELS_CH``
+            - ``LamaHIce``
+            - ``CAMELS_DE``
+            - ``GRDCCaravan``
+            - ``CAMELS_SE``
+            - ``Simbi``
+            - ``CAMELS_DK0``
+            - ``Bull``
+            - ``CAMELS_IND``
         path : str
             path to directory where the data is stored or where the data is to be
             downloaded. If provided and the path exists, then the data will be read
@@ -126,7 +126,7 @@ class RainfallRunoff(object):
         kwargs :
             additional keyword arguments for the underlying dataset class
             For example ``version`` for CAMELS_AUS or ``timestep`` for 
-            LamaH dataset.
+            LamaHCE dataset.
         """
 
         if dataset not in DATASETS:

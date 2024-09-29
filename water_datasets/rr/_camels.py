@@ -1074,43 +1074,6 @@ class CAMELS_CL(Camels):
     def _area_name(self)->str:
         return 'area'
 
-    # def area(
-    #         self,
-    #         stations: Union[str, List[str]] = None
-    # ) ->pd.Series:
-    #     """
-    #     Returns area (Km2) of all catchments as pandas series
-
-    #     parameters
-    #     ----------
-    #     stations : str/list
-    #         name/names of stations. Default is None, which will return
-    #         area of all stations
-
-    #     Returns
-    #     --------
-    #     pd.Series
-    #         a pandas series whose indices are catchment ids and values
-    #         are areas of corresponding catchments.
-
-    #     Examples
-    #     ---------
-    #     >>> from water_datasets import CAMELS_CL
-    #     >>> dataset = CAMELS_CL()
-    #     >>> dataset.area()  # returns area of all stations
-    #     >>> dataset.stn_coords('12872001')  # returns area of station whose id is 912101A
-    #     >>> dataset.stn_coords(['12872001', '12876004'])  # returns area of two stations
-    #     """
-    #     stations = check_attributes(stations, self.stations())
-
-    #     fpath = os.path.join(self.path,
-    #                          '1_CAMELScl_attributes',
-    #                          '1_CAMELScl_attributes.txt')
-    #     df = pd.read_csv(fpath, sep='\t', index_col='gauge_id')
-    #     df.columns = [column.strip() for column in df.columns]
-    #     s = df.loc['area', stations]
-    #     return s.astype(float)
-
     def stn_coords(
             self,
             stations:Union[str, List[str]] = None
@@ -1275,6 +1238,10 @@ class CAMELS_CH(Camels):
     """
     Rainfall runoff dataset of Swiss catchments. It consists of 331 catchments
     `Hoege et al., 2023 <https://doi.org/10.5194/essd-15-5755-2023>`_ .
+    The dataset consists of 209 static catchment features and 9 dynamic features.
+    The dynamic features span from 19810101 to 20201231 with daily timestep.
+    For ``hourly`` ``timestep``, only streamflow is available for 170 swiss catchments.
+    The hourly streamflow data is obtained from `Kauzlaric et al., 2023 <https://zenodo.org/records/7691294>`_ .
 
     Examples
     ---------
@@ -1315,15 +1282,18 @@ class CAMELS_CH(Camels):
     >>> data['static'].shape, data['dynamic'].shape
     ((1, 209), (72324, 1))
 
-
     """
-    url = "https://zenodo.org/record/7957061"
+    url = {
+        'camels_ch.zip': "https://zenodo.org/record/7957061",
+        'DischargeDBHydroCH.zip': 'https://zenodo.org/records/7691294'
+        }
 
     def __init__(
             self,
             path=None,
             overwrite:bool = False,
             to_netcdf: bool = True,
+            timestep:str = 'daily',
             **kwargs
     ):
         """
@@ -1346,6 +1316,11 @@ class CAMELS_CH(Camels):
         """
         super().__init__(path=path, **kwargs)
 
+        self.timestep = timestep
+
+        if timestep == 'daily' and 'DischargeDBHydroCH.zip' in self.url:
+            self.url.pop('DischargeDBHydroCH.zip')
+
         self._download(overwrite=overwrite)
 
         if to_netcdf:
@@ -1360,7 +1335,7 @@ class CAMELS_CH(Camels):
         'CAMELS_CH_catchments.shp'
     )
         
-        self._create_boundary_id_map(self.boundary_file, 9)
+        self._create_boundary_id_map(self.boundary_file, 0)
 
     @property
     def camels_path(self)->Union[str, os.PathLike]:
@@ -1424,6 +1399,19 @@ class CAMELS_CH(Camels):
        'precipitation(mm/d)', 'temperature_min(°C)', 'temperature_mean(°C)',
        'temperature_max(°C)', 'rel_sun_dur(%)', 'swe(mm)']
 
+    def all_hourly_stations(self)->List[str]:
+        """Names of all stations which have hourly data"""
+        return pd.read_excel(
+            os.path.join(self.path, 'Inventory_discharge_hydroCH.xlsx'), dtype={'ID': str}
+            )['ID'].values.tolist()
+
+    def hourly_stations(self)->List[str]:
+        """
+        IDs of those stations which have hourly data and which are also part of 
+        CAMELS-CH dataset
+        """
+        return [stn for stn in self.all_hourly_stations() if stn in self.stations()]
+
     @property
     def start(self):  # start of data
         return pd.Timestamp('1981-01-01')
@@ -1440,6 +1428,29 @@ class CAMELS_CH(Camels):
             skiprows=1
         )['gauge_id'].values.tolist()
         return [str(stn) for stn in stns]
+
+    @property
+    def foen_path(self)->Union[str, os.PathLike]:
+        return os.path.join(self.path, 'DischargeDBHydroCH', 'DischargeDBHydroCH', 'CH', 'FOEN')
+
+    def foen_stations(self)->List[str]:
+        """Returns all the stations in the FOEN folder"""
+        return os.listdir(self.foen_path)
+
+    def read_hourly_q_ch(self, stn:str)->pd.DataFrame:
+        stn = f"Q_{stn}_hourly.asc"
+        fname = [fname for fname in self.foen_stations() if stn in fname][0]
+        fpath = os.path.join(self.foen_path, fname)
+
+        q = pd.read_csv(fpath,
+                    sep="\t",
+                    parse_dates=[['YYYY', 'MM', 'DD', 'HH']],
+                    index_col='YYYY_MM_DD_HH',
+                    )
+        q.index = pd.to_datetime(q.index)
+        q.columns = ['q_cms']
+        q.index.name = "time"
+        return q
 
     def glacier_attrs(self)->pd.DataFrame:
         """
@@ -1623,7 +1634,6 @@ class CAMELS_CH(Camels):
             features: Union[str, list] = None
     )->pd.DataFrame:
         """
-
         Returns static features of one or more stations.
 
         Parameters
@@ -1707,19 +1717,23 @@ class CAMELS_CH(Camels):
 
         return dyn
 
-    def _read_dynamic_for_stn(self, stn_id)->pd.DataFrame:
+    def _read_dynamic_for_stn(self, stn_id:str)->pd.DataFrame:
         """
         Reads daily dynamic (meteorological + streamflow) data for one catchment
         and returns as DataFrame
         """
 
-        return pd.read_csv(
+        df = pd.read_csv(
             os.path.join(self.dynamic_path, f"CAMELS_CH_obs_based_{stn_id}.csv"),
             sep=';',
             index_col='date',
             parse_dates=True,
             dtype=np.float32
         )
+
+        df.index.name = 'time'
+        df.columns.name = 'dynamic_features'
+        return df
 
     @property
     def _area_name(self) ->str:
@@ -2555,7 +2569,6 @@ class CAMELS_SE(Camels):
             self.hydro_signatures_CNP_1990_2020()
         ], axis=1)    
  
-
     def _read_dynamic_from_csv(
             self,
             stations,

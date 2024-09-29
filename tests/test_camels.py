@@ -20,7 +20,7 @@ from water_datasets import CAMELS_DK
 from water_datasets.rr import CAMELS_DK0
 from water_datasets import CAMELS_CH
 from water_datasets import CAMELS_GB, CAMELS_BR, CAMELS_AUS
-from water_datasets import CAMELS_CL, CAMELS_US, LamaH, HYSETS, HYPE
+from water_datasets import CAMELS_CL, CAMELS_US, LamaHCE, HYSETS, HYPE
 from water_datasets import WaterBenchIowa
 from water_datasets import CAMELS_DE
 from water_datasets import LamaHIce
@@ -46,7 +46,7 @@ def test_dynamic_data(dataset, stations, num_stations, stn_data_len,
     logger.info(f"test_dynamic_data for {dataset.name}")
 
     if stations is None and len(dataset.stations()) > 500:
-        if dataset.time_step == 'daily':
+        if dataset.timestep == 'daily':
             # randomly select 500 stations
             stations = random.sample(dataset.stations(), 500)
         else:
@@ -493,7 +493,7 @@ class TestCamels(unittest.TestCase):
         test_df = True
         yearly_steps = {'daily': 366, 'hourly': 8784}
 
-        for idx, dt in enumerate(LamaH._data_types):
+        for idx, dt in enumerate(LamaHCE._data_types):
 
             for ts in ['hourly', 'daily']:
 
@@ -504,7 +504,7 @@ class TestCamels(unittest.TestCase):
 
                 logger.info(f'checking for {dt} at {ts} time step')
 
-                ds_eu = LamaH(time_step=ts, data_type=dt, path=gscad_path)
+                ds_eu = LamaHCE(timestep=ts, data_type=dt, path=gscad_path)
 
                 test_dataset(ds_eu, stations[ts][idx],
                                 len_dyn_data[ts], static[ts][idx], 
@@ -598,6 +598,11 @@ class TestCamels(unittest.TestCase):
     def test_camels_ch(self):
         ds_swiss = CAMELS_CH(path=os.path.join(gscad_path, 'CAMELS'))
         test_dataset(ds_swiss, 331, 14610, 209, 9)
+
+        ds_swiss = CAMELS_CH(path=os.path.join(gscad_path, 'CAMELS'), timestep='hourly')
+        q = ds_swiss.read_hourly_q_ch(ds_swiss.hourly_stations()[0])
+        assert pd.infer_freq(q.index) == 'H'
+
         return
 
     def test_camels_dk_docs(self):
@@ -647,18 +652,18 @@ class TestCamels(unittest.TestCase):
         for idx, data_type in enumerate(['total_upstrm', #'intermediate_all', 'intermediate_lowimp'
                           ]):
 
-            for time_step in ['hourly', 'daily']:
+            for timestep in ['hourly', 'daily']:
                 
-                logger.info(f'checking for {data_type}, {time_step}')
+                logger.info(f'checking for {data_type}, {timestep}')
 
-                dataset = LamaHIce(path=gscad_path, time_step=time_step, data_type=data_type)
+                dataset = LamaHIce(path=gscad_path, timestep=timestep, data_type=data_type)
 
                 test_dataset(dataset, 
-                             stations[time_step][idx], 
-                             length[time_step], 
+                             stations[timestep][idx], 
+                             length[timestep], 
                              154, 
-                             num_dynamic[time_step],
-                             yearly_steps=yr_steps[time_step]
+                             num_dynamic[timestep],
+                             yearly_steps=yr_steps[timestep]
                              )
         return
 

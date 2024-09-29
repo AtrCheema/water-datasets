@@ -147,7 +147,12 @@ class Camels(Datasets):
         else:
             id_index = 0
 
-        catch_ids_map = {
+        if os.path.basename(sf_reader.shapeName) in ["CAMELS_CH_catchments"]:
+            catch_ids_map = {
+            str(int(rec[id_index])): idx for idx, rec in enumerate(sf_reader.iterRecords())
+        }
+        else:
+            catch_ids_map = {
             str(rec[id_index]): idx for idx, rec in enumerate(sf_reader.iterRecords())
         }
 

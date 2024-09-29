@@ -46,7 +46,7 @@ Rainfall Runoff datasets
      - 50
      -
      - `Teutschbein et al., 2024 <https://doi.org/10.1002/gdj3.239>`_
-   * - LamaH
+   * - LamaHCE
      - 859
      -
      - `Klingler et al., 2021 <https://doi.org/10.5194/essd-13-4529-2021>`_
@@ -164,7 +164,7 @@ The datasets can be accessed individually by their names.
    .. automethod:: __init__
 
 
-.. autoclass:: water_datasets.rr.LamaH
+.. autoclass:: water_datasets.rr.LamaHCE
    :members:
    :show-inheritance:
 
