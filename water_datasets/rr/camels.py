@@ -70,7 +70,7 @@ class Camels(Datasets):
     def __init__(
             self,
             path:str = None,
-            boundary_file:Union[str, os.PathLike] = None,
+            timestep:str = "daily",
             id_idx_in_bndry_shape:int = None,
             overwrite:bool = False,
             verbosity:int = 1,
@@ -85,8 +85,8 @@ class Camels(Datasets):
                 from this directory. If provided and the directory does not exist,
                 then the data will be downloaded in this directory. If not provided,
                 then the data will be downloaded in the default directory.
-            boundary_file : str/path
-                path to boundary shape file. It must be complete path of .shp or .geojson file.
+            timestep : str
+                
             verbosity : int
                 0: no message will be printed
             kwargs : dict
@@ -95,6 +95,7 @@ class Camels(Datasets):
         super(Camels, self).__init__(path=path, verbosity=verbosity, overwrite=overwrite, **kwargs)
 
         self.bndry_id_map = {}
+        self.timestep = timestep
     
     def _create_boundary_id_map(self, boundary_file, id_idx_in_bndry_shape):
 
@@ -126,7 +127,7 @@ class Camels(Datasets):
         self.bndry_id_map = self._get_map(bndry_sf,
                                         id_index=id_idx_in_bndry_shape,
                                         name="bndry_shape")
-        
+    
         bndry_sf.close()
         return
 

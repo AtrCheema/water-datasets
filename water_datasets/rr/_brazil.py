@@ -1,13 +1,14 @@
 
 import os
 import glob
-from typing import Union, List
+import concurrent.futures as cf
+from typing import Union, List, Dict
 
 import numpy as np
 import pandas as pd
 
 from .camels import Camels
-from ..utils import check_attributes
+from ..utils import check_attributes, get_cpus
 
 # directory separator
 SEP = os.sep
@@ -15,11 +16,15 @@ SEP = os.sep
 
 class CAMELS_BR(Camels):
     """
-    This is a dataset of 593 Brazilian catchments with 67 static features
-    and 12 dyanmic features for each catchment. The dyanmic features are
-    timeseries from 1980-01-01 to 2018-12-31. This class
+    This is a dataset of 897 Brazilian catchments with 67 static features
+    and 10 dyanmic features for each catchment. The dyanmic features are
+    timeseries from 1920-01-01 to 2019-02-28. This class
     downloads and processes CAMELS dataset of Brazil as provided by
-    `VP Changas et al., 2020 <https://doi.org/10.5194/essd-12-2075-2020>`_
+    `VP Changas et al., 2020 <https://doi.org/10.5194/essd-12-2075-2020>`_ .
+    The simulated streamflow of 593 and raw streamflow of 3679 stations
+    shipped with this data is not included in dynamic features. Both
+    can be fetched through fetch_simulated_streamflow and fetch_raw_streamflow
+    methods.
 
     Examples
     --------
@@ -66,7 +71,7 @@ class CAMELS_BR(Camels):
     """
     url = "https://zenodo.org/record/3964745#.YA6rUxZS-Uk"
 
-    folders = {'streamflow_m3s': '02_CAMELS_BR_streamflow_m3s',
+    folders = {'streamflow_m3s_raw': '02_CAMELS_BR_streamflow_m3s',
                'streamflow_mm': '03_CAMELS_BR_streamflow_mm_selected_catchments',
                'simulated_streamflow_m3s': '04_CAMELS_BR_streamflow_simulated',
                'precipitation_cpc': '07_CAMELS_BR_precipitation_cpc',
@@ -80,7 +85,7 @@ class CAMELS_BR(Camels):
                'temperature_max': '13_CAMELS_BR_temperature_max_cpc'
                }
 
-    def __init__(self, path=None, verbosity:int = 1):
+    def __init__(self, path=None, verbosity:int = 1, **kwargs):
         """
         parameters
         ----------
@@ -91,8 +96,8 @@ class CAMELS_BR(Camels):
             calls to this class will not download the data unless
             ``overwrite`` is set to True.
         """
-        super().__init__(path=path, name="CAMELS_BR", verbosity=verbosity)
-        self.path = path
+        super().__init__(path=path, name="CAMELS_BR", verbosity=verbosity, **kwargs)
+
         self._download()
 
         # todo : dynamic data must be stored for all stations and not only for stations which are common among all attributes
@@ -129,8 +134,12 @@ class CAMELS_BR(Camels):
         return all_files
 
     @property
-    def dynamic_features(self) -> list:
-        return list(CAMELS_BR.folders.keys())
+    def dynamic_features(self) -> List[str]:
+        feats =  list(CAMELS_BR.folders.keys())
+        feats.remove('simulated_streamflow_m3s')
+        feats.remove('streamflow_m3s_raw')
+        return feats
+
 
     @property
     def static_attribute_categories(self):
@@ -280,49 +289,85 @@ class CAMELS_BR(Camels):
 
         return df.loc[stations, :]
 
-    def all_stations(self, attribute) -> list:
+    def all_stations(self, feature:str) -> List[str]:
         """Tells all station ids for which a data of a specific attribute is available."""
-        all_files = []
-        for _attr, _dir in self.folders.items():
-            if attribute in _attr:
-                all_files = os.listdir(os.path.join(self.path, f'{_dir}{SEP}{_dir}'))
+        p = self.folders[feature]
+        return [f.split('_')[0] for f in os.listdir(os.path.join(self.path, p, p))]
 
-        stations = []
-        for f in all_files:
-            stations.append(str(f.split('_')[0]))
-
-        return stations
-
-    def stations(self, to_exclude=None) -> list:
-        """Returns a list of station ids which are common among all dynamic
-        attributes.
+    def stations(
+            self,
+            ) -> List[str]:
+        """
+        Returns a list of station ids.
 
         Example
         -------
         >>> dataset = CAMELS_BR()
         >>> stations = dataset.stations()
         """
-        if to_exclude is not None:
-            if not isinstance(to_exclude, list):
-                assert isinstance(to_exclude, str)
-                to_exclude = [to_exclude]
-        else:
-            to_exclude = []
+        return self.all_stations('streamflow_mm')
 
-        stations = {}
-        for dyn_attr in self.dynamic_features:
-            if dyn_attr not in to_exclude:
-                stations[dyn_attr] = self.all_stations(dyn_attr)
+    def fetch_raw_streamflow(
+            self,
+            station_id: str = None
+            )->pd.DataFrame:
+        """
+        returns raw streamflow data for one or more stations.
 
-        stns = list(set.intersection(*map(set, list(stations.values()))))
-        return stns
+        Example
+        -------
+        >>> dataset = CAMELS_BR()
+        >>> data = dataset.fetch_raw_streamflow('10500000')
+        ... # fetch all time series data associated with a station.
+        >>> x = dataset.fetch_raw_streamflow(dataset.all_stations())
 
-    def _read_dynamic_from_csv(self,
-                               stations,
-                               attributes: Union[str, list] = 'all',
-                               st=None,
-                               en=None,
-                               ):
+        """
+
+        if station_id is None:
+            station_id = self.all_stations('streamflow_m3s_raw')
+        
+        if not isinstance(station_id, list):
+            station_id = [station_id]
+        
+        raw_q = []
+        for stn in station_id:
+            self._read_dynamic_feature('streamflow_m3s_raw', stn)
+        return pd.concat(raw_q, axis=1)
+
+    def fetch_simulated_streamflow(
+            self,
+            station_id: str = None
+            )->pd.DataFrame:
+        """
+        returns raw streamflow data for one or more stations.
+
+        Example
+        -------
+        >>> dataset = CAMELS_BR()
+        >>> data = dataset.fetch_simulated_streamflow('10500000')
+        ... # fetch all time series data associated with a station.
+        >>> x = dataset.fetch_simulated_streamflow(dataset.all_stations())
+
+        """
+
+        if station_id is None:
+            station_id = self.all_stations('simulated_streamflow_m3s')
+        
+        if not isinstance(station_id, list):
+            station_id = [station_id]
+
+        raw_q = []
+        for stn in station_id:
+            self._read_dynamic_feature('simulated_streamflow_m3s', stn)
+        return pd.concat(raw_q, axis=1)
+
+    def _read_dynamic_from_csv(
+            self,
+            stations,
+            attributes: Union[str, list] = 'all',
+            st=None,
+            en=None,
+            )->Dict[str, pd.DataFrame]:
         """
         returns the dynamic/time series attribute/attributes for one station id.
 
@@ -335,34 +380,67 @@ class CAMELS_BR(Camels):
 
         """
 
-        attributes = check_attributes(attributes, self.dynamic_features)
+        features = check_attributes(attributes, self.dynamic_features)
+
+        if st is None:
+            st = self.start
+        if en is None:
+            en = self.end
+
+        cpus = self.processes or min(get_cpus(), 64)
 
         dyn = {}
-        for stn_id in stations:
-            # making one separate dataframe for one station
-            data = pd.DataFrame()
-            for attr, _dir in self.folders.items():
 
-                if attr in attributes:
-                    path = os.path.join(self.path, f'{_dir}{SEP}{_dir}')
-                    # supposing that the filename starts with stn_id and has .txt extension.
-                    fname = [f for f in os.listdir(path) if f.startswith(str(stn_id)) and f.endswith('.txt')]
-                    fname = fname[0]
-                    if os.path.exists(os.path.join(path, fname)):
-                        df = pd.read_csv(os.path.join(path, fname), sep=' ')
-                        df.index = pd.to_datetime(df[['year', 'month', 'day']])
-                        df.index.freq = pd.infer_freq(df.index)
-                        df = df[st:en]
-                        # only read one column which matches the attr
-                        # todo, qual_flag maybe important
-                        [df.pop(item) for item in df.columns if item != attr]
-                        data = pd.concat([data, df], axis=1)
-                    else:
-                        raise FileNotFoundError(f"file {fname} not found at {path}")
+        if cpus == 1:
+            for idx, stn_id in enumerate(stations):
+                # making one separate dataframe for one station
+                dyn[stn_id] = self.get_dynamic_features(self, stn_id, features).loc[st:en]
 
-            dyn[stn_id] = data
+                if idx % 20 == 0:
+                    print(f"completed {idx} stations")
+        else:
+
+            if self.verbosity>0:
+                print(f"getting data for {len(stations)} stations using {cpus} cpus")
+
+            features = [features for _ in range(len(stations))]
+            with cf.ProcessPoolExecutor(cpus) as executor:
+                results = executor.map(self.get_dynamic_features, stations, features)
+
+            for stn_id, stn_df in zip(stations, results):
+                dyn[stn_id] = stn_df.loc[st:en]
+
+            if self.verbosity > 1:
+                print(f"completed fetching data for {len(stations)} stations")
 
         return dyn
+
+    def get_dynamic_features(self, stn_id, features, st=None, en=None):
+        feature_dfs = []
+        for feature, path in self.folders.items():
+
+            if feature in features:
+                feature_df = self._read_dynamic_feature(path, feature, stn_id, st, en)
+                feature_dfs.append(feature_df)
+
+        stn_df = pd.concat(feature_dfs, axis=1)
+        stn_df.columns.name = 'dynamic_features'
+        stn_df.index.name = 'time'
+        return stn_df
+
+    def _read_dynamic_feature(self, _dir, feature, stn_id, st=None, en=None):
+        path = os.path.join(self.path, f'{_dir}{SEP}{_dir}')
+        # supposing that the filename starts with stn_id and has .txt extension.
+        fname = [f for f in os.listdir(path) if f.startswith(str(stn_id)) and f.endswith('.txt')]
+        fname = fname[0]
+        if os.path.exists(os.path.join(path, fname)):
+            df = pd.read_csv(os.path.join(path, fname), sep=' ')
+            df.index = pd.to_datetime(df[['year', 'month', 'day']])
+            df = df[st:en][feature]
+        else:
+            raise FileNotFoundError(f"file {fname} not found at {path}")
+    
+        return df.astype(np.float32)
 
     def fetch_static_features(
             self,

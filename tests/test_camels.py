@@ -515,7 +515,7 @@ class TestCamels(unittest.TestCase):
 
     def test_br(self):
         ds_br = CAMELS_BR(path=os.path.join(gscad_path, 'CAMELS'))
-        test_dataset(ds_br, 593, 14245, 67, 12)
+        test_dataset(ds_br, 897, 14245, 67, 10)
         return
 
     def test_cabra(self):
@@ -638,7 +638,7 @@ class TestCamels(unittest.TestCase):
         dataset = CAMELS_DE(path=os.path.join(gscad_path, 'CAMELS'))
         test_dataset(dataset, 1555, 25568, 111, 21)
         return
-    
+
     def test_lamahice(self):
         
         stations = {
@@ -704,13 +704,12 @@ class TestCamels(unittest.TestCase):
         dataset = Bull(path=gscad_path)
         test_dataset(dataset, 484, 25932, 214, 55)
         return
-    
+
     def test_india(self):
 
         dataset = CAMELS_IND(path=os.path.join(gscad_path, 'CAMELS'))
         test_dataset(dataset, 472, 14976, 210, 20)
         return
-
 
     def test_rainfallrunoff(self):
         ds_aus = RainfallRunoff('CAMELS_AUS', path=os.path.join(gscad_path, 'CAMELS'),
