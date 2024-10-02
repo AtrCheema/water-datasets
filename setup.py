@@ -21,18 +21,18 @@ min_requirements = [
     ]
 
 extra_requires = [
-
-"xarray",
-"netCDF4",
+# for plotting
+"easy_mpl",
 
 # spatial processing
-'imageio',
-# shapely manually download the wheel file and install
+# maybe manually download the wheel file and install
+# shapely, # for spatial processing in mtropics
 'pyshp',
+# fiona, # processing of shapefiles in mtropics
 
 # for reading data
 'netCDF4',
- 'xarray',
+'xarray',
 ]
 
 

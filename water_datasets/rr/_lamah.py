@@ -89,7 +89,7 @@ class LamaHCE(Camels):
 
         super().__init__(path=path, overwrite=overwrite, **kwargs)
 
-        _data_types = self._data_types if self.timestep == 'daily' else ['total_upstrm']
+        self.timestep = timestep
 
         if timestep == "daily" and "1_LamaH-CE_daily_hourly.tar.gz" in self.url:
             self.url.pop("1_LamaH-CE_daily_hourly.tar.gz")
@@ -113,11 +113,17 @@ class LamaHCE(Camels):
 
     @property
     def boundary_file(self):
-        return os.path.join(self.ts_path,
+        if self.timestep == 'daily':
+            return os.path.join(self.ts_path,
+                                    #"CAMELS_AT1",
+                                    "A_basins_total_upstrm",
+                                    "3_shapefiles", "Upstrm_area_total.shp")
+        else:
+            return os.path.join(self.ts_path,
                                 #"CAMELS_AT1",
                                 "A_basins_total_upstrm",
-                                "3_shapefiles", "Basins_A.shp")
-    
+                                "3_shapefiles", "Basins_A.shp")    
+
     def _maybe_to_netcdf(self, fdir: str):
         # since data is very large, saving all the data in one file
         # consumes a lot of memory, which is impractical for most of the personal
@@ -158,7 +164,7 @@ class LamaHCE(Camels):
         station = self.stations()[0]
         df = self.read_ts_of_station(station)  # this takes time
         cols = df.columns.to_list()
-        [cols.remove(val) for val in ['DOY', 'ckhs', 'HOD', 'qceq', 'qcol']  if val in cols ]
+        [cols.remove(val) for val in ['DOY', 'ckhs', 'checked', 'HOD', 'qceq', 'qcol']  if val in cols ]
         return cols
 
     @property
@@ -422,6 +428,12 @@ class LamaHCE(Camels):
 
         return df
 
+    @property
+    def chk_col(self):
+        cols = {'daily': 'checked',
+               'hourly': 'ckhs'}
+        return cols[self.timestep]
+
     def read_ts_of_station(
             self,
             station,
@@ -432,12 +444,12 @@ class LamaHCE(Camels):
         q_df = pd.DataFrame()
         if features is None:
             q_df = self._read_q_for_station(station)
-        elif features in ["q_cms", 'ckhs']:
+        elif features in ["q_cms", self.chk_col]:
             return self._read_q_for_station(station)
         if isinstance(features, list):
-            if len(features)==1 and features[0] in ['q_cms', 'ckhs']:
+            if len(features)==1 and features[0] in ['q_cms', self.chk_col]:
                 return self._read_q_for_station(station)
-            elif 'q_cms' in features or 'ckhs' in features:
+            elif 'q_cms' in features or self.chk_col in features:
                 q_df = self._read_q_for_station(station)
 
 

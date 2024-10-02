@@ -12,7 +12,7 @@ import pandas as pd
 
 from .camels import Camels
 from ..utils import get_cpus
-from ..utils import check_attributes, download, sanity_check, _unzip, plot_shapefile
+from ..utils import check_attributes, download, _unzip
 
 from .._backend import netCDF4, xarray as xr
 
@@ -705,7 +705,7 @@ class CAMELS_AUS(Camels):
             to_netcdf :
         """
         if path is not None:
-            assert isinstance(path, str), f'path must be string like but it is "{path}" of type {path.__class__.__name__}'
+            assert isinstance(path, (str, os.PathLike)), f'path must be string like but it is "{path}" of type {path.__class__.__name__}'
             if not os.path.exists(path) or len(os.listdir(path)) < 2:
                 raise FileNotFoundError(f"The path {path} does not exist")
 
@@ -917,18 +917,6 @@ class CAMELS_AUS(Camels):
             stn_id = self.stations()
 
         return self._read_static(stn_id, features)
-
-    def plot(self, what, stations=None, **kwargs):
-        assert what in ['outlets', 'boundaries']
-        f1 = os.path.join(self.path,
-                          f'02_location_boundary_area{SEP}02_location_boundary_area{SEP}shp{SEP}CAMELS_AUS_BasinOutlets_adopted.shp')
-        f2 = os.path.join(self.path,
-                          f'02_location_boundary_area{SEP}02_location_boundary_area{SEP}shp{SEP}bonus data{SEP}Australia_boundaries.shp')
-
-        if plot_shapefile is not None:
-            return plot_shapefile(f1, bbox_shp=f2, recs=stations, rec_idx=0, **kwargs)
-        else:
-            raise ModuleNotFoundError("Shapely must be installed in order to plot the datasets.")
 
 
 class CAMELS_CL(Camels):
