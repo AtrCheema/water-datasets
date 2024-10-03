@@ -46,7 +46,7 @@ def test_dynamic_data(dataset, stations, num_stations, stn_data_len,
     logger.info(f"test_dynamic_data for {dataset.name}")
 
     if stations is None and len(dataset.stations()) > 500:
-        if dataset.timestep == 'daily':
+        if dataset.timestep == 'D':
             # randomly select 500 stations
             stations = random.sample(dataset.stations(), 500)
         else:
@@ -486,21 +486,21 @@ class TestCamels(unittest.TestCase):
         return
 
     def test_lamah(self):
-        stations = {'daily': [859, 859, 454], 'hourly': [859, 859, 454]}
-        static = {'daily': [80, 81, 80], 'hourly': [84, 81, 80]}
-        num_dyn_attrs = {'daily': 22, 'hourly': 16}
-        len_dyn_data = {'daily': 14244, 'hourly': 341856}
+        stations = {'D': [859, 859, 454], 'H': [859, 859, 454]}
+        static = {'D': [80, 81, 80], 'H': [84, 81, 80]}
+        num_dyn_attrs = {'D': 22, 'H': 16}
+        len_dyn_data = {'D': 14244, 'H': 341856}
         test_df = True
-        yearly_steps = {'daily': 366, 'hourly': 8784}
+        yearly_steps = {'D': 366, 'H': 8784}
 
         for idx, dt in enumerate(LamaHCE._data_types):
 
-            for ts in ['hourly', 'daily']:
+            for ts in ['H', 'D']:
 
-                if ts =='hourly':
+                if ts =='H':
                     test_df=False
 
-                #if ts in ['daily']:
+                #if ts in ['D']:
 
                 logger.info(f'checking for {dt} at {ts} time step')
 
@@ -599,7 +599,7 @@ class TestCamels(unittest.TestCase):
         ds_swiss = CAMELS_CH(path=os.path.join(gscad_path, 'CAMELS'))
         test_dataset(ds_swiss, 331, 14610, 209, 9)
 
-        ds_swiss = CAMELS_CH(path=os.path.join(gscad_path, 'CAMELS'), timestep='hourly')
+        ds_swiss = CAMELS_CH(path=os.path.join(gscad_path, 'CAMELS'), timestep='H')
         q = ds_swiss.read_hourly_q_ch(ds_swiss.hourly_stations()[0])
         assert pd.infer_freq(q.index) == 'H'
 
@@ -642,17 +642,17 @@ class TestCamels(unittest.TestCase):
     def test_lamahice(self):
         
         stations = {
-            'daily': [111, 107,  107],
-            'hourly': [76]
+            'D': [111, 107,  107],
+            'H': [76]
             }
-        length = {'daily': 26298, 'hourly': 412825}
-        num_dynamic = {'daily': 35, 'hourly': 27}
-        yr_steps = {'daily': 366, 'hourly': 8784}
+        length = {'D': 26298, 'H': 412825}
+        num_dynamic = {'D': 35, 'H': 27}
+        yr_steps = {'D': 366, 'H': 8784}
 
         for idx, data_type in enumerate(['total_upstrm', #'intermediate_all', 'intermediate_lowimp'
                           ]):
 
-            for timestep in ['hourly', 'daily']:
+            for timestep in ['H', 'D']:
                 
                 logger.info(f'checking for {data_type}, {timestep}')
 

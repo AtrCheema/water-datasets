@@ -1228,8 +1228,8 @@ class CAMELS_CH(Camels):
     `Hoege et al., 2023 <https://doi.org/10.5194/essd-15-5755-2023>`_ .
     The dataset consists of 209 static catchment features and 9 dynamic features.
     The dynamic features span from 19810101 to 20201231 with daily timestep.
-    For ``hourly`` ``timestep``, only streamflow is available for 170 swiss catchments.
-    The hourly streamflow data is obtained from `Kauzlaric et al., 2023 <https://zenodo.org/records/7691294>`_ .
+    For daily (``D``) ``timestep``, only streamflow is available for 170 swiss catchments.
+    The hourly (``H``) streamflow data is obtained from `Kauzlaric et al., 2023 <https://zenodo.org/records/7691294>`_ .
 
     Examples
     ---------
@@ -1281,7 +1281,7 @@ class CAMELS_CH(Camels):
             path=None,
             overwrite:bool = False,
             to_netcdf: bool = True,
-            timestep:str = 'daily',
+            timestep:str = 'D',
             **kwargs
     ):
         """
@@ -1306,7 +1306,7 @@ class CAMELS_CH(Camels):
 
         self.timestep = timestep
 
-        if timestep == 'daily' and 'DischargeDBHydroCH.zip' in self.url:
+        if timestep == 'D' and 'DischargeDBHydroCH.zip' in self.url:
             self.url.pop('DischargeDBHydroCH.zip')
 
         self._download(overwrite=overwrite)

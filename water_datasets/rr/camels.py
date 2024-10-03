@@ -70,7 +70,7 @@ class Camels(Datasets):
     def __init__(
             self,
             path:str = None,
-            timestep:str = "daily",
+            timestep:str = "D",
             id_idx_in_bndry_shape:int = None,
             overwrite:bool = False,
             verbosity:int = 1,

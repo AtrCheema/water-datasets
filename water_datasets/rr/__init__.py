@@ -6,7 +6,7 @@ import os
 from typing import Union, List
 
 import pandas as pd
-from .._backend import xarray as xr, plt, plt_Axes
+from .._backend import plt, plt_Axes
 
 from .camels import Camels
 from ._camels import CAMELS_AUS

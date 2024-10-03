@@ -37,7 +37,7 @@ class LamaHCE(Camels):
     }
 
     _data_types = ['total_upstrm', 'diff_upstrm_all', 'diff_upstrm_lowimp']
-    time_steps = ['daily', 'hourly']
+    time_steps = ['D', 'H']
 
     static_attribute_categories = ['']
 
@@ -60,7 +60,7 @@ class LamaHCE(Camels):
             calls to this class will not download the data unless
             ``overwrite`` is set to True.
         timestep :
-                possible values are ``daily`` or ``hourly``
+                possible values are ``D`` for daily or ``H`` for hourly timestep
         data_type :
                 possible values are ``total_upstrm``, ``diff_upstrm_all``
                 or ``diff_upstrm_lowimp``
@@ -68,14 +68,14 @@ class LamaHCE(Camels):
         Examples
         --------
         >>> from water_datasets import LamaHCE
-        >>> dataset = LamaHCE(timestep='daily', data_type='total_upstrm')
+        >>> dataset = LamaHCE(timestep='D', data_type='total_upstrm')
         # The daily dataset is from 859 with 80 static and 22 dynamic features
         >>> len(dataset.stations()), len(dataset.static_features), len(dataset.dynamic_features)
         (859, 80, 22)
         >>> df = dataset.fetch(3, as_dataframe=True)
         >>> df.shape
         (313368, 3)
-        >>> dataset = LamaHCE(timestep='hourly', data_type='total_upstrm')
+        >>> dataset = LamaHCE(timestep='H', data_type='total_upstrm')
         >>> len(dataset.stations()), len(dataset.static_features), len(dataset.dynamic_features)
         (859, 80, 17)
         >>> dataset.fetch_dynamic_features('1', features = ['q_cms'])
@@ -91,9 +91,9 @@ class LamaHCE(Camels):
 
         self.timestep = timestep
 
-        if timestep == "daily" and "1_LamaH-CE_daily_hourly.tar.gz" in self.url:
+        if timestep == "D" and "1_LamaH-CE_daily_hourly.tar.gz" in self.url:
             self.url.pop("1_LamaH-CE_daily_hourly.tar.gz")
-        if timestep == 'hourly' and '2_LamaH-CE_daily.tar.gz' in self.url:
+        if timestep == 'H' and '2_LamaH-CE_daily.tar.gz' in self.url:
                     self.url.pop('2_LamaH-CE_daily.tar.gz')        
 
         self._download(overwrite=overwrite)
@@ -113,7 +113,7 @@ class LamaHCE(Camels):
 
     @property
     def boundary_file(self):
-        if self.timestep == 'daily':
+        if self.timestep == 'D':
             return os.path.join(self.ts_path,
                                     #"CAMELS_AT1",
                                     "A_basins_total_upstrm",
@@ -174,14 +174,14 @@ class LamaHCE(Camels):
     @property
     def ts_path(self):
         directory = f'2_LamaH-CE_daily{SEP}CAMELS_AT'
-        if self.timestep == 'hourly':
+        if self.timestep == 'H':
             directory = f'1_LamaH-CE_daily_hourly'
         return os.path.join(self.path, directory)
 
     @property
     def data_type_dir(self):
         directory = f'2_LamaH-CE_daily{SEP}CAMELS_AT'
-        if self.timestep == 'hourly':
+        if self.timestep == 'H':
             directory = f'1_LamaH-CE_daily_hourly'
         # self.path/CAMELS_AT/data_type_dir
         f = [f for f in os.listdir(self.ts_path) if self.data_type in f][0]
@@ -190,7 +190,7 @@ class LamaHCE(Camels):
     @property
     def q_dir(self):
         directory = f'2_LamaH-CE_daily{SEP}CAMELS_AT'
-        if self.timestep == 'hourly':
+        if self.timestep == 'H':
             directory = f'1_LamaH-CE_daily_hourly'
         # self.path/CAMELS_AT/data_type_dir
         return os.path.join(self.path, f'{directory}', 'D_gauges', '2_timeseries')
@@ -406,7 +406,7 @@ class LamaHCE(Camels):
         Examples
         --------
             >>> from water_datasets import LamaHCE
-            >>> dataset = LamaHCE(timestep='daily', data_type='total_upstrm')
+            >>> dataset = LamaHCE(timestep='D', data_type='total_upstrm')
             >>> df = dataset.fetch_static_features('99')  # (1, 61)
             ...  # get list of all static features
             >>> dataset.static_features
@@ -430,8 +430,8 @@ class LamaHCE(Camels):
 
     @property
     def chk_col(self):
-        cols = {'daily': 'checked',
-               'hourly': 'ckhs'}
+        cols = {'D': 'checked',
+               'H': 'ckhs'}
         return cols[self.timestep]
 
     def read_ts_of_station(
@@ -502,7 +502,7 @@ class LamaHCE(Camels):
             'volsw_4': np.float32
         }
 
-        if self.timestep == 'daily':
+        if self.timestep == 'D':
             if features:
                 if not isinstance(features, list):
                     features = [features]
@@ -558,7 +558,7 @@ class LamaHCE(Camels):
             'checked': np.bool_
         }
 
-        if self.timestep == 'daily':
+        if self.timestep == 'D':
             q_df = pd.read_csv(q_fname, sep=';', dtype=q_dtype)
             periods = pd.PeriodIndex(year=q_df["YYYY"],
                                      month=q_df["MM"], day=q_df["DD"],
@@ -619,7 +619,7 @@ class LamaHIce(LamaHCE):
 'https://www.hydroshare.org/resource/86117a5f36cc4b7c90a5d54e18161c91/data/contents/lamah_ice_hourly.zip'
     }
     _data_types = ['total_upstrm', 'intermediate_all', 'intermediate_lowimp']
-    time_steps = ['daily', 'hourly']
+    time_steps = ['D', 'H']
     DTYPES = {
         'total_upstrm': 'A_basins_total_upstrm',
         'intermediate_all': 'B_basins_intermediate_all',
@@ -630,7 +630,7 @@ class LamaHIce(LamaHCE):
             path=None,
             overwrite=False,
             *,
-            timestep:str = "daily",
+            timestep:str = "D",
             data_type:str = "total_upstrm",
             to_netcdf:bool = True,            
             **kwargs):
@@ -645,16 +645,16 @@ class LamaHIce(LamaHCE):
                 calls to this class will not download the data unless
                 ``overwrite`` is set to True.
             timestep :
-                    possible values are ``daily`` or ``hourly``
+                    possible values are ``D`` for daily or ``H`` for hourly timestep
             data_type :
                     possible values are ``total_upstrm``, ``intermediate_all``
                     or ``intermediate_lowimp``    
         """
 
         # don't download hourly data if timestep is daily
-        if timestep == "daily" and "lamah_ice_hourly.zip" in self.url:
+        if timestep == "D" and "lamah_ice_hourly.zip" in self.url:
             self.url.pop("lamah_ice_hourly.zip")
-        if timestep == 'hourly' and 'Caravan_extension_lamahice.zip' in self.url:
+        if timestep == 'H' and 'Caravan_extension_lamahice.zip' in self.url:
                     self.url.pop('Caravan_extension_lamahice.zip')
 
         super().__init__(path=path, timestep=timestep, data_type=data_type,
@@ -665,7 +665,7 @@ class LamaHIce(LamaHCE):
     @property
     def q_dir(self):
         directory = 'CAMELS_AT'
-        if self.timestep == 'hourly':
+        if self.timestep == 'H':
             directory = 'CAMELS_AT1'
         # self.path/CAMELS_AT/data_type_dir
         return os.path.join(self.path, f'{directory}', 'D_gauges', '2_timeseries')
@@ -680,13 +680,13 @@ class LamaHIce(LamaHCE):
 
     @property
     def start(self):
-        if self.timestep == "hourly":
+        if self.timestep == "H":
             return "19760826 00:00"
         return "19500101"
 
     @property
     def end(self):  
-        if self.timestep == "hourly":
+        if self.timestep == "H":
             return "20230930 23:00"
         return "20211231"
 
@@ -701,14 +701,14 @@ class LamaHIce(LamaHCE):
     @property
     def gauges_path(self):
         """returns the path where gauge data files are located"""
-        if self.timestep == "hourly":
+        if self.timestep == "H":
             return os.path.join(self.path, "lamah_ice_hourly", "lamah_ice_hourly", "D_gauges")
         return os.path.join(self.path, "lamah_ice", "lamah_ice", "D_gauges")
 
     @property
     def q_path(self):
         """path where all q files are located"""
-        if self.timestep == "hourly":
+        if self.timestep == "H":
             return os.path.join(self.gauges_path, "2_timeseries", "hourly")
         return os.path.join(self.gauges_path, "2_timeseries", "daily")
 
@@ -760,7 +760,7 @@ class LamaHIce(LamaHCE):
         p1 = "2_timeseries"
         p2 = "daily"
 
-        if self.timestep == "hourly":
+        if self.timestep == "H":
             p0 = "lamah_ice_hourly"
             p1 = "2_timeseries"
             p2 = "hourly"
@@ -935,7 +935,7 @@ class LamaHIce(LamaHCE):
                 x['YYYY'].astype(int),x['MM'].astype(int), x['DD'].astype(int)),"%Y %m %d"),
             axis=1)
         
-        if self.timestep == "hourly":
+        if self.timestep == "H":
             hour = df.groupby(['YYYY', 'MM', 'DD']).cumcount()
             df.index = index + pd.to_timedelta(hour, unit='h')
         else:
@@ -977,8 +977,7 @@ class LamaHIce(LamaHCE):
         fpath = os.path.join(self._clim_ts_path(), f"ID_{stn}.csv")
 
         if not os.path.exists(fpath):
-            ts = {'hourly': 'H', 'daily': 'D'}
-            return pd.DataFrame(index=pd.date_range(self.start, self.end, freq=ts[self.timestep]))
+            return pd.DataFrame(index=pd.date_range(self.start, self.end, freq=self.timestep))
 
         dtypes = {
             "YYYY": np.int32,
@@ -1015,7 +1014,7 @@ class LamaHIce(LamaHCE):
                 x['YYYY'].astype(int), x['MM'].astype(int), x['DD'].astype(int)), "%Y %m %d"),
             axis=1)
         
-        if self.timestep == "hourly":
+        if self.timestep == "H":
             #hour = df.groupby(['YYYY', 'MM', 'DD']).cumcount()
             df.index = index + pd.to_timedelta(df['HOD'], unit='h')
             for col in ['YYYY', 'MM', 'DD', 'DOY', 'hh', 'mm', 'HOD']:
@@ -1030,7 +1029,7 @@ class LamaHIce(LamaHCE):
     @property
     def data_type_dir(self):
         p = "lamah_ice"
-        if self.timestep == "hourly":
+        if self.timestep == "H":
             p = "lamah_ice_hourly"
         return os.path.join(self.path, p, p, self.DTYPES[self.data_type])
 
