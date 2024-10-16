@@ -34,29 +34,29 @@ class Camels(Datasets):
     Attributes
     -----------
     - path str/path: diretory of the dataset
-    - dynamic_features list: tells which dynamic attributes are available in
+    - dynamic_features list: tells which dynamic features are available in
       this dataset
-    - static_features list: a list of static attributes.
-    - static_attribute_categories list: tells which kinds of static attributes
+    - static_features list: a list of static features.
+    - static_attribute_categories list: tells which kinds of static features
       are present in this category.
 
     Methods
     ---------
-    - stations : returns name/id of stations for which the data (dynamic attributes)
+    - stations : returns name/id of stations for which the data (dynamic features)
         exists as list of strings.
-    - fetch : fetches all attributes (both static and dynamic type) of all
+    - fetch : fetches all features (both static and dynamic type) of all
             station/gauge_ids or a speficified station. It can also be used to
-            fetch all attributes of a number of stations ids either by providing
+            fetch all features of a number of stations ids either by providing
             their guage_id or  by just saying that we need data of 20 stations
             which will then be chosen randomly.
     - fetch_dynamic_features :
-            fetches speficied dynamic attributes of one specified station. If the
-            dynamic attribute is not specified, all dynamic attributes will be
+            fetches speficied dynamic features of one specified station. If the
+            dynamic attribute is not specified, all dynamic features will be
             fetched for the specified station. If station is not specified, the
-            specified dynamic attributes will be fetched for all stations.
+            specified dynamic features will be fetched for all stations.
     - fetch_static_features :
-            works same as `fetch_dynamic_features` but for `static` attributes.
-            Here if the `category` is not specified then static attributes of
+            works same as `fetch_dynamic_features` but for `static` features.
+            Here if the `category` is not specified then static features of
             the specified station for all categories are returned.
         stations : returns list of stations
     """
@@ -72,6 +72,7 @@ class Camels(Datasets):
             path:str = None,
             timestep:str = "D",
             id_idx_in_bndry_shape:int = None,
+            to_netcdf:bool = True,
             overwrite:bool = False,
             verbosity:int = 1,
             **kwargs
@@ -96,6 +97,7 @@ class Camels(Datasets):
 
         self.bndry_id_map = {}
         self.timestep = timestep
+        self.to_netcdf = to_netcdf
     
     def _create_boundary_id_map(self, boundary_file, id_idx_in_bndry_shape):
 
@@ -171,7 +173,7 @@ class Camels(Datasets):
             stn_id: Union[str, list] = None,
             features: Union[str, list] = None
     )->pd.DataFrame:
-        """Fetches all or selected static attributes of one or more stations.
+        """Fetches all or selected static features of one or more stations.
 
         Parameters
         ----------
@@ -227,7 +229,7 @@ class Camels(Datasets):
 
     def area(
             self,
-            stations: Union[str, List[str]] = None
+            stations: Union[str, List[str]] = 'all'
     ) ->pd.Series:
         """
         Returns area (Km2) of all/selected catchments as pandas series
@@ -235,7 +237,7 @@ class Camels(Datasets):
         parameters
         ----------
         stations : str/list (default=None)
-            name/names of stations. Default is None, which will return
+            name/names of stations. Default is ``all``, which will return
             area of all stations
 
         Returns
@@ -253,7 +255,7 @@ class Camels(Datasets):
         >>> dataset.area(['2004', '6004'])  # returns area of two stations
         """
 
-        stations = check_attributes(stations, self.stations())
+        stations = check_attributes(stations, self.stations(), 'stations')
 
         df = self.fetch_static_features(features=[self._area_name])
         df.columns = ['area']
@@ -286,40 +288,41 @@ class Camels(Datasets):
         return os.path.join(self.base_ds_dir, "CAMELS")
 
     def fetch(self,
-              stations: Union[str, list, int, float, None] = None,
-              dynamic_features: Union[list, str, None] = 'all',
-              static_features: Union[str, list, None] = None,
+              stations: Union[str, list, int, float] = "all",
+              dynamic_features: Union[List[str], str, None] = 'all',
+              static_features: Union[str, List[str], None] = None,
               st: Union[None, str] = None,
               en: Union[None, str] = None,
               as_dataframe: bool = False,
               **kwargs
               ) -> Union[dict, pd.DataFrame]:
         """
-        Fetches the attributes of one or more stations.
+        Fetches the features of one or more stations.
 
         Arguments:
-            stations : if string, it is supposed to be a station name/gauge_id.
-                If list, it will be a list of station/gauge_ids. If int, it will
-                be supposed that the user want data for this number of
-                stations/gauge_ids. If None (default), then attributes of all
-                available stations. If float, it will be supposed that the user
-                wants data of this fraction of stations.
-            dynamic_features : If not None, then it is the attributes to be
-                fetched. If None, then all available attributes are fetched
-            static_features : list of static attributes to be fetches. None
+            stations :  
+                It can have following values:
+                    - int : number of (randomly selected) stations to fetch
+                    - float : fraction of (randomly selected) stations to fetch
+                    - str : name/id of station to fetch. However, if ``all`` is
+                        provided, then all stations will be fetched.
+                    - list : list of names/ids of stations to fetch
+            dynamic_features : If not None, then it is the features to be
+                fetched. If None, then all available features are fetched
+            static_features : list of static features to be fetches. None
                 means no static attribute will be fetched.
             st : starting date of data to be returned. If None, the data will be
                 returned from where it is available.
             en : end date of data to be returned. If None, then the data will be
                 returned till the date data is available.
-            as_dataframe : whether to return dynamic attributes as pandas
+            as_dataframe : whether to return dynamic features as pandas
                 dataframe or as xarray dataset.
             kwargs : keyword arguments to read the files
 
         returns:
             If both static  and dynamic features are obtained then it returns a
             dictionary whose keys are station/gauge_ids and values are the
-            attributes and dataframes.
+            features and dataframes.
             Otherwise either dynamic or static features are returned.
 
         Examples
@@ -350,7 +353,10 @@ class Camels(Datasets):
         elif isinstance(stations, list):
             pass
         elif isinstance(stations, str):
-            stations = [stations]
+            if stations == 'all':
+                stations = self.stations()
+            else:
+                stations = [stations]
         elif isinstance(stations, float):
             num_stations = int(len(self.stations()) * stations)
             stations = random.sample(self.stations(), num_stations)
@@ -372,12 +378,13 @@ class Camels(Datasets):
 
     def _maybe_to_netcdf(self, fname: str):
         self.dyn_fname = os.path.join(self.path, f'{fname}.nc')
-        if not os.path.exists(self.dyn_fname) or self.overwrite:
-            # saving all the data in netCDF file using xarray
-            print(f'converting data to netcdf format for faster io operations')
-            data = self.fetch(static_features=None)
+        if self.to_netcdf:
+            if not os.path.exists(self.dyn_fname) or self.overwrite:
+                # saving all the data in netCDF file using xarray
+                print(f'converting data to netcdf format for faster io operations')
+                data = self.fetch(static_features=None)
 
-            data.to_netcdf(self.dyn_fname)
+                data.to_netcdf(self.dyn_fname)
         return
 
     def fetch_stations_features(
@@ -390,17 +397,17 @@ class Camels(Datasets):
             as_dataframe: bool = False,
             **kwargs
     ):
-        """Reads attributes of more than one stations.
+        """Reads features of more than one stations.
 
         parameters
         ----------
         stations : 
             list of stations for which data is to be fetched.
         dynamic_features : 
-            list of dynamic attributes to be fetched.
-            if ``all``, then all dynamic attributes will be fetched.
-        static_features : list of static attributes to be fetched.
-            If ``all``, then all static attributes will be fetched. If None,
+            list of dynamic features to be fetched.
+            if ``all``, then all dynamic features will be fetched.
+        static_features : list of static features to be fetched.
+            If ``all``, then all static features will be fetched. If None,
             `then no static attribute will be fetched.
         st : 
             start of data to be fetched.
@@ -421,7 +428,7 @@ class Camels(Datasets):
             station, the `DataArray` is of dimensions (time, dynamic_features).
             where `time` is defined by `st` and `en` i.e. length of `DataArray`.
             In case, when the returned object is pandas DataFrame, the first index
-            is `time` and second index is `dyanamic_features`. Static attributes
+            is `time` and second index is `dyanamic_features`. Static features
             are always returned as pandas DataFrame and have shape
             `(stations, static_features)`. If `dynamic_features` is None,
             then they are not returned and the returned value only consists of
@@ -448,6 +455,8 @@ class Camels(Datasets):
             ... dynamic_features=['streamflow_mmd', 'tmax_AWAP'], static_features=['elev_mean'])
         """
         st, en = self._check_length(st, en)
+
+        stations = check_attributes(stations, self.stations(), 'stations')
 
         if dynamic_features is not None:
 
@@ -484,12 +493,12 @@ class Camels(Datasets):
     def fetch_dynamic_features(
             self,
             stn_id: str,
-            features='all',
+            dynamic_features = 'all',
             st=None,
             en=None,
             as_dataframe=False
     ):
-        """Fetches all or selected dynamic attributes of one station.
+        """Fetches all or selected dynamic features of one station.
 
         Parameters
         ----------
@@ -521,7 +530,7 @@ class Camels(Datasets):
         station = [stn_id]
         return self.fetch_stations_features(
             station,
-            features,
+            dynamic_features,
             None,
             st=st,
             en=en,
@@ -595,7 +604,7 @@ class Camels(Datasets):
 
     def plot_stations(
             self,
-            stations:List[str] = None,
+            stations:List[str] = 'all',
             marker='.',
             ax:plt_Axes = None,
             show:bool = True,
@@ -645,7 +654,7 @@ class Camels(Datasets):
 
     def q_mmd(
             self,
-            stations: Union[str, List[str]] = None
+            stations: Union[str, List[str]] = "all"
     )->pd.DataFrame:
         """
         returns streamflow in the units of milimeter per day. This is obtained
@@ -654,7 +663,7 @@ class Camels(Datasets):
         parameters
         ----------
         stations : str/list
-            name/names of stations. Default is None, which will return
+            name/names of stations. Default is ``all``, which will return
             area of all stations
 
         Returns
@@ -687,7 +696,7 @@ class Camels(Datasets):
 
     def stn_coords(
             self,
-            stations:Union[str, List[str]] = None
+            stations:Union[str, List[str]] = 'all'
     ) ->pd.DataFrame:
         """
         returns coordinates of stations as DataFrame

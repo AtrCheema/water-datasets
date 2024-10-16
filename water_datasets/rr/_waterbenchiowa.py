@@ -43,8 +43,8 @@ class WaterBenchIowa(Camels):
     """
     url = "https://zenodo.org/record/7087806#.Y6rW-BVByUk"
 
-    def __init__(self, path=None):
-        super(WaterBenchIowa, self).__init__(path=path)
+    def __init__(self, path=None, **kwargs):
+        super(WaterBenchIowa, self).__init__(path=path, **kwargs)
 
         self._download()
 
@@ -99,7 +99,7 @@ class WaterBenchIowa(Camels):
     def fetch_static_features(
             self,
             stn_id: Union[str, List[str]],
-            features:Union[str, List[str]]=None
+            static_features:Union[str, List[str]] = "all"
     )->pd.DataFrame:
         """
 
@@ -138,10 +138,9 @@ class WaterBenchIowa(Camels):
            (1, 2)
 
         """
-        if not isinstance(stn_id, list):
-            stn_id = [stn_id]
+        stn_id = check_attributes(stn_id, self.stations())
 
-        features = check_attributes(features, self.static_features)
+        features = check_attributes(static_features, self.static_features)
 
         dfs = []
         for stn in stn_id:

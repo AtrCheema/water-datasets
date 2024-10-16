@@ -197,8 +197,9 @@ class LamaHCE(Camels):
 
     def stations(self) -> list:
         # assuming file_names of the format ID_{stn_id}.csv
+        ts_dir = {'H': 'hourly', 'D': 'daily'}[self.timestep]
         _dirs = os.listdir(os.path.join(self.data_type_dir,
-                                        f'2_timeseries{SEP}{self.timestep}'))
+                                        f'2_timeseries{SEP}{ts_dir}'))
         s = [f.split('_')[1].split('.csv')[0] for f in _dirs]
         return s
 
@@ -469,9 +470,11 @@ class LamaHCE(Camels):
             features = features.copy()
             [features.remove(itm)for itm in ['q_cms', 'ckhs'] if itm in features]
 
+        ts_folder = {'D': 'daily', 'H': 'hourly'}[self.timestep]
+
         met_fname = os.path.join(
             self.data_type_dir,
-            f'2_timeseries{SEP}{self.timestep}{SEP}ID_{station}.csv')
+            f'2_timeseries{SEP}{ts_folder}{SEP}ID_{station}.csv')
 
         usecols = None
         met_dtype = {
@@ -547,8 +550,10 @@ class LamaHCE(Camels):
 
     def _read_q_for_station(self, station):
 
+        ts_folder = {'D': 'daily', 'H': 'hourly'}[self.timestep]
+
         q_fname = os.path.join(self.q_dir,
-                             f'{self.timestep}{SEP}ID_{station}.csv')
+                             f'{ts_folder}{SEP}ID_{station}.csv')
 
         q_dtype = {
             'YYYY': np.int32,

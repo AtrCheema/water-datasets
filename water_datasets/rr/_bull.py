@@ -344,8 +344,8 @@ class Bull(Camels):
 
     def fetch_static_features(
             self,
-            stn_id: Union[str, List[str]] = None,
-            features:Union[str, List[str]]=None
+            stn_id: Union[str, List[str]] = 'all',
+            features:Union[str, List[str]] = 'all'
     ) -> pd.DataFrame:
         """
         Returns static features of one or more stations.

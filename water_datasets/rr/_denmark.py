@@ -175,7 +175,7 @@ class CAMELS_DK(Camels):
 
     def q_mmd(
             self,
-            stations: Union[str, List[str]] = None
+            stations: Union[str, List[str]] = 'all'
     )->pd.DataFrame:
         """
         returns streamflow in the units of milimeter per day. This is obtained
@@ -184,7 +184,7 @@ class CAMELS_DK(Camels):
         parameters
         ----------
         stations : str/list
-            name/names of stations. Default is None, which will return
+            name/names of stations. Default is ``all``, which will return
             area of all stations
 
         Returns
@@ -250,7 +250,7 @@ class CAMELS_DK(Camels):
 
     def stn_coords(
             self,
-            stations:Union[str, List[str]] = None
+            stations:Union[str, List[str]] = 'all'
     ) ->pd.DataFrame:
         """
         returns coordinates of stations as DataFrame
@@ -308,8 +308,8 @@ class CAMELS_DK(Camels):
 
     def fetch_static_features(
             self,
-            stn_id: Union[str, List[str]] = None,
-            features:Union[str, List[str]]=None
+            stn_id: Union[str, List[str]] = 'all',
+            features:Union[str, List[str]] = 'all'
     ) -> pd.DataFrame:
         """
         Returns static features of one or more stations.
@@ -356,6 +356,7 @@ class CAMELS_DK(Camels):
         """
         stations = check_attributes(stn_id, self.stations())
         features = check_attributes(features, self.static_features)
+
         df = pd.concat([self.hyd_atlas_attributes(),
                    self.other_static_attributes(),
                    self.caravan_static_attributes()], axis=1)
@@ -370,7 +371,7 @@ class CAMELS_DK(Camels):
                             "attributes", "camelsdk",
                             "attributes_hydroatlas_camelsdk.csv")
 
-    def hyd_atlas_attributes(self, stations=None)->pd.DataFrame:
+    def hyd_atlas_attributes(self, stations='all')->pd.DataFrame:
         """
         Returns
         --------
@@ -383,7 +384,7 @@ class CAMELS_DK(Camels):
         df.index = [idx[9:] for idx in indices]
         return df
 
-    def other_static_attributes(self, stations=None) -> pd.DataFrame:
+    def other_static_attributes(self, stations='all') -> pd.DataFrame:
         """
         Returns
         --------
@@ -395,7 +396,7 @@ class CAMELS_DK(Camels):
         df.index = [idx[9:] for idx in indices]
         return df
 
-    def caravan_static_attributes(self, stations=None) -> pd.DataFrame:
+    def caravan_static_attributes(self, stations='all') -> pd.DataFrame:
         """
         Returns
         --------

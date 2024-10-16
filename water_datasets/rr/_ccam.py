@@ -115,7 +115,7 @@ class CCAM(Camels):
 
         if shapefile is not None:
             merge_shapefiles(shp_files, boundaries, add_new_field=True,
-                                ignore_previous_fields=True)
+                                ignore_previous_fields=True, verbosity=self.verbosity)
 
             self._create_boundary_id_map(self.boundary_file, 2)
 
@@ -140,7 +140,7 @@ class CCAM(Camels):
 
     def q_mmd(
             self,
-            stations: Union[str, List[str]] = None
+            stations: Union[str, List[str]] = "all"
     )->pd.DataFrame:
         """
         returns streamflow in the units of milimeter per day. This is obtained
@@ -149,7 +149,7 @@ class CCAM(Camels):
         parameters
         ----------
         stations : str/list
-            name/names of stations. Default is None, which will return
+            name/names of stations. Default is ``all``, which will return
             area of all stations
 
         Returns
@@ -159,7 +159,7 @@ class CCAM(Camels):
             are catchment/station ids.
 
         """
-        stations = check_attributes(stations, self.stations())
+        stations = check_attributes(stations, self.stations(), 'stations')
         q = self.fetch_stations_features(stations,
                                            dynamic_features='q',
                                            as_dataframe=True)
@@ -270,7 +270,7 @@ class CCAM(Camels):
 
     def fetch_meteo(
             self,
-            stn_id:Union[str, List[str]]="all",
+            stn_id:Union[str, List[str]] = "all",
             features:Union[str, List[str]] = "all",
             st = '1990-01-01',
             en = '2021-03-31',
@@ -293,7 +293,7 @@ class CCAM(Camels):
             raise ModuleNotFoundError(f"xarray must be installed")
         else:
 
-            dyn = xr.load_dataset(self.meteo_nc_path)
+            dyn = xr.open_dataset(self.meteo_nc_path)
             dyn = dyn[stations].sel(dynamic_features=features, time=slice(st, en))
             if as_dataframe:
                 dyn = dyn.to_dataframe(['time', 'dynamic_features'])
@@ -339,8 +339,8 @@ class CCAM(Camels):
 
     def fetch_static_features(
             self,
-            stn_id: Union[str, List[str]] = None,
-            features:Union[str, List[str]]=None
+            stn_id: Union[str, List[str]] = "all",
+            features:Union[str, List[str]] = "all"
     ) -> pd.DataFrame:
         """
         Returns static features of one or more stations.
@@ -385,8 +385,8 @@ class CCAM(Camels):
            (1, 3)
 
         """
-        stations = check_attributes(stn_id, self.stations())
-        features = check_attributes(features, self.static_features)
+        stations = check_attributes(stn_id, self.stations(), 'stations')
+        features = check_attributes(features, self.static_features, 'static features')
         ds = []
         for stn in stations:
             d = self._read_yr_static(stn)

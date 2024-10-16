@@ -315,7 +315,9 @@ class Datasets(object):
             if not os.path.exists(x):
                 os.makedirs(x)
         else:
-            assert os.path.exists(x), f"The path {x} does not exist"
+            #assert os.path.exists(x), f"The path {x} does not exist"
+            if not os.path.exists(x) and self.verbosity>0:
+                print(f"The path {x} does not exist. Creating the directory.")
             x = os.path.join(x, self.__class__.__name__)
         # sanity_check(self.name, x)
         self._path = x

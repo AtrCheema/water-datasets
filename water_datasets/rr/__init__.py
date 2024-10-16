@@ -64,12 +64,61 @@ DATASETS = {
 
 class RainfallRunoff(object):
     """
-    Rainfall Runoff datasets
+    This is the master class which provides access to all the rainfall-runoff 
+    datasets. Use this class instead of using the individual dataset classes.
+
+    Examples
+    --------
+    >>> from water_datasets import RainfallRunoff
+    >>> dataset = RainfallRunoff('CAMELS_AUS')  # instead of CAMELS_AUS, you can provide any other dataset name
+    >>> df = dataset.fetch(stations=1, as_dataframe=True)
+    >>> df = df.unstack() # the returned dataframe is a multi-indexed dataframe so we have to unstack it
+    >>> df.shape
+       (21184, 26)
+    ... # get name of all stations as list
+    >>> stns = dataset.stations()
+    >>> len(stns)
+       222
+    ... # get data of 10 % of stations as dataframe
+    >>> df = dataset.fetch(0.1, as_dataframe=True)
+    >>> df.shape
+       (550784, 22)
+    ... # The returned dataframe is a multi-indexed data
+    >>> df.index.names == ['time', 'dynamic_features']
+        True
+    ... # get data by station id
+    >>> df = dataset.fetch(stations='224214A', as_dataframe=True).unstack()
+    >>> df.shape
+        (21184, 26)
+    ... # get names of available dynamic features
+    >>> dataset.dynamic_features
+    ... # get only selected dynamic features
+    >>> data = dataset.fetch(1, as_dataframe=True,
+    ...  dynamic_features=['tmax_AWAP', 'precipitation_AWAP', 'et_morton_actual_SILO', 'streamflow_MLd']).unstack()
+    >>> data.shape
+       (21184, 4)
+    ... # get names of available static features
+    >>> dataset.static_features
+    ... # get data of 10 random stations
+    >>> df = dataset.fetch(10, as_dataframe=True)
+    >>> df.shape  # remember this is a multiindexed dataframe
+       (21184, 260)
+    # when we get both static and dynamic data, the returned data is a dictionary
+    # with ``static`` and ``dyanic`` keys.
+    >>> data = dataset.fetch(stations='224214A', static_features="all", as_dataframe=True)
+    >>> data['static'].shape, data['dynamic'].shape
+    ((1, 166), (550784, 1))    
+    >>> coords = dataset.stn_coords() # returns coordinates of all stations
+    >>> coords.shape
+        (472, 2)
+    >>> dataset.stn_coords('3001')  # returns coordinates of station whose id is 3001
+        18.3861	80.3917
+    >>> dataset.stn_coords(['3001', '17021'])  # returns coordinates of two stations        
     """
     def __init__(
             self,
             dataset:str,
-            path: Union[str, os.PathLike],
+            path: Union[str, os.PathLike] = None,
             overwrite:bool = False,
             to_netcdf:bool = True,
             processes:int = None,
@@ -109,11 +158,12 @@ class RainfallRunoff(object):
             - ``Bull``
             - ``CAMELS_IND``
         path : str
-            path to directory where the data is stored or where the data is to be
-            downloaded. If provided and the path exists, then the data will be read
-            from this path. If provided and the path does not exist,
-            then the data will be downloaded in this path. If not provided,
-            then the data will be downloaded in the default path.
+            path to directory inside which data is located/downloaded. 
+            If provided and the path/dataset exists, then the data will be read
+            from this path. If provided and the path/dataset does not exist,
+            then the data will be downloaded at this path. If not provided,
+            then the data will be downloaded in the default path which is
+            ~/water-datasts/data/.
         overwrite : bool
             If the data is already downloaded then you can set it to True,
             to make a fresh download.
@@ -202,14 +252,14 @@ class RainfallRunoff(object):
 
     def fetch_static_features(
             self,
-            stn_id: Union[str, list] = None,
-            features: Union[str, list] = None
+            stations: Union[str, list] = "all",
+            static_features: Union[str, list] = "all"
     )->pd.DataFrame:
         """Fetches all or selected static attributes of one or more stations.
 
         Parameters
         ----------
-            stn_id : str
+            stations : str
                 name/id of station of which to extract the data
             features : list/str, optional (default="all")
                 The name/names of features to fetch. By default, all available
@@ -230,19 +280,19 @@ class RainfallRunoff(object):
             ... features=['elev_mean', 'relief', 'ksat', 'pop_mean'])
         """
 
-        return self.dataset.fetch_static_features(stn_id, features)
+        return self.dataset.fetch_static_features(stations, static_features)
 
     def area(
             self,
-            stations: Union[str, List[str]] = None
+            stations: Union[str, List[str]] = "all"
     ) ->pd.Series:
         """
         Returns area (Km2) of all/selected catchments as pandas series
 
         parameters
         ----------
-        stations : str/list (default=None)
-            name/names of stations. Default is None, which will return
+        stations : str/list (default=``all``)
+            name/names of stations. Default is ``all``, which will return
             area of all stations
 
         Returns
@@ -261,34 +311,39 @@ class RainfallRunoff(object):
         """
         return self.dataset.area(stations)
 
-
     def fetch(self,
-              stations: Union[str, list, int, float, None] = None,
-              dynamic_features: Union[list, str, None] = 'all',
-              static_features: Union[str, list, None] = None,
+              stations: Union[str, List[str], int, float] = "all",
+              dynamic_features: Union[List[str], str, None] = 'all',
+              static_features: Union[str, List[str], None] = None,
               st: Union[None, str] = None,
               en: Union[None, str] = None,
               as_dataframe: bool = False,
               **kwargs
               ) -> Union[dict, pd.DataFrame]:
         """
-        Fetches the attributes of one or more stations.
+        Fetches the features of one or more stations.
 
         parameters
         ----------
         stations : 
-            if string, it is supposed to be a station name/gauge_id.
-            If list, it will be a list of station/gauge_ids. If int, it will
-            be supposed that the user want data for this number of
-            stations/gauge_ids. If None (default), then attributes of all
-            available stations. If float, it will be supposed that the user
-            wants data of this fraction of stations.
-        dynamic_features : 
-            If not None, then it is the attributes to be
-            fetched. If None, then all available attributes are fetched
-        static_features : 
-            list of static attributes to be fetches. None
-            means no static attribute will be fetched.
+            It can have following values:
+                - int : number of (randomly selected) stations to fetch
+                - float : fraction of (randomly selected) stations to fetch
+                - str : name/id of station to fetch. However, if ``all`` is
+                    provided, then all stations will be fetched.
+                - list : list of names/ids of stations to fetch
+        dynamic_features : (default=``all``)
+            It can have following values:
+                - str : name of dynamic feature to fetch. If ``all`` is
+                    provided, then all dynamic features will be fetched.
+                - list : list of dynamic features to fetch.
+                - None : No dynamic feature will be fetched.
+        static_features : (default=None)
+            It can have following values:
+                - str : name of static feature to fetch. If ``all`` is
+                    provided, then all static features will be fetched.
+                - list : list of static features to fetch.
+                - None : No static feature will be fetched.
         st : 
             starting date of data to be returned. If None, the data will be
             returned from where it is available.
@@ -332,18 +387,18 @@ class RainfallRunoff(object):
         """
         return self.dataset.fetch(stations, dynamic_features, static_features, st, en, as_dataframe, **kwargs)
 
-
     def fetch_stations_features(
             self,
             stations: Union[str, List[str]],
-            dynamic_features='all',
-            static_features=None,
+            dynamic_features: Union[str, List[str], None] = 'all',
+            static_features: Union[str, List[str], None] = None,
             st=None,
             en=None,
             as_dataframe: bool = False,
             **kwargs
     ):
-        """Reads attributes of more than one stations.
+        """
+        Reads attributes of more than one stations.
 
         parameters
         ----------
@@ -401,7 +456,7 @@ class RainfallRunoff(object):
     def fetch_dynamic_features(
             self,
             stn_id: str,
-            features='all',
+            dynamic_features='all',
             st=None,
             en=None,
             as_dataframe=False
@@ -433,12 +488,12 @@ class RainfallRunoff(object):
             ... features=['tmax_AWAP', 'vprp_AWAP', 'streamflow_mmd'],
             ... as_dataframe=True).unstack()
         """
-        return self.dataset.fetch_dynamic_features(stn_id, features, st, en, as_dataframe)
-
+        return self.dataset.fetch_dynamic_features(
+            stn_id, dynamic_features, st, en, as_dataframe)
 
     def fetch_station_features(
             self,
-            station: str,
+            stn_id: str,
             dynamic_features: Union[str, list, None] = 'all',
             static_features: Union[str, list, None] = None,
             as_ts: bool = False,
@@ -480,11 +535,11 @@ class RainfallRunoff(object):
             >>> dataset.fetch_station_features('912101A')
 
         """
-        return self.dataset.fetch_station_features(station, dynamic_features, static_features, as_ts, st, en, **kwargs)
+        return self.dataset.fetch_station_features(stn_id, dynamic_features, static_features, as_ts, st, en, **kwargs)
 
     def plot_stations(
             self,
-            stations:List[str] = None,
+            stations:List[str] = 'all',
             marker='.',
             ax:plt_Axes = None,
             show:bool = True,
@@ -525,7 +580,7 @@ class RainfallRunoff(object):
 
     def q_mmd(
             self,
-            stations: Union[str, List[str]] = None
+            stations: Union[str, List[str]] = 'all'
     )->pd.DataFrame:
         """
         returns streamflow in the units of milimeter per day. This is obtained
@@ -534,7 +589,7 @@ class RainfallRunoff(object):
         parameters
         ----------
         stations : str/list
-            name/names of stations. Default is None, which will return
+            name/names of stations. Default is ``all``, which will return
             area of all stations
 
         Returns
@@ -548,7 +603,7 @@ class RainfallRunoff(object):
 
     def stn_coords(
             self,
-            stations:Union[str, List[str]] = None
+            stations:Union[str, List[str]] = "all"
     ) ->pd.DataFrame:
         """
         returns coordinates of stations as DataFrame
@@ -586,7 +641,7 @@ class RainfallRunoff(object):
 
     def get_boundary(
             self,
-            catchment_id: str,
+            stn_id: str,
             as_type: str = 'numpy'
     ):
         """
@@ -594,7 +649,7 @@ class RainfallRunoff(object):
 
         Parameters
         ----------
-        catchment_id : str
+        stn_id : str
             name/id of catchment
         as_type : str
             'numpy' or 'geopandas'
@@ -605,11 +660,11 @@ class RainfallRunoff(object):
         >>> dataset = RainfallRunoff('CAMELS_SE')
         >>> dataset.get_boundary(dataset.stations()[0])
         """
-        return self.dataset.get_boundary(catchment_id, as_type)
+        return self.dataset.get_boundary(stn_id, as_type)
 
     def plot_catchment(
             self,
-            catchment_id: str,
+            stn_id: str,
             ax: plt_Axes = None,
             show: bool = True,
             **kwargs
@@ -640,7 +695,7 @@ class RainfallRunoff(object):
         >>> plt.show()
 
         """
-        return self.dataset.plot_catchment(catchment_id, ax, show, **kwargs)
+        return self.dataset.plot_catchment(stn_id, ax, show, **kwargs)
 
     def stations(self)->List[str]:
         """

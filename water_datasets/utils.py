@@ -171,7 +171,8 @@ def check_attributes(
         check_against: list, 
         attribute_name:str = ''
         ) -> List[str]:
-    if attributes == 'all' or attributes is None:
+
+    if isinstance(attributes, str) and attributes == 'all':
         attributes = check_against
     elif not isinstance(attributes, list):
         assert isinstance(attributes, str), f"unknown type {type(attributes)} for {attribute_name}"
@@ -1031,7 +1032,8 @@ def merge_shapefiles(
         new_field_name:str = "ID",
         new_field_val_maker = None,
         ensure_same_projection:bool = True,
-        ignore_previous_fields:bool = False
+        ignore_previous_fields:bool = False,
+        verbosity:int = 0
 ):
     """
     merges shapefiles into one out_shapefile
@@ -1052,6 +1054,10 @@ def merge_shapefiles(
     ignore_previous_fields : bool
         if true will not copy fields from the shapefiles in the new/merged shapefile.
     """
+    if os.path.exists(out_shapefile + '.shp'):
+        if verbosity>0:
+            print(f"{out_shapefile} already exists")
+        return
     proj_file = os.path.join(os.path.dirname(out_shapefile),
                              f"{os.path.basename(out_shapefile)}.prj")
 

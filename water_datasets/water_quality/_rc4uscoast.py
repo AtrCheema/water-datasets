@@ -80,7 +80,7 @@ class RC4USCoast(Datasets):
         >>> len(ds.stations)
         140
         """
-        return xr.load_dataset(self.q_fname).RC4USCoast_ID.data.astype(str).tolist()
+        return xr.open_dataset(self.q_fname).RC4USCoast_ID.data.astype(str).tolist()
 
     @property
     def parameters(self)->List[str]:
@@ -90,16 +90,16 @@ class RC4USCoast(Datasets):
         >>> len(ds.parameters)
         27
         """
-        df = xr.load_dataset(self.chem_fname)
+        df = xr.open_dataset(self.chem_fname)
         return list(df.data_vars.keys())
 
     @property
     def start(self)->pd.Timestamp:
-        return pd.Timestamp(xr.load_dataset(self.q_fname).time.data[0])
+        return pd.Timestamp(xr.open_dataset(self.q_fname).time.data[0])
 
     @property
     def end(self)->pd.Timestamp:
-        return pd.Timestamp(xr.load_dataset(self.q_fname).time.data[-1])
+        return pd.Timestamp(xr.open_dataset(self.q_fname).time.data[-1])
 
     def fetch_chem(
             self,
@@ -145,7 +145,7 @@ class RC4USCoast(Datasets):
         if isinstance(parameter, str):
             parameter = [parameter]
 
-        ds = xr.load_dataset(self.chem_fname)[parameter]
+        ds = xr.open_dataset(self.chem_fname)[parameter]
         if stations == "all":
             pass
         elif not isinstance(stations, list):
@@ -205,7 +205,7 @@ class RC4USCoast(Datasets):
         # getting data between specific periods
         >>> data = ds.fetch_q("all", st="20000101", en="20181230")
         """
-        q = xr.load_dataset(self.q_fname)
+        q = xr.open_dataset(self.q_fname)
         if stations:
             if stations == "all":
                 q = q.sel(nv=nv)

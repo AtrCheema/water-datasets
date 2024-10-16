@@ -231,8 +231,8 @@ class CAMELS_US(Camels):
 
     def fetch_static_features(
             self,
-            stn_id: Union[str, List[str]]="all",
-            features:Union[str, List[str]]=None
+            stn_id: Union[str, List[str]] = "all",
+            features:Union[str, List[str]] = "all"
     ):
         """
         gets one or more static features of one or more stations
@@ -268,6 +268,7 @@ class CAMELS_US(Camels):
                (671, 59)
         """
         features = check_attributes(features, self.static_features)
+        stn_id = check_attributes(stn_id, self.stations(), 'stations')
 
         static_fpath = os.path.join(self.path, 'static_features.csv')
         if not os.path.exists(static_fpath):
@@ -286,9 +287,6 @@ class CAMELS_US(Camels):
             static_df.index = idx['gauge_id']
 
         static_df.index = static_df.index.astype(str)
-
-        if stn_id == "all":
-            stn_id = self.stations()
 
         df = static_df.loc[stn_id][features]
         if isinstance(df, pd.Series):
@@ -474,7 +472,7 @@ class CAMELS_GB(Camels):
     def fetch_static_features(
             self,
             stn_id: Union[str, List[str]] = "all",
-            features:Union[str, List[str]]="all"
+            features:Union[str, List[str]] = "all"
     ) -> pd.DataFrame:
         """
         Fetches static features of one or more stations for one or
@@ -526,17 +524,7 @@ class CAMELS_GB(Camels):
             static_df = pd.concat(static_dfs, axis=1)
             static_df.to_csv(static_fpath)
 
-        if stn_id == "all":
-            stn_id = self.stations()
-
-        if isinstance(stn_id, str):
-            station = [stn_id]
-        elif isinstance(stn_id, int):
-            station = [str(stn_id)]
-        elif isinstance(stn_id, list):
-            station = [str(stn) for stn in stn_id]
-        else:
-            raise ValueError
+        station = check_attributes(stn_id, self.stations(), 'stations')
 
         static_df.index = static_df.index.astype(str)
 
@@ -704,10 +692,10 @@ class CAMELS_AUS(Camels):
             version: version of the dataset to download. Allowed values are 1 and 2.
             to_netcdf :
         """
-        if path is not None:
-            assert isinstance(path, (str, os.PathLike)), f'path must be string like but it is "{path}" of type {path.__class__.__name__}'
-            if not os.path.exists(path) or len(os.listdir(path)) < 2:
-                raise FileNotFoundError(f"The path {path} does not exist")
+        # if path is not None:
+        #     assert isinstance(path, (str, os.PathLike)), f'path must be string like but it is "{path}" of type {path.__class__.__name__}'
+        #     if not os.path.exists(path) or len(os.listdir(path)) < 2:
+        #         raise FileNotFoundError(f"The path {path} does not exist")
 
         self.version = version
 
@@ -875,7 +863,7 @@ class CAMELS_AUS(Camels):
     def fetch_static_features(
             self,
             stn_id: Union[str, List[str]] = "all",
-            features:Union[str, List[str]]="all",
+            features:Union[str, List[str]] = "all",
             **kwargs
     ) -> pd.DataFrame:
         """Fetches static features of one or more stations as dataframe.
@@ -913,8 +901,7 @@ class CAMELS_AUS(Camels):
 
         """
 
-        if stn_id == "all":
-            stn_id = self.stations()
+        stn_id = check_attributes(stn_id, self.stations(), 'stations')
 
         return self._read_static(stn_id, features)
 
@@ -1170,8 +1157,8 @@ class CAMELS_CL(Camels):
 
     def fetch_static_features(
             self,
-            stn_id: Union[str, List[str]]= "all",
-            features:Union[str, List[str]]=None
+            stn_id: Union[str, List[str]] = "all",
+            features:Union[str, List[str]] = "all"
     ):
         """
         Returns static features of one or more stations.
@@ -1213,11 +1200,7 @@ class CAMELS_CL(Camels):
         """
         features = check_attributes(features, self.static_features)
 
-        if stn_id == "all":
-            stn_id = self.stations()
-
-        if isinstance(stn_id, str):
-            stn_id = [stn_id]
+        stn_id = check_attributes(stn_id, self.stations(), 'stations')
 
         return self._read_static(stn_id, features)
 
@@ -1618,8 +1601,8 @@ class CAMELS_CH(Camels):
 
     def fetch_static_features(
             self,
-            stn_id: Union[str, list] = None,
-            features: Union[str, list] = None
+            stn_id: Union[str, list] = "all",
+            features: Union[str, list] = "all"
     )->pd.DataFrame:
         """
         Returns static features of one or more stations.
@@ -1663,7 +1646,7 @@ class CAMELS_CH(Camels):
         >>> data.shape
            (1, 3)
         """
-        stations = check_attributes(stn_id, self.stations())
+        stations = check_attributes(stn_id, self.stations(), 'stations')
 
         df = pd.concat(
     [
@@ -1800,7 +1783,7 @@ class CAMELS_DE(Camels):
             path=None,
             overwrite:bool = False,
             to_netcdf: bool = True,
-            verbsity: int = 1,
+            verbosity: int = 1,
             **kwargs
     ):
         """
@@ -1821,7 +1804,7 @@ class CAMELS_DE(Camels):
             This will fasten repeated calls to fetch etc. but will
             require netCDF5 package as well as xarray.
         """
-        super().__init__(path=path, verbosity=verbsity,  **kwargs)
+        super().__init__(path=path, verbosity=verbosity,  **kwargs)
 
         self._download(overwrite=overwrite)
 
@@ -1925,8 +1908,8 @@ class CAMELS_DE(Camels):
 
     def fetch_static_features(
             self,
-            stn_id: Union[str, list] = None,
-            features: Union[str, list] = None
+            stn_id: Union[str, list] = "all",
+            features: Union[str, list] = "all"
     )->pd.DataFrame:
         """
 
@@ -1967,7 +1950,7 @@ class CAMELS_DE(Camels):
         >>> data.shape
            (1, 3)
         """
-        stations = check_attributes(stn_id, self.stations())
+        stations = check_attributes(stn_id, self.stations(), 'stations')
 
         df = self.static_data()
         features = check_attributes(features, df.columns.tolist(),
@@ -2109,7 +2092,7 @@ class GRDCCaravan(Camels):
             self,
             path=None,
             overwrite:bool = False,
-            verbsity: int = 1,
+            verbosity: int = 1,
             **kwargs
     ):
         
@@ -2122,7 +2105,7 @@ class GRDCCaravan(Camels):
             if "caravan-grdc-extension-csv.tar.gz" in self.url:
                 self.url.pop("caravan-grdc-extension-csv.tar.gz")
         
-        super().__init__(path=path, verbosity=verbsity, **kwargs)
+        super().__init__(path=path, verbosity=verbosity, **kwargs)
 
         for _file, url in self.url.items():
             fpath = os.path.join(self.path, _file)
@@ -2278,8 +2261,8 @@ class GRDCCaravan(Camels):
 
     def fetch_static_features(
             self,
-            stn_id: Union[str, list] = None,
-            features: Union[str, list] = None
+            stn_id: Union[str, list] = "all",
+            features: Union[str, list] = "all"
     )->pd.DataFrame:
         """
 
@@ -2320,7 +2303,7 @@ class GRDCCaravan(Camels):
         >>> data.shape
            (1, 3)
         """
-        stations = check_attributes(stn_id, self.stations())
+        stations = check_attributes(stn_id, self.stations(), 'stations')
 
         df = self.static_data()
         features = check_attributes(features, df.columns.tolist(),
@@ -2601,8 +2584,8 @@ class CAMELS_SE(Camels):
 
     def fetch_static_features(
             self,
-            stn_id: Union[str, list] = None,
-            features: Union[str, list] = None
+            stn_id: Union[str, list] = "all",
+            features: Union[str, list] = "all"
     )->pd.DataFrame:
         """
 
@@ -2643,7 +2626,7 @@ class CAMELS_SE(Camels):
         >>> data.shape
            (1, 3)
         """
-        stations = check_attributes(stn_id, self.stations())
+        stations = check_attributes(stn_id, self.stations(), 'stations')
 
         df = self.static_data().copy()
         features = check_attributes(features, self.static_features,
@@ -2923,8 +2906,8 @@ class CAMELS_DK(Camels):
 
     def fetch_static_features(
             self,
-            stn_id: Union[str, List[str]] = None,
-            features:Union[str, List[str]]=None
+            stn_id: Union[str, List[str]] = "all",
+            features:Union[str, List[str]] = "all"
     ) -> pd.DataFrame:
         """
         Returns static features of one or more stations.
@@ -2969,7 +2952,7 @@ class CAMELS_DK(Camels):
            (1, 2)
 
         """
-        stations = check_attributes(stn_id, self.stations())
+        stations = check_attributes(stn_id, self.stations(), 'stations')
         features = check_attributes(features, self.static_features)
         df = self.static_data()
         return df.loc[stations, features]
@@ -3239,8 +3222,8 @@ class CAMELS_IND(Camels):
 
     def fetch_static_features(
             self,
-            stn_id: Union[str, List[str]] = None,
-            features:Union[str, List[str]]=None
+            stn_id: Union[str, List[str]] = "all",
+            features:Union[str, List[str]] = "all"
     ) -> pd.DataFrame:
         """
         Returns static features of one or more stations.
@@ -3285,7 +3268,7 @@ class CAMELS_IND(Camels):
            (1, 2)
 
         """
-        stations = check_attributes(stn_id, self.stations())
-        features = check_attributes(features, self.static_features)
+        stations = check_attributes(stn_id, self.stations(), 'stations')
+        features = check_attributes(features, self.static_features, 'static_features')
         df = self.static_data()
         return df.loc[stations, features]    

@@ -226,7 +226,7 @@ class HYSETS(Camels):
 
     def q_mmd(
             self,
-            stations: Union[str, List[str]] = None
+            stations: Union[str, List[str]] = 'all'
     )->pd.DataFrame:
         """
         returns streamflow in the units of milimeter per day. This is obtained
@@ -256,7 +256,7 @@ class HYSETS(Camels):
 
     def area(
             self,
-            stations: Union[str, List[str]] = None,
+            stations: Union[str, List[str]] = 'all',
             source:str = 'other'
     ) ->pd.Series:
         """
@@ -300,7 +300,7 @@ class HYSETS(Camels):
 
     def stn_coords(
             self,
-            stations:Union[str, List[str]] = None
+            stations:Union[str, List[str]] = 'all'
     ) ->pd.DataFrame:
         """
         returns coordinates of stations as DataFrame
@@ -393,7 +393,7 @@ class HYSETS(Camels):
     def fetch_dynamic_features(
             self,
             stn_id,
-            features='all',
+            features = 'all',
             st=None,
             en=None,
             as_dataframe=False
@@ -418,7 +418,7 @@ class HYSETS(Camels):
     def _fetch_dynamic_features(
             self,
             stations: list,
-            dynamic_features='all',
+            dynamic_features = 'all',
             st=None,
             en=None,
             as_dataframe=False,

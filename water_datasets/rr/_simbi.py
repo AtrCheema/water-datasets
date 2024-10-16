@@ -442,8 +442,8 @@ class Simbi(Camels):
 
     def fetch_static_features(
             self,
-            stn_id: Union[str, list] = None,
-            features: Union[str, list] = None
+            stn_id: Union[str, list] = 'all',
+            static_features: Union[str, list] = 'all'
     )->pd.DataFrame:
         """
 
@@ -485,11 +485,11 @@ class Simbi(Camels):
         >>> data.shape
            (1, 3)
         """
-        stations = check_attributes(stn_id, self.stations())
+        stations = check_attributes(stn_id, self.static_data_stations())
 
         df = self.static_data().copy()
-        features = check_attributes(features, self.static_features,
-                                    "static features")
+        features = check_attributes(static_features, self.static_features,
+                                    "static_features")
         return df.loc[stations, features]            
  
     def _read_dynamic_from_csv(

@@ -45,7 +45,7 @@ def test_dynamic_data(dataset, stations, num_stations, stn_data_len,
                       as_dataframe=False, raise_len_error=True):
     logger.info(f"test_dynamic_data for {dataset.name}")
 
-    if stations is None and len(dataset.stations()) > 500:
+    if stations ==  'all' and len(dataset.stations()) > 500:
         if dataset.timestep == 'D':
             # randomly select 500 stations
             stations = random.sample(dataset.stations(), 500)
@@ -135,7 +135,7 @@ def check_dataset(dataset, xds, num_stations, data_len,
 
 
 def test_static_data(dataset, stations, target):
-    if stations is None:
+    if stations == 'all':
         logger.info(f"test_static_data for {dataset.name} for all stations expected {target}")
     else:
         logger.info(f"test_static_data for {dataset.name} for {stations} stations expected {target}")
@@ -402,9 +402,9 @@ def test_dataset(dataset, num_stations, dyn_data_len, num_static_attrs, num_dyn_
                  raise_len_error=True):
 
     # check that dynamic attribues from all data can be retrieved.
-    test_dynamic_data(dataset, None, num_stations, dyn_data_len)
+    test_dynamic_data(dataset, 'all', num_stations, dyn_data_len)
     if test_df:
-        test_dynamic_data(dataset, None, num_stations, dyn_data_len, as_dataframe=True)
+        test_dynamic_data(dataset, 'all', num_stations, dyn_data_len, as_dataframe=True)
 
     # check that dynamic data of 10% of stations can be retrieved
     test_dynamic_data(dataset, 0.1, int(num_stations*0.1), dyn_data_len, 
@@ -412,7 +412,7 @@ def test_dataset(dataset, num_stations, dyn_data_len, num_static_attrs, num_dyn_
     test_dynamic_data(dataset, 0.1, int(num_stations*0.1), dyn_data_len, True,
                       raise_len_error=raise_len_error)
 
-    test_static_data(dataset, None, num_stations)  # check that static data of all stations can be retrieved
+    test_static_data(dataset, 'all', num_stations)  # check that static data of all stations can be retrieved
 
     test_static_data(dataset, 0.1, int(num_stations*0.1))  # check that static data of 10% of stations can be retrieved
 
@@ -467,7 +467,7 @@ class TestCamels(unittest.TestCase):
         return
 
     def test_aus(self):
-        ds_aus = CAMELS_AUS(path=os.path.join(gscad_path, 'CAMELS'), version=1)
+        ds_aus = CAMELS_AUS(path=os.path.join(gscad_path, 'CAMELS_AUS_V1'), version=1)
         test_dataset(ds_aus, 222, 23376, 166, 26)
 
         ds_aus = CAMELS_AUS(path=os.path.join(gscad_path, 'CAMELS'), version=2)

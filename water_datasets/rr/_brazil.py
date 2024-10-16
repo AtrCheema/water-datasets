@@ -175,7 +175,7 @@ class CAMELS_BR(Camels):
 
     def q_mmd(
             self,
-            stations: Union[str, List[str]] = None
+            stations: Union[str, List[str]] = "all"
     )->pd.DataFrame:
         """
         returns streamflow in the units of milimeter per day. he name of
@@ -205,7 +205,7 @@ class CAMELS_BR(Camels):
     
     def area(
             self,
-            stations: Union[str, List[str]] = None,
+            stations: Union[str, List[str]] = "all",
             source:str = "gsim",
     ) ->pd.Series:
         """
@@ -252,7 +252,7 @@ class CAMELS_BR(Camels):
 
     def stn_coords(
             self,
-            stations:Union[str, List[str]] = None
+            stations:Union[str, List[str]] = 'all'
     ) ->pd.DataFrame:
         """
         returns coordinates of stations as DataFrame
@@ -469,17 +469,7 @@ class CAMELS_BR(Camels):
 
         """
 
-        if stn_id == "all":
-            stn_id = self.stations()
-
-        if isinstance(stn_id, int):
-            station = [str(stn_id)]
-        elif isinstance(stn_id, list):
-            station = [str(stn) for stn in stn_id]
-        elif isinstance(stn_id, str):
-            station = [stn_id]
-        else:
-            raise ValueError
+        station = check_attributes(stn_id, self.stations())
 
         attributes = check_attributes(features, self.static_features)
 
@@ -643,7 +633,7 @@ class CABra(Camels):
 
     def q_mmd(
             self,
-            stations: Union[str, List[str]] = None
+            stations: Union[str, List[str]] = 'all'
     )->pd.DataFrame:
         """
         returns streamflow in the units of milimeter per day. It is obtained
@@ -652,7 +642,7 @@ class CABra(Camels):
         parameters
         ----------
         stations : str/list
-            name/names of stations. Default is None, which will return
+            name/names of stations. Default is ``all``, which will return
             area of all stations
 
         Returns
@@ -714,7 +704,7 @@ class CABra(Camels):
 
     def stn_coords(
             self,
-            stations:Union[str, List[str]] = None
+            stations:Union[str, List[str]] = 'all'
     ) ->pd.DataFrame:
         """
         returns coordinates of stations as DataFrame
@@ -1101,8 +1091,8 @@ class CABra(Camels):
 
     def fetch_static_features(
             self,
-            stn_id: Union[str, List[str]] = None,
-            features:Union[str, List[str]]=None
+            stn_id: Union[str, List[str]] = 'all',
+            features:Union[str, List[str]] = 'all'
     ) -> pd.DataFrame:
         """
         Returns static features of one or more stations.
