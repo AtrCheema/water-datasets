@@ -117,7 +117,7 @@ class, however :py:class:`water_datasets.RainfallRunoff` class can be used to ac
      -
      - `Bathelemy et al., 2024 <doi: 10.5194/essd-16-2073-2024>`_
    * - ``CAMELS_IND``
-     - :py:class:`water_datasets.rr.CAMELS_IND`_
+     - :py:class:`water_datasets.rr.CAMELS_IND`
      - 472
      -
      - `Mangukiya et al., 2024 <https://doi.org/10.5194/essd-2024-379>`_

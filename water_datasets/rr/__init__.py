@@ -73,6 +73,7 @@ class RainfallRunoff(object):
     >>> dataset = RainfallRunoff('CAMELS_AUS')  # instead of CAMELS_AUS, you can provide any other dataset name
     >>> df = dataset.fetch(stations=1, as_dataframe=True)
     >>> df = df.unstack() # the returned dataframe is a multi-indexed dataframe so we have to unstack it
+    >>> df.columns = df.columns.get_level_values('dynamic_features')
     >>> df.shape
        (21184, 26)
     ... # get name of all stations as list
@@ -163,7 +164,7 @@ class RainfallRunoff(object):
             from this path. If provided and the path/dataset does not exist,
             then the data will be downloaded at this path. If not provided,
             then the data will be downloaded in the default path which is
-            ~/water-datasts/data/.
+            ``.../water-datasts/data/``.
         overwrite : bool
             If the data is already downloaded then you can set it to True,
             to make a fresh download.
@@ -175,8 +176,8 @@ class RainfallRunoff(object):
             0: no message will be printed
         kwargs :
             additional keyword arguments for the underlying dataset class
-            For example ``version`` for CAMELS_AUS or ``timestep`` for 
-            LamaHCE dataset.
+            For example ``version`` for :py:class:`water_datasets.rr.CAMELS_AUS` or ``timestep`` for 
+            :py:class:`water_datasets.rr.LamaHCE` dataset.
         """
 
         if dataset not in DATASETS:
@@ -318,7 +319,7 @@ class RainfallRunoff(object):
               st: Union[None, str] = None,
               en: Union[None, str] = None,
               as_dataframe: bool = False,
-              **kwargs
+              **kwargs  # todo, where do these keyword args go?
               ) -> Union[dict, pd.DataFrame]:
         """
         Fetches the features of one or more stations.
@@ -327,21 +328,24 @@ class RainfallRunoff(object):
         ----------
         stations : 
             It can have following values:
+
                 - int : number of (randomly selected) stations to fetch
                 - float : fraction of (randomly selected) stations to fetch
                 - str : name/id of station to fetch. However, if ``all`` is
-                    provided, then all stations will be fetched.
+                  provided, then all stations will be fetched.
                 - list : list of names/ids of stations to fetch
         dynamic_features : (default=``all``)
             It can have following values:
+
                 - str : name of dynamic feature to fetch. If ``all`` is
-                    provided, then all dynamic features will be fetched.
+                  provided, then all dynamic features will be fetched.
                 - list : list of dynamic features to fetch.
                 - None : No dynamic feature will be fetched.
         static_features : (default=None)
             It can have following values:
+
                 - str : name of static feature to fetch. If ``all`` is
-                    provided, then all static features will be fetched.
+                  provided, then all static features will be fetched.
                 - list : list of static features to fetch.
                 - None : No static feature will be fetched.
         st : 
@@ -354,7 +358,7 @@ class RainfallRunoff(object):
             whether to return dynamic attributes as pandas
             dataframe or as xarray dataset.
         kwargs : 
-            keyword arguments to read the files
+            keyword arguments
 
         returns
         -------
@@ -708,3 +712,29 @@ class RainfallRunoff(object):
         >>> dataset.stations()
         """
         return self.dataset.stations()
+
+    @property
+    def start(self)->str:
+        """
+        returns starting date of data
+
+        Examples
+        --------
+        >>> from water_datasets import RainfallRunoff
+        >>> dataset = RainfallRunoff('CAMELS_AUS')
+        >>> dataset.start()
+        """
+        return self.dataset.start
+
+    @property
+    def end(self)->str:
+        """
+        returns end date of data
+
+        Examples
+        --------
+        >>> from water_datasets import RainfallRunoff
+        >>> dataset = RainfallRunoff('CAMELS_AUS')
+        >>> dataset.end()
+        """
+        return self.dataset.end

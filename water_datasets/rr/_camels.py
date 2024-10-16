@@ -299,7 +299,7 @@ class CAMELS_GB(Camels):
     """
     This is a dataset of 671 catchments with 145 static features
     and 10 dyanmic features for each catchment following the work of
-    `Coxon et al., 2020 <https://doi.org/10.5194/essd-12-2459-2020>`_.
+    `Coxon et al., 2020 <https://doi.org/10.5194/essd-12-2459-2020>`__.
     The dyanmic features are timeseries from 1970-10-01 to 2015-09-30.
 
     >>> from water_datasets import CAMELS_GB

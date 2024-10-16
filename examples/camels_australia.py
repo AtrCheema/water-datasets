@@ -7,8 +7,8 @@ import os
 import site
 
 if __name__ == '__main__':
-    wd_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath('__file__')))))
-    # wd_dir = os.path.dirname(os.path.dirname(os.path.realpath('__file__')))
+    wd_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath('__file__')))))
+    #wd_dir = os.path.dirname(os.path.realpath('__file__'))
     print(wd_dir)
     site.addsitedir(wd_dir)
 
@@ -25,7 +25,8 @@ print_info()
 
 # %%
 
-dataset = RainfallRunoff('CAMELS_AUS', version=1)
+dataset = RainfallRunoff('CAMELS_AUS', version=1, #path='/mnt/datawaha/hyex/atr/gscad_database/raw/CAMELS_AUS_V1'
+                         )
 
 # %%
 dataset.start
@@ -64,7 +65,7 @@ npp = 'net primary productivity'
 
 # %%
 
-static = dataset.fetch_static_features(stn_id=stations)
+static = dataset.fetch_static_features(stations=stations)
 static.shape
 
 # %%
@@ -231,6 +232,7 @@ _ = hist(streamflow.skew().values.reshape(-1,), bins=50)
 # %%
 df = dataset.fetch(stations=1, as_dataframe=True)
 df = df.unstack() # the returned dataframe is a multi-indexed dataframe so we have to unstack it
+df.columns = df.columns.get_level_values('dynamic_features')
 df.shape
 
 # %%
