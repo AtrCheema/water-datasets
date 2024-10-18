@@ -113,6 +113,16 @@ class CAMELS_BR(Camels):
         self._create_boundary_id_map(self.boundary_file, 3)
 
     @property
+    def dyn_map(self):
+        return {
+        'streamflow_mm': 'obs_q_mmd',
+        'temperature_min': 'min_temp_C',
+        'temperature_max': 'max_temp_C',
+        'temperature_mean': 'mean_temp_C',
+        'precipitation_mswep': 'pcp_mm',
+        }
+
+    @property
     def _all_dirs(self):
         """All the folders in the dataset_directory"""
         return [f for f in os.listdir(self.path) if os.path.isdir(os.path.join(self.path, f))]
@@ -566,7 +576,6 @@ class CABra(Camels):
         met_src : str
             source of meteorological data, must be one of
             ``ens``, ``era5`` or ``ref``.
-
         """
         super(CABra, self).__init__(path=path,
                                     **kwargs)
@@ -582,6 +591,16 @@ class CABra(Camels):
 
         self.boundary_file = os.path.join(self.path, "CABra_boundaries", "CABra_boundaries.shp")
         self._create_boundary_id_map(self.boundary_file, 2)
+
+    @property
+    def dyn_map(self):
+        return {
+        'Streamflow': 'obs_q_mmd',
+        'tmin_ens': 'min_temp_C',
+        'tmax_ens': 'max_temp_C',
+        'p_ens': 'pcp_mm',
+        'rh_ens': 'rh_%',
+        }
 
     @property
     def q_path(self):

@@ -2,6 +2,9 @@
 ====================
 CAMELS Australia
 ====================
+This example demonstrates how to use the `water_datasets` package to download and 
+explore the CAMELS Australia dataset using the `RainfallRunoff` class. Although we 
+show it for CAMELS Australia, the same can be done for all other rainfall runoff datasets
 """
 import os
 import site
@@ -25,7 +28,9 @@ print_info()
 
 # %%
 
-dataset = RainfallRunoff('CAMELS_AUS', version=1, #path='/mnt/datawaha/hyex/atr/gscad_database/raw/CAMELS_AUS_V1'
+dataset = RainfallRunoff('CAMELS_AUS', version=1, 
+                         #overwrite=True,
+                         #path='/mnt/datawaha/hyex/atr/gscad_database/raw/CAMELS_AUS_V1'
                          )
 
 # %%
@@ -300,3 +305,8 @@ data['static']
 # %%
 
 data['dynamic']
+
+# %%
+# get data data of all stations as xarray dataset
+data = dataset.fetch()
+data

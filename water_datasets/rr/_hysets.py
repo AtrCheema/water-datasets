@@ -154,6 +154,15 @@ class HYSETS(Camels):
         self.boundary_file = os.path.join(path,  "HYSETS_watershed_boundaries", "HYSETS_watershed_boundaries_20200730.shp")
         self._create_boundary_id_map(self.boundary_file, 2)
 
+    @property
+    def dyn_map(self):
+        return {
+        'discharge': 'obs_q_cms', 
+        'tasmin': 'min_temp_C',
+        'tasmax': 'max_temp_C',
+        'pr': 'pcp_mm',
+        }
+
     def _maybe_to_netcdf(self, fname: str):
         # todo saving as one file takes very long time
         oneD_vars = []

@@ -492,6 +492,14 @@ class Simbi(Camels):
                                     "static_features")
         return df.loc[stations, features]            
  
+    @property
+    def dyn_map(self):
+        return {
+        'q': 'obs_q_cms',
+        'temp': 'mean_temp_C',
+        'pcp': 'pcp_mm',
+        }
+
     def _read_dynamic_from_csv(
         self,
         stations,

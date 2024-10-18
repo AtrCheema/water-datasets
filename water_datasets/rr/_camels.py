@@ -133,6 +133,15 @@ class CAMELS_US(Camels):
         self._maybe_to_netcdf('camels_us_dyn')
 
     @property
+    def dyn_map(self):
+        return {
+        'Flow': 'obs_q_mmd',
+        'tmin(C)': 'min_temp_C',
+        'tmax(C)': 'max_temp_C',
+        'prcp(mm/day)': 'pcp_mm',
+        }
+
+    @property
     def start(self):
         return "19800101"
 
@@ -391,6 +400,16 @@ class CAMELS_GB(Camels):
             _unzip(self.data_path)
         
         self._create_boundary_id_map(self.boundary_file, 0)
+
+    @property
+    def dyn_map(self):
+        return {
+        'discharge_spec': 'obs_q_cms',
+        'temperature': 'mean_temp_C',
+        'humidity': 'mean_rh_%',
+        'windspeed': 'mean_wind',
+        'precipitation': 'pcp_mm',
+        }
 
     @property
     def data_path(self):
@@ -735,8 +754,22 @@ class CAMELS_AUS(Camels):
         "shp",
         "CAMELS_AUS_Boundaries_adopted.shp" if self.version==1 else "CAMELS_AUS_v2_Boundaries_adopted.shp"
     )
-        
         self._create_boundary_id_map(self.boundary_file, 0)
+
+    @property
+    def dyn_map(self):
+        return {
+        'streamflow_MLd': 'obs_q_cms',
+        'streamflow_mmd': 'obs_q_mmd',
+        'tmin_SILO': 'min_temp_C',
+        'tmax_SILO': 'max_temp_C',
+        }
+
+    @property
+    def dyn_factors(self):
+        return {
+        'streamflow_MLd': 0.01157,
+        }
 
     @property
     def start(self):
@@ -898,7 +931,6 @@ class CAMELS_AUS(Camels):
         >>> static_data = dataset.fetch_static_features(stns, ['catchment_di', 'elev_mean'])
         >>> static_data.shape
            (222, 2)
-
         """
 
         stn_id = check_attributes(stn_id, self.stations(), 'stations')
@@ -908,7 +940,7 @@ class CAMELS_AUS(Camels):
 
 class CAMELS_CL(Camels):
     """
-    This is a dataset of 516 catchments with
+    This is a dataset of 516 Chilean catchments with
     104 static features and 12 dyanmic features for each catchment.
     The dyanmic features are timeseries from 1913-02-15 to 2018-03-09.
     This class downloads and processes CAMELS dataset of Chile following the work of
@@ -955,7 +987,6 @@ class CAMELS_CL(Camels):
     >>> data = dataset.fetch(stations='8350001', static_features="all", as_dataframe=True)
     >>> data['static'].shape, data['dynamic'].shape
     >>> ((1, 104), (460488, 1))
-
     """
 
     urls = {
@@ -1017,6 +1048,17 @@ class CAMELS_CL(Camels):
     )
         
         self._create_boundary_id_map(self.boundary_file, 0)
+
+    @property
+    def dyn_map(self):
+        return {
+        'streamflow_m3s': 'obs_q_cms',
+        'streamflow_mm': 'obs_q_mmd',
+        'tmin_cr2met': 'min_temp_C',
+        'tmax_cr2met': 'max_temp_C',
+        'tmean_cr2met': 'mean_temp_C',
+        'precip_mswep': 'pcp_mm',
+        }
 
     @property
     def _all_dirs(self):
@@ -1196,7 +1238,6 @@ class CAMELS_CL(Camels):
         >>> data = dataset.fetch_static_features('2110002', features=['slope_mean', 'area'])
         >>> data.shape
            (1, 2)
-
         """
         features = check_attributes(features, self.static_features)
 
@@ -1207,7 +1248,7 @@ class CAMELS_CL(Camels):
 
 class CAMELS_CH(Camels):
     """
-    Rainfall runoff dataset of Swiss catchments. It consists of 331 catchments
+    Data of 331 Swiss catchments from 
     `Hoege et al., 2023 <https://doi.org/10.5194/essd-15-5755-2023>`_ .
     The dataset consists of 209 static catchment features and 9 dynamic features.
     The dynamic features span from 19810101 to 20201231 with daily timestep.
@@ -1294,6 +1335,8 @@ class CAMELS_CH(Camels):
 
         self._download(overwrite=overwrite)
 
+        self._dynamic_features = self._read_dynamic_for_stn(self.stations()[0]).columns.tolist()
+
         if to_netcdf:
             self._maybe_to_netcdf('camels_ch_dyn')
         
@@ -1305,8 +1348,20 @@ class CAMELS_CH(Camels):
         'catchment_delineations',
         'CAMELS_CH_catchments.shp'
     )
-        
         self._create_boundary_id_map(self.boundary_file, 0)
+
+    @property
+    def dyn_map(self):
+        return {
+        'discharge_vol(m3/s)': 'obs_q_cms',
+        #'discharge_vol(m3/s)': 'sim_q_cms',
+        'discharge_spec(mm/d)': 'obs_q_mmd',
+        'temperature_min(°C)': 'min_temp_C',
+        'temperature_max(°C)': 'max_temp_C',
+        'temperature_mean(°C)': 'mean_temp_C',
+        'precipitation(mm/d)': 'pcp_mm',
+        'swe(mm)': 'swe_mm',
+        }
 
     @property
     def camels_path(self)->Union[str, os.PathLike]:
@@ -1366,9 +1421,7 @@ class CAMELS_CH(Camels):
 
     @property
     def dynamic_features(self) -> List[str]:
-        return ['discharge_vol(m3/s)', 'discharge_spec(mm/d)', 'waterlevel(m)',
-       'precipitation(mm/d)', 'temperature_min(°C)', 'temperature_mean(°C)',
-       'temperature_max(°C)', 'rel_sun_dur(%)', 'swe(mm)']
+        return self._dynamic_features
 
     def all_hourly_stations(self)->List[str]:
         """Names of all stations which have hourly data"""
@@ -1685,7 +1738,6 @@ class CAMELS_CH(Camels):
         dyn = {
             stn: self._read_dynamic_for_stn(stn).loc["19810101": "20201231", attributes] for stn in stations
         }
-
         return dyn
 
     def _read_dynamic_for_stn(self, stn_id:str)->pd.DataFrame:
@@ -1704,6 +1756,9 @@ class CAMELS_CH(Camels):
 
         df.index.name = 'time'
         df.columns.name = 'dynamic_features'
+
+        df.rename(columns=self.dyn_map, inplace=True)
+
         return df
 
     @property
@@ -1716,16 +1771,16 @@ class CAMELS_CH(Camels):
 
     @property
     def _mmd_feature_name(self)->str:
-        return 'discharge_spec(mm/d)'
+        return 'obs_q_mmd'
 
 
 class CAMELS_DE(Camels):
     """
-    class to read CAMELS data for Germany. The data is from 1555 catchments.
-    The data is from `Loritz et al., 2024 <https://doi.org/10.5194/essd-2024-318>`_ 
-    while the data is downloaded from `zenodo <https://zenodo.org/record/12733968>`_ .
-    This class reads staic and dynamic data of catchments as well as loads the catchment
-    boundaries.
+    This is the data from 1555 german catchments following the work of
+    `Loritz et al., 2024 <https://doi.org/10.5194/essd-2024-318>`_ .
+    The data is downloaded from `zenodo <https://zenodo.org/record/12733968>`_ .
+    This data consists of 155 static and 21 dynamic features. The dynamic features
+    span from 1951-01-01 to 2020-12-31 with daily timestep.
 
     Examples
     --------
@@ -1819,6 +1874,27 @@ class CAMELS_DE(Camels):
                                           "CAMELS_DE_catchment_boundaries",
                                           "catchments", "CAMELS_DE_catchments.shp")
         self._create_boundary_id_map(self.boundary_file, 0)
+
+    @property
+    def dyn_map(self):
+        return {
+        'discharge_vol': 'obs_q_cms',
+        'discharge_spec': 'obs_q_mmd',
+        'temperature_min': 'min_temp_C',
+        'temperature_max': 'max_temp_C',
+        'temperature_mean': 'mean_temp_C',
+        #'precipitation_mean': 'pcp_mm',
+        'precipitation_mean': 'mean_pcp_mm',
+        'precipitation_median': 'median_pcp_mm',
+        'precipitation_stdev': 'std_pcp_mm',
+        'precipitation_min': 'min_pcp_mm',
+        'precipitation_max': 'max_pcp_mm',
+        'humidity_mean': 'mean_rh_%',
+        'humidity_median': 'median_rh_%',
+        'humidity_stdev': 'std_rh_%',
+        'humidity_min': 'min_rh_%',
+        'humidity_max': 'max_rh_%',
+        }
 
     @property
     def ts_dir(self)->str:
@@ -1954,7 +2030,7 @@ class CAMELS_DE(Camels):
 
         df = self.static_data()
         features = check_attributes(features, df.columns.tolist(),
-                                    "static features")
+                                    "static_features")
         return df.loc[stations, features]
 
     def _read_dynamic_from_csv(
@@ -1968,12 +2044,21 @@ class CAMELS_DE(Camels):
         reads dynamic data of one or more catchments
         """
 
-        attributes = check_attributes(dynamic_features, self.dynamic_features)
-        stations = check_attributes(stations, self.stations())
+        features = check_attributes(dynamic_features, self.dynamic_features, 'dynamic_features')
+        stations = check_attributes(stations, self.stations(), 'stations')
 
-        dyn = {
-            stn: self._read_dynamic_for_stn(stn).loc[st: en, attributes] for stn in stations
-        }
+        cpus = self.processes or min(get_cpus(), 32)
+
+        if cpus == 1 or len(stations) < 32:
+
+            dyn = {
+                stn: self._read_dynamic_for_stn(stn).loc[st: en, features] for stn in stations
+            }
+        else:
+            with cf.ProcessPoolExecutor(cpus) as executor:
+                dyn = executor.map(self._read_dynamic_for_stn, stations)
+            
+            dyn = {stn: df.loc[st: en, features] for stn, df in zip(stations, dyn)}
 
         return dyn
 
@@ -1983,13 +2068,18 @@ class CAMELS_DE(Camels):
         and returns as DataFrame
         """
 
-        return pd.read_csv(
+        df = pd.read_csv(
             os.path.join(self.ts_dir, f"CAMELS_DE_hydromet_timeseries_{stn_id}.csv"),
             #sep=';',
             index_col='date',
             parse_dates=True,
             #dtype=np.float32
         )
+
+        df.rename(columns=self.dyn_map, inplace=True)
+        df.index.name = 'time'
+        df.columns.name = 'dynamic_features'
+        return df
 
     @property
     def start(self):
@@ -2019,17 +2109,17 @@ class CAMELS_DE(Camels):
     def _mmd_feature_name(self) ->str:
         """Observed catchment-specific discharge (converted to millimetres per day
         using catchment areas"""
-        return 'discharge_spec'
+        return 'obs_q_mmd'
 
 
 class GRDCCaravan(Camels):
     """
-    This is a dataset of 5357 catchments following the works of 
+    This is a dataset of 5357 catchments from around the globe following the works of 
     `Faerber et al., 2023 <https://zenodo.org/records/10074416>`_ . The dataset consists of 39
     dynamic (timeseries) features and 211 static features. The dynamic (timeseries) data
     spands from 1950-01-02 to 2019-05-19. 
 
-    if xarray+netCDF4 is installed then netcdf files will be downloaded
+    if xarray + netCDF4 packages are installed then netcdf files will be downloaded
     otherwise csv files will be downloaded and used.
 
     Examples
@@ -2131,6 +2221,16 @@ class GRDCCaravan(Camels):
         self.dyn_fname = ''
 
     @property
+    def dyn_map(self):
+        return {
+        'streamflow': 'obs_q_cms',
+        'temperature_2m_mean': 'mean_temp_C',
+        'temperature_2m_min': 'min_temp_C',
+        'temperature_2m_min': 'max_temp_C',
+        'total_precipitation_sum': 'pcp_mm',
+        }
+    
+    @property
     def static_features(self):
         return self._static_attributes
 
@@ -2184,7 +2284,7 @@ class GRDCCaravan(Camels):
 
     @property
     def _q_name(self) ->str:
-        return 'streamflow'
+        return 'obs_q_cms'
         
     def other_attributes(self)->pd.DataFrame:
         return pd.read_csv(os.path.join(self.attrs_path, 'attributes_other_grdc.csv'), index_col='gauge_id')
@@ -2244,8 +2344,8 @@ class GRDCCaravan(Camels):
             >>> from water_datasets import GRDCCaravan
             >>> dataset = GRDCCaravan()
             >>> dataset.fetch_station_features('912101A')
-
         """
+        dynamic_features = check_attributes(dynamic_features, self.dynamic_features, 'dynamic_features')
 
         if self.ftype == "netcdf":
             fpath = os.path.join(self.ts_path, f'{station}.nc')
@@ -2254,10 +2354,12 @@ class GRDCCaravan(Camels):
             fpath = os.path.join(self.ts_path, f'{station}.csv')
             df = pd.read_csv(fpath, index_col='date', parse_dates=True)
 
+        df.rename(columns=self.dyn_map, inplace=True)
+
         if static_features is not None:
             static = self.fetch_static_features(station, static_features)
         
-        return {'static': static, 'dynamic': df[self.dynamic_features]}
+        return {'static': static, 'dynamic': df[dynamic_features]}
 
     def fetch_static_features(
             self,
@@ -2342,6 +2444,9 @@ class GRDCCaravan(Camels):
         else:
             fpath = os.path.join(self.ts_path, f'{stn_id}.csv')
             df = pd.read_csv(fpath, index_col='date', parse_dates=True)
+
+        df.rename(columns=self.dyn_map, inplace=True)
+
         df.index.name = 'time'
         df.columns.name = 'dynamic_features'
         return df
@@ -2349,9 +2454,11 @@ class GRDCCaravan(Camels):
 
 class CAMELS_SE(Camels):
     """
-    Data set of 50 Swedish catchments following the work of 
-    `Teutschbein et al., 2024 < https://doi.org/10.1002/gdj3.239>`_ .
-
+    Dataset of 50 Swedish catchments following the works of 
+    `Teutschbein et al., 2024 <https://doi.org/10.1002/gdj3.239>`_ . 
+    The dataset consists of 76 static catchment features and 4 dynamic features.
+    The dynamic features span from 19610101 to 20201231 with daily timestep.
+    
     Examples
     --------
     >>> from water_datasets import CAMELS_SE
@@ -2454,6 +2561,15 @@ class CAMELS_SE(Camels):
             self._maybe_to_netcdf('camels_se_dyn')
 
     @property
+    def dyn_map(self):
+        return {
+        'Qobs_m3s': 'obs_q_cms',
+        'Qobs_mm': 'obs_q_mmd',
+        'Tobs_C': 'mean_temp_C',
+        'Pobs_mm': 'pcp_mm',
+        }
+
+    @property
     def static_features(self):
         return self._static_features
     
@@ -2471,7 +2587,7 @@ class CAMELS_SE(Camels):
 
     @property
     def _mmd_feature_name(self) ->str:
-        return 'Qobs_mm'   
+        return 'obs_q_cms'   
 
     @property
     def _coords_name(self)->List[str]:
@@ -2580,6 +2696,11 @@ class CAMELS_SE(Camels):
         )   
         df.index.name = 'time'
         df.columns.name = 'dynamic_features'
+
+        for old_name, new_name in self.dyn_map.items():
+            if old_name in df.columns:
+                df.rename(columns={old_name: new_name}, inplace=True)
+
         return df
 
     def fetch_static_features(
@@ -2636,13 +2757,13 @@ class CAMELS_SE(Camels):
 
 class CAMELS_DK(Camels):
     """
-    This is an updated version of CAMELS_DK0 dataset which is available on 
-    `zenodo <https://zenodo.org/record/7962379>`_ . This dataset was presented
-    by `Liu et al., 2024 <https://doi.org/10.5194/essd-2024-292>`_ and data is 
+    This is an updated version of :py class: `water_datasets.rr.CAMELS_DK0` 
+    dataset . This dataset was presented
+    by `Liu et al., 2024 <https://doi.org/10.5194/essd-2024-292>`_ and is 
     available at `dataverse <https://dataverse.geus.dk/dataset.xhtml?persistentId=doi:10.22008/FK2/AZXSYP>`_ .
-    This dataset consists of static and dynamic features from 304 danish catchments. 
-    There are 13 dynamic (time series) features from 1989-01-02 to 2023-12-31 with daily timestep
-    and 119 static features for each of 304 catchments.
+    This dataset consists of 119 static and 13 dynamic features from 3330 danish catchments. 
+    The dynamic (time series) features span from 1989-01-02 to 2023-12-31 with daily timestep.
+    However, the streamflow observations are available for only 304 catchments.
 
     Examples
     ---------
@@ -2765,9 +2886,18 @@ class CAMELS_DK(Camels):
         self.boundary_file = os.path.join(
         self.path,
         "CAMELS_DK_304_gauging_catchment_boundaries.shp"
-    )
-        
+    )   
         self._create_boundary_id_map(self.boundary_file, 0)
+
+    @property
+    def dyn_map(self):
+        return {
+            'Qobs': 'obs_q_cms',
+            'temperature': 'mean_temp_C',
+            'precipitation': 'pcp_mm',
+            'pet': 'makkink_pet_mm',
+            'Qsim': 'sim_q_cms',
+        }
 
     @property
     def gaug_catch_path(self):
@@ -2859,7 +2989,12 @@ class CAMELS_DK(Camels):
         df = pd.read_csv(os.path.join(fpath), parse_dates=True, index_col='time')
         df.columns.name = 'dynamic_features'
         df.pop('catch_id')
-        return df.astype(np.float32)
+        df = df.astype(np.float32)
+
+        for old_name, new_name in self.dyn_map.items():
+            if old_name in df.columns:
+                df.rename(columns={old_name: new_name}, inplace=True)
+        return df        
 
     @property
     def dynamic_features(self)->List[str]:
@@ -3063,6 +3198,18 @@ class CAMELS_IND(Camels):
         self._create_boundary_id_map(self.boundary_file, 0)
 
     @property
+    def dyn_map(self):
+        return {
+        #'streamflow_cms': 'obs_q_cms',
+        'tmin(C)': 'min_temp_C',
+        'tmax(C)': 'max_temp_C',
+        'tavg(C)': 'mean_temp_C',
+        'prcp(mm/day)': 'pcp_mm',
+        'rel_hum(%)': 'rh_%',
+        'wind(m/s)': 'windspeed_ms'
+        }
+
+    @property
     def static_path(self)->os.PathLike:
         return os.path.join(self.path, "attributes_txt")
 
@@ -3094,7 +3241,7 @@ class CAMELS_IND(Camels):
 
     @property
     def _q_name(self)->str:
-        return 'streamflow_cms'
+        return 'obs_q_cms'
     
     @property
     def start(self)->pd.Timestamp:  # start of data
@@ -3199,10 +3346,15 @@ class CAMELS_IND(Camels):
     def _read_dyn_csv(self, stn:str)->pd.DataFrame:
         """reads dynamic data for a given station"""
         q = self._read_q(stn)[stn]
-        q.name = "streamflow_cms"
+        q.name = "obs_q_cms"
         df = pd.concat([self._read_forcings(stn), pd.DataFrame(q)], axis=1)
         df.columns.name = 'dynamic_features'
         df.index.name = "time"
+
+        for old_name, new_name in self.dyn_map.items():
+            if old_name in df.columns:
+                df.rename(columns={old_name: new_name}, inplace=True)
+
         return df
 
     def _read_dynamic_from_csv(
@@ -3212,7 +3364,7 @@ class CAMELS_IND(Camels):
             st=None,
             en=None)->dict:
 
-        features = check_attributes(dynamic_features, self.dynamic_features)
+        features = check_attributes(dynamic_features, self.dynamic_features, 'dynamic_features')
         stations = check_attributes(stations, self.stations(), 'stations')
 
         dyn = {stn: self._read_dyn_csv(stn)[features] for stn in stations}

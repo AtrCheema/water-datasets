@@ -50,6 +50,13 @@ class WaterBenchIowa(Camels):
 
         self._maybe_to_netcdf('WaterBenchIowa.nc')
 
+    @property
+    def dyn_map(self):
+        return {
+        'discharge': 'obs_q_mmd',
+        'precipitation': 'pcp_mm',
+        }
+
     def stations(self)->List[str]:
         return [fname.split('_')[0] for fname in os.listdir(self.ts_path) if fname.endswith('.csv')]
 

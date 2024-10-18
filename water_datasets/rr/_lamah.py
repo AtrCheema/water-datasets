@@ -12,7 +12,7 @@ from .._backend import xarray as xr
 from .._backend import netCDF4
 
 from ..utils import get_cpus
-from ..utils import check_attributes, dateandtime_now
+from ..utils import check_attributes
 from .camels import Camels, _handle_dynamic
 
 
@@ -25,7 +25,7 @@ class LamaHCE(Camels):
     (mainly Austria). The dataset is downloaded from
     `zenodo <https://zenodo.org/record/4609826#.YFNp59zt02w>`_
     following the work of
-    `Klingler et al., 2021 <https://essd.copernicus.org/preprints/essd-2021-72/>`_ .
+    `Klingler et al., 2021 <https://doi.org/10.5194/essd-13-4529-2021>`_ .
     For ``total_upstrm`` data, there are 859 stations with 61 static features
     and 17 dynamic features. The temporal extent of data is from 1981-01-01
     to 2019-12-31.
@@ -112,6 +112,25 @@ class LamaHCE(Camels):
         self._create_boundary_id_map(self.boundary_file, 0)
 
     @property
+    def dyn_map(self):
+        return {
+            'D': {
+                'q_cms': 'obs_q_cms', 
+                '2m_temp_min': 'min_temp_C',
+                '2m_temp_max': 'max_temp_C',
+                '2m_temp_mean': 'mean_temp_C',
+                'prec': 'pcp_mm',
+                'swe': 'swe_mm',
+                },
+            'H': {
+                'q_cms': 'obs_q_cms',
+                '2m_temp': 'mean_temp_C',
+                'prec': 'pcp_mm',
+                'swe': 'swe_mm',
+        }
+        }
+    
+    @property
     def boundary_file(self):
         if self.timestep == 'D':
             return os.path.join(self.ts_path,
@@ -165,7 +184,7 @@ class LamaHCE(Camels):
         df = self.read_ts_of_station(station)  # this takes time
         cols = df.columns.to_list()
         [cols.remove(val) for val in ['DOY', 'ckhs', 'checked', 'HOD', 'qceq', 'qcol']  if val in cols ]
-        return cols
+        return [self.dyn_map[self.timestep].get(col, col) for col in cols]
 
     @property
     def static_features(self) -> List[str]: 
@@ -266,7 +285,7 @@ class LamaHCE(Camels):
 
         if dynamic_features is not None:
 
-            dynamic_features = check_attributes(dynamic_features, self.dynamic_features)
+            dynamic_features = check_attributes(dynamic_features, self.dynamic_features, 'dynamic_features')
 
             if netCDF4 is None or not self.all_ncs_exist:
                 # read from csv files
@@ -365,16 +384,23 @@ class LamaHCE(Camels):
 
         cpus = self.processes or get_cpus()
 
-        dynamic_features = [dynamic_features for _ in range(len(stations))]
+        if cpus == 1 or len(stations)<10:
+            results = {}
+            for idx, stn in enumerate(stations):
+                results[stn] = self.read_ts_of_station(stn, None).loc[:, dynamic_features]
+            
+                if self.verbosity>0 and idx % 10 == 0:
+                    print(f'{idx} stations read')
+        else:
 
-        with  cf.ProcessPoolExecutor(max_workers=cpus) as executor:
-            results = executor.map(
-                self.read_ts_of_station,
-                stations,
-                dynamic_features
-            )
+            with  cf.ProcessPoolExecutor(max_workers=cpus) as executor:
+                results = executor.map(
+                    self.read_ts_of_station,
+                    stations,
+                    [None for _ in range(len(stations))]
+                )
 
-        results = {stn:data[dynamic_features[0]] for stn, data in zip(stations, results)}
+            results = {stn:data.loc[:, dynamic_features] for stn, data in zip(stations, results)}
         return results
 
     def _make_ds_from_ncs(self, dynamic_features, stations, st, en):
@@ -456,10 +482,16 @@ class LamaHCE(Camels):
 
         met_df = self._read_met_for_station(station, features)
 
-        if features:
-            df = pd.concat([met_df, q_df], axis=1).loc[:, features]
-        else:
-            df =  pd.concat([met_df, q_df], axis=1)
+        # todo: this function is called at the start of the class when
+        # we don't know the names of dynamic features
+        # if features:
+        #     df = pd.concat([met_df, q_df], axis=1).loc[:, features]
+        # else:
+        df =  pd.concat([met_df, q_df], axis=1)
+
+        for col in self.dyn_map[self.timestep]:
+            if col in df.columns:
+                df.rename(columns={col: self.dyn_map[self.timestep][col]}, inplace=True)
 
         df.columns.name = "dynamic_features"
         df.index.name = "time"
@@ -510,10 +542,11 @@ class LamaHCE(Camels):
                 if not isinstance(features, list):
                     features = [features]
 
-                usecols = ['YYYY', 'MM', 'DD'] + features
+                #usecols = ['YYYY', 'MM', 'DD'] + features
 
             met_df = pd.read_csv(met_fname, sep=';', dtype=met_dtype,
-                                 usecols=usecols)
+                                 #usecols=usecols
+                                 )
 
             periods = pd.PeriodIndex(year=met_df["YYYY"],
                                      month=met_df["MM"], day=met_df["DD"],
@@ -525,7 +558,7 @@ class LamaHCE(Camels):
                 if not isinstance(features, list):
                     features = [features]
 
-                usecols = ['YYYY', 'MM', 'DD', 'hh', 'mm'] + features
+                #usecols = ['YYYY', 'MM', 'DD', 'hh', 'mm'] + features
 
             met_dtype.update({
                 'hh': np.int32,
@@ -537,7 +570,8 @@ class LamaHCE(Camels):
                 'surf_net_therm_rad': np.float32
             })
 
-            met_df = pd.read_csv(met_fname, sep=';', dtype=met_dtype, usecols=usecols)
+            met_df = pd.read_csv(met_fname, sep=';', dtype=met_dtype, #usecols=usecols
+                                 )
 
             periods = pd.PeriodIndex(year=met_df["YYYY"],
                                      month=met_df["MM"], day=met_df["DD"], hour=met_df["hh"],
@@ -606,13 +640,11 @@ class LamaHCE(Camels):
 class LamaHIce(LamaHCE):
     """
     Daily and hourly hydro-meteorological time series data of 111 river basins
-    of Iceland. The total period of dataset is from 1950 to 2021 for daily
+    of Iceland following `Helgason et al., 2024 <https://doi.org/10.5194/essd-16-2741-2024>`_. 
+    The total period of dataset is from 1950 to 2021 for daily
     and 1976-20023 for hourly timestep. The average
     length of daily data is 33 years while for that of hourly it is 11 years.
-    The dataset is available on hydroshare at
-    https://www.hydroshare.org/resource/86117a5f36cc4b7c90a5d54e18161c91/ .
-    The paper : https://doi.org/10.5194/essd-2023-349
-
+    The dataset is available on `hydroshare <https://www.hydroshare.org/resource/86117a5f36cc4b7c90a5d54e18161c91/>`_ 
     """
 
     url = {
@@ -662,11 +694,34 @@ class LamaHIce(LamaHCE):
         if timestep == 'H' and 'Caravan_extension_lamahice.zip' in self.url:
                     self.url.pop('Caravan_extension_lamahice.zip')
 
-        super().__init__(path=path, timestep=timestep, data_type=data_type,
+        super().__init__(path=path, 
+                         timestep=timestep, 
+                         data_type=data_type,
                          overwrite=overwrite,
                          to_netcdf=to_netcdf,
                           **kwargs)
 
+    @property
+    def dyn_map(self):
+        return {
+            'D': {
+                'qobs': 'obs_q_cms', 
+                '2m_temp_min': 'min_temp_C',
+                '2m_temp_max': 'max_temp_C',
+                '2m_temp_mean': 'mean_temp_C',
+                'prec': 'pcp_mm',
+                'pet': 'pet_mm',
+                'ref_et_rav': 'ref_et_mm',
+                },
+            'H': {
+                'qobs': 'obs_q_cms',
+                '2m_temp': 'mean_temp_C',
+                'prec': 'pcp_mm',
+                'pet': 'pet_mm',
+                'ref_et_rav': 'ref_et_mm',
+        }
+        }
+    
     @property
     def q_dir(self):
         directory = 'CAMELS_AT'
@@ -863,7 +918,7 @@ class LamaHIce(LamaHCE):
             are catchment/station ids.
 
         """
-        stations = check_attributes(stations, self.stations())
+        stations = check_attributes(stations, self.stations(), 'stations')
         q = self.fetch_q(stations)
         area_m2 = self.area(stations) * 1e6  # area in m2
         q = (q / area_m2) * 86400  # cms to m/day
@@ -897,7 +952,7 @@ class LamaHIce(LamaHCE):
             For daily timestep, the dataframe has shape of 32630 rows and 111 columns
 
         """
-        stations = check_attributes(stations, self.stations())
+        stations = check_attributes(stations, self.stations(), 'stations')
 
         cpus = self.processes or min(get_cpus(), 16)
 
@@ -946,7 +1001,7 @@ class LamaHIce(LamaHCE):
         else:
             df.index = pd.to_datetime(index)
         s = df['qobs']
-        s.name = stn
+        #s.name = stn
         return s
 
     def fetch_clim_features(
@@ -959,7 +1014,7 @@ class LamaHIce(LamaHCE):
         -------
         pd.DataFrame
         """
-        stations = check_attributes(stations, self.stations())
+        stations = check_attributes(stations, self.stations(), 'stations')
 
         dfs = []
         for stn in stations:
@@ -1044,7 +1099,9 @@ class LamaHIce(LamaHCE):
         df = self.fetch_stn_meteo(station, nrows=2)  # this takes time
         cols = df.columns.to_list()
         [cols.remove(val) for val in ['DOY', 'checked', 'HOD']  if val in cols ]
-        return cols
+        dyn_feats =  cols + ['obs_q_cms']
+
+        return [self.dyn_map[self.timestep].get(col, col) for col in dyn_feats]
 
     def _read_dynamic_from_csv(
             self,
@@ -1095,7 +1152,15 @@ class LamaHIce(LamaHCE):
         # drop duplicated index from met
         met = met.loc[~met.index.duplicated(keep='first')]
 
-        df = pd.concat([met, q], axis=1).loc[self.start:self.end, dynamic_features]
+        # todo: this method is called at the start when when dynamic_features attribute
+        # has not been set then how do we know dynamic features correctly?, so better
+        # to use all columns
+        df = pd.concat([met, q], axis=1).loc[self.start:self.end, :]
+
+        for col in self.dyn_map[self.timestep]:
+            if col in df.columns:
+                df.rename(columns={col: self.dyn_map[self.timestep][col]}, inplace=True)
+
         df.columns.name = "dynamic_features"
         df.index.name = "time"
         return df

@@ -2,7 +2,7 @@
 import os
 import random
 import warnings
-from typing import Union, List
+from typing import Union, List, Dict
 
 import numpy as np
 import pandas as pd
@@ -11,7 +11,7 @@ from .._datasets import Datasets
 from .._backend import netCDF4
 from .._backend import shapefile
 from .._backend import xarray as xr, plt, easy_mpl, plt_Axes
-from ..utils import check_attributes, dateandtime_now
+from ..utils import check_attributes
 
 
 # directory separator
@@ -98,7 +98,15 @@ class Camels(Datasets):
         self.bndry_id_map = {}
         self.timestep = timestep
         self.to_netcdf = to_netcdf
-    
+
+    @property
+    def dyn_map(self)->Dict[str, str]:
+        return {}
+
+    @property
+    def dyn_factors(self)->Dict[str, float]:
+        return {}
+
     def _create_boundary_id_map(self, boundary_file, id_idx_in_bndry_shape):
 
         if boundary_file is None:
@@ -460,7 +468,7 @@ class Camels(Datasets):
 
         if dynamic_features is not None:
 
-            dynamic_features = check_attributes(dynamic_features, self.dynamic_features)
+            dynamic_features = check_attributes(dynamic_features, self.dynamic_features, 'dynamic_features')
 
             if netCDF4 is None or not os.path.exists(self.dyn_fname):
                 # read from csv files

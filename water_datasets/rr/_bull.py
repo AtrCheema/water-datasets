@@ -116,6 +116,12 @@ class Bull(Camels):
         self._create_boundary_id_map(self.boundary_file, 0)
 
         self.dyn_fname = ''
+
+    @property
+    def dyn_map(self):
+        return {
+        'streamflow': 'obs_q_cms',
+        }
     
     @property
     def attributes_path(self):

@@ -67,6 +67,42 @@ class RainfallRunoff(object):
     This is the master class which provides access to all the rainfall-runoff 
     datasets. Use this class instead of using the individual dataset classes.
 
+    
+    Naming Convention for dynamic features
+    +--------------+--------------------------------------------------+
+    | Feature Name |           Description                            |
+    +=================================================================+
+    |  obs_q_cms   |   observed streamflow in cms                     |
+    +-----------------------------------------------------------------+
+    |  obs_q_mmd   |   observed streamflow in mm/day                  |
+    +-----------------------------------------------------------------+
+    |  pcp_mm      |   precipitation in mm                            |
+    +-----------------------------------------------------------------+
+    |  max_temp_C  |   maximum air temperature in degree celcius      |
+    +-----------------------------------------------------------------+
+    |  min_temp_C  |   minimum air temperature in degree celcius      |
+    +-----------------------------------------------------------------+
+    |  mean_temp_C |   mean temperature in degree celcius             |
+    +-----------------------------------------------------------------+
+    | method_pet_mm|   potential evapotranspiration in mm             |
+    +-----------------------------------------------------------------+
+    |  et_mm       |   evapotranspiration in mm                       |
+    +-----------------------------------------------------------------+
+    |  rh_%        |   relative humidity in percentage                |
+    +-----------------------------------------------------------------+
+    |  min_rh_%    |   minimum relative humidity                      |
+    +-----------------------------------------------------------------+
+    |  max_rh_%    |   maximum relative humidity                      |
+    +-----------------------------------------------------------------+
+    |  swe_mm      |   snow water equivalent                          |
+    +-----------------------------------------------------------------+
+    |  solrad_wm2  |   solar radiation watt per meter square          |
+    +-----------------------------------------------------------------+
+    |windspeed_ms  |    wind speed in meter per second                |
+    +--------------+--------------------------------------------------+
+    + sim_q_cms    |   simulated streamflow in cms                    |
+    +-----------------------------------------------------------------+
+        
     Examples
     --------
     >>> from water_datasets import RainfallRunoff
@@ -193,11 +229,8 @@ class RainfallRunoff(object):
             **kwargs
             )
 
-    def __repr__(self):
-        return f"RainfallRunoff({self.dataset}) with {len(self.stations())} stations, {self.num_dynamic} dynamic features and {self.num_static} static features"
-
     def __str__(self):
-        return f"RainfallRunoff({self.dataset}) with {len(self.stations())} stations, {self.num_dynamic} dynamic features and {self.num_static} static features"
+        return f"RainfallRunoff({self.name}) with {len(self.stations())} stations, {self.num_dynamic()} dynamic and {self.num_static()} static features"
 
     def __len__(self):
         return len(self.stations())

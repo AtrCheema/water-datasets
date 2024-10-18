@@ -120,6 +120,16 @@ class CCAM(Camels):
             self._create_boundary_id_map(self.boundary_file, 2)
 
     @property
+    def dyn_map(self):
+        return {
+        'q': 'obs_q_mmd',
+        'tem_min': 'min_temp_C',
+        'tem_max': 'max_temp_C',
+        'tem_mean': 'mean_temp_C',
+        'rhu': 'rh_%',
+        }
+
+    @property
     def meteo_path(self):
         """path where daily meteorological data of stations is present"""
         return os.path.join(self.path, "1_meteorological", '1_meteorological')
