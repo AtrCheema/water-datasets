@@ -176,7 +176,7 @@ def check_attributes(
         attributes = check_against
     elif not isinstance(attributes, list):
         assert isinstance(attributes, str), f"unknown type {type(attributes)} for {attribute_name}"
-        assert attributes in check_against
+        assert attributes in check_against, f"invalid value {attributes} for {attribute_name}"
         attributes = [attributes]
     else:
         assert isinstance(attributes, list), f'unknown attributes {attributes}'

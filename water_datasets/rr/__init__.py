@@ -69,39 +69,44 @@ class RainfallRunoff(object):
 
     
     Naming Convention for dynamic features
-    +--------------+--------------------------------------------------+
-    | Feature Name |           Description                            |
-    +=================================================================+
-    |  obs_q_cms   |   observed streamflow in cms                     |
-    +-----------------------------------------------------------------+
-    |  obs_q_mmd   |   observed streamflow in mm/day                  |
-    +-----------------------------------------------------------------+
-    |  pcp_mm      |   precipitation in mm                            |
-    +-----------------------------------------------------------------+
-    |  max_temp_C  |   maximum air temperature in degree celcius      |
-    +-----------------------------------------------------------------+
-    |  min_temp_C  |   minimum air temperature in degree celcius      |
-    +-----------------------------------------------------------------+
-    |  mean_temp_C |   mean temperature in degree celcius             |
-    +-----------------------------------------------------------------+
-    | method_pet_mm|   potential evapotranspiration in mm             |
-    +-----------------------------------------------------------------+
-    |  et_mm       |   evapotranspiration in mm                       |
-    +-----------------------------------------------------------------+
-    |  rh_%        |   relative humidity in percentage                |
-    +-----------------------------------------------------------------+
-    |  min_rh_%    |   minimum relative humidity                      |
-    +-----------------------------------------------------------------+
-    |  max_rh_%    |   maximum relative humidity                      |
-    +-----------------------------------------------------------------+
-    |  swe_mm      |   snow water equivalent                          |
-    +-----------------------------------------------------------------+
-    |  solrad_wm2  |   solar radiation watt per meter square          |
-    +-----------------------------------------------------------------+
-    |windspeed_ms  |    wind speed in meter per second                |
-    +--------------+--------------------------------------------------+
-    + sim_q_cms    |   simulated streamflow in cms                    |
-    +-----------------------------------------------------------------+
+    --------------------------------------
+    +--------------+---------------------------------------------------------+
+    | Feature Name |           Description                                   |
+    +==============+=========================================================+
+    |  obs_q_cms   |   observed streamflow in cms                            |
+    +--------------+---------------------------------------------------------+
+    |  obs_q_mmd   |   observed streamflow in mm/day                         |
+    +--------------+---------------------------------------------------------+
+    |  pcp_mm      |   precipitation in mm                                   |
+    +--------------+---------------------------------------------------------+
+    |  max_temp_C  |   maximum air temperature in degree celcius             |
+    +--------------+---------------------------------------------------------+
+    |  min_temp_C  |   minimum air temperature in degree celcius             |
+    +--------------+---------------------------------------------------------+
+    |  mean_temp_C |   mean temperature in degree celcius                    |
+    +--------------+---------------------------------------------------------+
+    | method_pet_mm|   potential evapotranspiration in mm                    |
+    +--------------+---------------------------------------------------------+
+    |  et_mm       |   evapotranspiration in mm                              |
+    +--------------+---------------------------------------------------------+
+    |  rh_%        |   relative humidity in percentage                       |
+    +--------------+---------------------------------------------------------+
+    |  min_rh_%    |   minimum relative humidity                             |
+    +--------------+---------------------------------------------------------+
+    |  max_rh_%    |   maximum relative humidity                             |
+    +--------------+---------------------------------------------------------+
+    |  swe_mm      |   snow water equivalent                                 |
+    +--------------+---------------------------------------------------------+
+    |  solrad_wm2  |   solar radiation watt per meter square                 |
+    +--------------+---------------------------------------------------------+
+    |windspeed_ms  |    wind speed in meter per second                       |
+    +--------------+---------------------------------------------------------+
+    | sim_q_cms    |   simulated streamflow in cms                           |
+    +--------------+---------------------------------------------------------+
+    |dwn_lw_rad_wm2| downward long wave radiation in watt per meter square   |
+    +--------------+---------------------------------------------------------+
+    |dwn_sw_rad_wm2| downward short wave radiation in watt per meter square  |
+    +--------------+---------------------------------------------------------+
         
     Examples
     --------
@@ -213,7 +218,7 @@ class RainfallRunoff(object):
         kwargs :
             additional keyword arguments for the underlying dataset class
             For example ``version`` for :py:class:`water_datasets.rr.CAMELS_AUS` or ``timestep`` for 
-            :py:class:`water_datasets.rr.LamaHCE` dataset.
+            :py:class:`water_datasets.rr.LamaHCE` dataset or ``met_src`` for ``CAMELS_BR``
         """
 
         if dataset not in DATASETS:

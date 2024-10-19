@@ -142,8 +142,7 @@ class Camels(Datasets):
         return
 
     @staticmethod
-    def _get_map(sf_reader, id_index=None, name:str='')->dict:
-
+    def _get_map(sf_reader, id_index=None, name:str='')->Dict[str, int]:
 
         fieldnames = [f[0] for f in sf_reader.fields[1:]]
 
