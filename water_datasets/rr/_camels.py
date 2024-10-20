@@ -27,7 +27,9 @@ class CAMELS_US(Camels):
     timeseries from 1980-01-01 to 2014-12-31. This class
     downloads and processes CAMELS dataset of 671 catchments named as CAMELS
     from `ucar.edu <https://ral.ucar.edu/solutions/products/camels>`_
-    following `Newman et al., 2015 <https://doi.org/10.5194/hess-19-209-2015>`_
+    following `Newman et al., 2015 <https://doi.org/10.5194/hess-19-209-2015>`_ ,
+    `Newman et al., 2022 <https://gdex.ucar.edu/dataset/camels.html.>`_ and
+    `Addor et al., 2017 <https://hess.copernicus.org/articles/21/5293/2017/>`_.
 
     Examples
     --------
@@ -84,7 +86,7 @@ class CAMELS_US(Camels):
                'elev_bands': f'elev{SEP}daymet',
                'hru': f'hru_forcing{SEP}daymet'}
 
-    dynamic_features = ['dayl(s)', 'prcp(mm/day)', 'srad(W/m2)',
+    dynamic_features_ = ['dayl(s)', 'prcp(mm/day)', 'srad(W/m2)',
                         'swe(mm)', 'tmax(C)', 'tmin(C)', 'vp(Pa)', 'Flow']
 
     def __init__(
@@ -135,10 +137,18 @@ class CAMELS_US(Camels):
     @property
     def dyn_map(self):
         return {
-        'Flow': 'obs_q_mmd',
+        'Flow': 'obs_q_cms',
         'tmin(C)': 'min_temp_C',
         'tmax(C)': 'max_temp_C',
         'prcp(mm/day)': 'pcp_mm',
+        'swe(mm)': 'swe_mm',
+        'pet_mean': 'pet_mm',
+        }
+    
+    @property
+    def dyn_factors(self)->Dict[str, float]:
+        return {
+            'obs_q_cms': 0.0283168,
         }
 
     @property
@@ -166,7 +176,11 @@ class CAMELS_US(Camels):
 
     @property
     def _q_name(self)->str:
-        return 'Flow'
+        return 'obs_q_cms'
+    
+    @property
+    def dynamic_features(self)->List[str]:
+        return [self.dyn_map.get(feat, feat) for feat in self.dynamic_features_]
 
     @property
     def _area_name(self)->str:
@@ -188,12 +202,13 @@ class CAMELS_US(Camels):
 
         return stns
 
-    def _read_dynamic_from_csv(self,
-                               stations,
-                               dynamic_features: Union[str, list] = 'all',
-                               st=None,
-                               en=None,
-                               ):
+    def _read_dynamic_from_csv(
+            self,
+            stations,
+            dynamic_features: Union[str, list] = 'all',
+            st=None,
+            en=None,
+            ):
         dyn = {}
         for station in stations:
 
@@ -224,17 +239,27 @@ class CAMELS_US(Camels):
                 stn_file = f'{station}_streamflow_qc.txt'
                 if stn_file in cat_dirs:
                     fpath = os.path.join(flow_dir, f'{cat}{SEP}{stn_file}')
-                    df1 = pd.read_csv(fpath, sep="\s+|;|:'",
+                    q_df = pd.read_csv(fpath, 
+                                        sep=r"\s+",
                                       names=['station', 'Year', 'Month', 'Day', 'Flow', 'Flag'],
                                       engine='python')
-                    df1.index = pd.to_datetime(
-                        df1['Year'].map(str) + '-' + df1['Month'].map(str) + '-' + df1['Day'].map(str))
+                    q_df.index = pd.to_datetime(
+                        q_df['Year'].map(str) + '-' + q_df['Month'].map(str) + '-' + q_df['Day'].map(str))
 
-            out_df = pd.concat([df[['dayl(s)',
-                                    'prcp(mm/day)', 'srad(W/m2)', 'swe(mm)', 'tmax(C)', 'tmin(C)', 'vp(Pa)']],
-                                df1['Flow']],
-                               axis=1)
-            dyn[station] = out_df
+            stn_df = pd.concat([
+                df[['dayl(s)', 'prcp(mm/day)', 'srad(W/m2)', 'swe(mm)', 'tmax(C)', 'tmin(C)', 'vp(Pa)']],
+                q_df['Flow']],
+                axis=1)
+            
+            stn_df.columns.name = 'dynamic_features'
+            stn_df.index.name = 'time'
+            stn_df.rename(columns=self.dyn_map, inplace=True)
+
+            for col, fact in self.dyn_factors.items():
+                if col in stn_df.columns:
+                    stn_df[col] *= fact
+
+            dyn[station] = stn_df
 
         return dyn
 
@@ -310,7 +335,10 @@ class CAMELS_GB(Camels):
     and 10 dyanmic features for each catchment following the work of
     `Coxon et al., 2020 <https://doi.org/10.5194/essd-12-2459-2020>`__.
     The dyanmic features are timeseries from 1970-10-01 to 2015-09-30.
+    The data is downloaded from `ceh website <https://data-package.ceh.ac.uk/data/8344e4f3-d2ea-44f5-8afa-86d2987543a9.zip>`_
 
+    Examples
+    --------
     >>> from water_datasets import CAMELS_GB
     >>> dataset = CAMELS_GB()
     >>> data = dataset.fetch(0.1, as_dataframe=True)
@@ -349,7 +377,7 @@ class CAMELS_GB(Camels):
     >>> data['static'].shape, data['dynamic'].shape
     ((1, 290), (164360, 1))
     """
-    dynamic_features = ["precipitation", "pet", "temperature", "discharge_spec",
+    dynamic_features_ = ["precipitation", "pet", "temperature", "discharge_spec",
                         "discharge_vol", "peti",
                         "humidity", "shortwave_rad", "longwave_rad", "windspeed"]
 
@@ -404,11 +432,14 @@ class CAMELS_GB(Camels):
     @property
     def dyn_map(self):
         return {
-        'discharge_spec': 'obs_q_cms',
+        'discharge_vol': 'obs_q_cms',
+        'discharge_spec': 'obs_q_mmd',
         'temperature': 'mean_temp_C',
-        'humidity': 'mean_rh_%',
-        'windspeed': 'mean_wind',
+        'humidity': 'rh_%',
+        'windspeed': 'windspeed_ms',
         'precipitation': 'pcp_mm',
+        'pet': 'pm_pet_mm',
+        'shorwave_rad': 'dwn_sw_rad_wm2',
         }
 
     @property
@@ -442,6 +473,10 @@ class CAMELS_GB(Camels):
                 cols += (list(df.columns))
         return cols
 
+    @property
+    def dynamic_features(self)->List[str]:
+        return [self.dyn_map.get(feat, feat) for feat in self.dynamic_features_]
+    
     def stations(self, to_exclude=None):
         # CAMELS_GB_hydromet_timeseries_StationID_number
         path = os.path.join(self.data_path, 'timeseries')
@@ -453,7 +488,7 @@ class CAMELS_GB(Camels):
 
     @property
     def _mmd_feature_name(self) ->str:
-        return 'discharge_spec'
+        return 'obs_q_mmd'
 
     @property
     def _area_name(self)->str:
@@ -464,11 +499,11 @@ class CAMELS_GB(Camels):
         return ['gauge_lat', 'gauge_lon']
 
     def _read_dynamic_from_csv(
-            self,
-            stations,
-            features: Union[str, list] = 'all',
-            st=None,
-            en=None,
+        self,
+        stations,
+        features: Union[str, list] = 'all',
+        st=None,
+        en=None,
     ):
         """Fetches dynamic attribute/features of one or more station."""
         dyn = {}
@@ -480,6 +515,8 @@ class CAMELS_GB(Camels):
             df = pd.read_csv(os.path.join(path, fname), index_col='date')
             df.index = pd.to_datetime(df.index)
             df.index.freq = pd.infer_freq(df.index)
+
+            df.rename(columns=self.dyn_map, inplace=True)
 
             df.columns.name = 'dynamic_features'
             df.index.name = 'time'
@@ -529,7 +566,7 @@ class CAMELS_GB(Camels):
            (671, 2)
         """
 
-        features = check_attributes(features, self.static_features)
+        features = check_attributes(features, self.static_features, 'static_features')
         static_fname = 'static_features.csv'
         static_fpath = os.path.join(self.data_path, static_fname)
         if os.path.exists(static_fpath):
@@ -768,7 +805,7 @@ class CAMELS_AUS(Camels):
     @property
     def dyn_factors(self):
         return {
-        'streamflow_MLd': 0.01157,
+        'obs_q_cms': 0.01157,
         }
 
     @property
@@ -812,7 +849,7 @@ class CAMELS_AUS(Camels):
 
     @property
     def dynamic_features(self) -> list:
-        return list(self.folders[self.version].keys())
+        return [self.dyn_map.get(feat, feat) for feat in list(self.folders[self.version].keys())]
 
     def q_mmd(
             self,
@@ -837,7 +874,7 @@ class CAMELS_AUS(Camels):
         """
         stations = check_attributes(stations, self.stations())
         q = self.fetch_stations_features(stations,
-                                           dynamic_features='streamflow_MLd',
+                                           dynamic_features='obs_q_cms',
                                            as_dataframe=True)
         q.index = q.index.get_level_values(0)
         q = q * 0.01157  # mega liter per day to cms
@@ -872,24 +909,30 @@ class CAMELS_AUS(Camels):
 
         dyn_attrs = {}
         dyn = {}
-        for _attr in dynamic_features:
+        for _attr in list(self.folders[self.version].keys()):
             _path = os.path.join(self.path, f'{self.folders[self.version][_attr]}{SEP}{_attr}.csv')
-            _df = pd.read_csv(_path, na_values=['-99.99'])
-            _df.index = pd.to_datetime(_df[['year', 'month', 'day']])
-            [_df.pop(col) for col in ['year', 'month', 'day']]
+            attr_df = pd.read_csv(_path, na_values=['-99.99'])
+            attr_df.index = pd.to_datetime(attr_df[['year', 'month', 'day']])
+            [attr_df.pop(col) for col in ['year', 'month', 'day']]
 
-            dyn_attrs[_attr] = _df
+            dyn_attrs[_attr] = attr_df
 
         # making one separate dataframe for one station
         for stn in stations:
             stn_df = pd.DataFrame()
             for attr, attr_df in dyn_attrs.items():
-                if attr in dynamic_features:
-                    stn_df[attr] = attr_df[stn]
+                #if attr in dynamic_features:
+                stn_df[attr] = attr_df[stn]
             
+            stn_df.rename(columns=self.dyn_map, inplace=True)
+
+            for col, fact in self.dyn_factors.items():
+                if col in stn_df.columns:
+                    stn_df[col] = stn_df[col] * fact
+
             stn_df.index.name = 'time'
             stn_df.columns.name = 'dynamic_features'
-            dyn[stn] = stn_df
+            dyn[stn] = stn_df.loc[:, dynamic_features]
 
         return dyn
 
@@ -897,7 +940,6 @@ class CAMELS_AUS(Camels):
             self,
             stn_id: Union[str, List[str]] = "all",
             features:Union[str, List[str]] = "all",
-            **kwargs
     ) -> pd.DataFrame:
         """Fetches static features of one or more stations as dataframe.
 
@@ -1007,7 +1049,7 @@ class CAMELS_CL(Camels):
         "CAMELScl_catchment_boundaries.zip": "https://store.pangaea.de/Publications/Alvarez-Garreton-etal_2018/",
     }
 
-    dynamic_features = ['streamflow_m3s', 'streamflow_mm',
+    dynamic_features_ = ['streamflow_m3s', 'streamflow_mm',
                         'precip_cr2met', 'precip_chirps', 'precip_mswep', 'precip_tmpa',
                         'tmin_cr2met', 'tmax_cr2met', 'tmean_cr2met',
                         'pet_8d_modis', 'pet_hargreaves',
@@ -1084,8 +1126,12 @@ class CAMELS_CL(Camels):
         return df.index.to_list()
 
     @property
+    def dynamic_features(self) -> List[str]:
+        return [self.dyn_map.get(feat, feat) for feat in self.dynamic_features_]
+
+    @property
     def _mmd_feature_name(self) ->str:
-        return 'streamflow_mm'
+        return 'obs_q_mmd'
 
     @property
     def _area_name(self)->str:
@@ -1093,7 +1139,7 @@ class CAMELS_CL(Camels):
 
     def stn_coords(
             self,
-            stations:Union[str, List[str]] = None
+            stations:Union[str, List[str]] = "all"
     ) ->pd.DataFrame:
         """
         returns coordinates of stations as DataFrame
@@ -1125,7 +1171,7 @@ class CAMELS_CL(Camels):
         df = pd.read_csv(fpath, sep='\t', index_col='gauge_id')
         df = df.loc[['gauge_lat', 'gauge_lon'], :].transpose()
         df.columns = ['lat', 'long']
-        stations = check_attributes(stations, self.stations())
+        stations = check_attributes(stations, self.stations(), 'stations')
         df.index  = [index.strip() for index in df.index]
         return df.loc[stations, :]
 
@@ -1136,7 +1182,7 @@ class CAMELS_CL(Camels):
         stn_fname = os.path.join(self.path, 'stations.json')
         if not os.path.exists(stn_fname):
             _stations = {}
-            for dyn_attr in self.dynamic_features:
+            for dyn_attr in self.dynamic_features_:
                 for _dir in self._all_dirs:
                     if dyn_attr in _dir:
                         fname = os.path.join(self.path, f"{_dir}{SEP}{_dir}.txt")
@@ -1162,19 +1208,24 @@ class CAMELS_CL(Camels):
 
         # reading all dynnamic features
         dyn_attrs = {}
-        for attr in dynamic_features:
+        for attr in self.dynamic_features_:
             fname = [f for f in self._all_dirs if '_' + attr in f][0]
             fname = os.path.join(self.path, f'{fname}{SEP}{fname}.txt')
-            _df = pd.read_csv(fname, sep='\t', index_col=['gauge_id'], na_values=" ")
-            _df.index = pd.to_datetime(_df.index)
-            dyn_attrs[attr] = _df[st:en]
+            df = pd.read_csv(fname, sep='\t', index_col=['gauge_id'], na_values=" ")
+            df.index = pd.to_datetime(df.index)
+
+            dyn_attrs[attr] = df[st:en]
 
         # making one separate dataframe for one station
         for stn in stations:
             stn_df = pd.DataFrame()
             for attr, attr_df in dyn_attrs.items():
-                if attr in dynamic_features:
-                    stn_df[attr] = attr_df[stn]
+                #if attr in dynamic_features:
+                stn_df[attr] = attr_df[stn]
+
+            stn_df.rename(columns=self.dyn_map, inplace=True)
+            stn_df.index.name = 'time'
+            stn_df.columns.name = 'dynamic_features'
             dyn[stn] = stn_df[st:en]
 
         return dyn

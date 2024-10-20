@@ -120,7 +120,18 @@ class CAMELS_BR(Camels):
         'temperature_max': 'max_temp_C',
         'temperature_mean': 'mean_temp_C',
         'precipitation_mswep': 'pcp_mm',
+        'potential_evapotransp_gleam': 'gleam_pet_mm',
         }
+
+    @property
+    def dyn_generators(self):
+        return {
+            'obs_q_cms': self.func1,
+        }
+
+    def func1(self, x):
+        # convert cms to mmd
+        return x / 86400
 
     @property
     def _all_dirs(self):
@@ -206,7 +217,7 @@ class CAMELS_BR(Camels):
         """
         stations = check_attributes(stations, self.stations())
         q = self.fetch_stations_features(stations,
-                                           dynamic_features='streamflow_mm',
+                                           dynamic_features='obs_q_mmd',
                                            as_dataframe=True)
         q.index = q.index.get_level_values(0)
         #area_m2 = self.area(stations) * 1e6  # area in m2
@@ -429,24 +440,32 @@ class CAMELS_BR(Camels):
         feature_dfs = []
         for feature, path in self.folders.items():
 
-            if feature in features:
-                feature_df = self._read_dynamic_feature(path, feature, stn_id, st, en)
-                feature_dfs.append(feature_df)
+            #if feature in features:
+            feature_df = self._read_dynamic_feature(path, feature, stn_id, st, en)
+            feature_dfs.append(feature_df)
 
         stn_df = pd.concat(feature_dfs, axis=1)
         stn_df.columns.name = 'dynamic_features'
         stn_df.index.name = 'time'
         return stn_df
 
-    def _read_dynamic_feature(self, _dir, feature, stn_id, st=None, en=None):
-        path = os.path.join(self.path, f'{_dir}{SEP}{_dir}')
+    def _read_dynamic_feature(self, folder, feature, stn_id, st=None, en=None):
+        path = os.path.join(self.path, f'{folder}{SEP}{folder}')
         # supposing that the filename starts with stn_id and has .txt extension.
         fname = [f for f in os.listdir(path) if f.startswith(str(stn_id)) and f.endswith('.txt')]
         fname = fname[0]
         if os.path.exists(os.path.join(path, fname)):
             df = pd.read_csv(os.path.join(path, fname), sep=' ')
             df.index = pd.to_datetime(df[['year', 'month', 'day']])
-            df = df[st:en][feature]
+            df = df.drop(['year', 'month', 'day'], axis=1)
+
+            # df.rename(columns = self.dyn_map, inplace=True)
+
+            # for col in self.dyn_generators:
+            #     if col in df.columns:
+            #         df[col] = self.dyn_generators[col](df[col])
+
+            df = df.loc[st:en, feature]
         else:
             raise FileNotFoundError(f"file {fname} not found at {path}")
     
@@ -455,10 +474,9 @@ class CAMELS_BR(Camels):
     def fetch_static_features(
             self,
             stn_id: Union[str, List[str]] = "all",
-            features:Union[str, List[str]]=None
+            features:Union[str, List[str]] = "all"
     ) -> pd.DataFrame:
         """
-
         fetches static feature/features of one or mroe stations
 
         Parameters
@@ -476,7 +494,6 @@ class CAMELS_BR(Camels):
         >>> data = dataset.fetch_static_features(dataset.stations(), dataset.static_features)
         >>> data.shape
         (597, 67)
-
         """
 
         station = check_attributes(stn_id, self.stations())
@@ -583,6 +600,8 @@ class CABra(Camels):
         self.met_src = met_src
         self._download(overwrite=overwrite)
 
+        self._dynamic_features = self.__dynamic_features()
+
         self.dyn_fname = os.path.join(self.path,
                                       f'cabra_{met_src}_dyn.nc')
 
@@ -592,14 +611,50 @@ class CABra(Camels):
         self.boundary_file = os.path.join(self.path, "CABra_boundaries", "CABra_boundaries.shp")
         self._create_boundary_id_map(self.boundary_file, 2)
 
+    @staticmethod
+    def _get_map(sf_reader, id_index=None, name:str='')->Dict[str, int]:
+
+
+        fieldnames = [f[0] for f in sf_reader.fields[1:]]
+
+        if len(fieldnames) > 1:
+            if id_index is None:
+                raise ValueError(f"""
+                more than one fileds are present in {name} shapefile 
+                i.e: {fieldnames}. 
+                Please provide a value for id_idx_in_{name} that must be
+                less than {len(fieldnames)}
+                """)
+        else:
+            id_index = 0
+
+        catch_ids_map = {
+        str(int(rec[id_index])): idx for idx, rec in enumerate(sf_reader.iterRecords())
+    }
+        return catch_ids_map
+    
     @property
     def dyn_map(self):
         return {
-        'Streamflow': 'obs_q_mmd',
-        'tmin_ens': 'min_temp_C',
-        'tmax_ens': 'max_temp_C',
-        'p_ens': 'pcp_mm',
-        'rh_ens': 'rh_%',
+        'Streamflow': 'obs_q_cms',
+        'tmin_ens': 'ens_min_temp_C',
+        'tmax_ens': 'ens_max_temp_C',
+        'tmin_era5': 'era5_min_temp_C',
+        'tmax_era5': 'era5_max_temp_C',
+        'tmin_ref': 'ref_min_temp_C',
+        'tmax_ref': 'ref_max_temp_C',
+        'p_ens': 'ens_pcp_mm',
+        'p_ref': 'ref_pcp_mm',
+        'p_era5': 'era5_pcp_mm',
+        'rh_ens': 'ens_rh_%',
+        'rh_era5': 'era5_rh_%',
+        'rh_ref': 'ref_rh_%',
+        'wnd_ens': 'ens_windspeed_ms',
+        'wnd_era5': 'era5_windspeed_ms',
+        'wnd_ref': 'ref_windspeed_ms',
+        'pet_pm': 'pm_pet_mm',
+        'pet_pt': 'pt_pet_mm',
+        'pet_hg': 'hg_pet_mm'
         }
 
     @property
@@ -612,17 +667,15 @@ class CABra(Camels):
         return os.path.join(self.path, 'CABra_attributes', 'CABra_attributes')
 
     @property
-    def dynamic_features(self) -> list:
-        return ["p_ens",
-                  "tmin_ens",
-                  "tmax_ens",
-                  "rh_ens",
-                  "wnd_ens",
-                  "srad_ens",
-                  "et_ens",
-                  "pet_pm",
-                  "pet_pt",
-                  "pet_hg", 'Quality', 'Streamflow']
+    def dynamic_features(self) -> List[str]:
+        return self._dynamic_features
+
+    def __dynamic_features(self)->List[str]:
+        stn = self.stations()[0]
+        df = pd.concat([self._read_q_from_csv(stn), self._read_meteo_from_csv(stn)], axis=1)
+        cols = df.columns.to_list()
+        cols = [col for col in cols if col not in ['Year', 'Month', 'Day']]
+        return cols
 
     @property
     def static_features(self)->List[str]:
@@ -673,7 +726,7 @@ class CABra(Camels):
         """
         stations = check_attributes(stations, self.stations())
         q = self.fetch_stations_features(stations,
-                                           dynamic_features='Streamflow',
+                                           dynamic_features='obs_q_cms',
                                            as_dataframe=True)
         q.index = q.index.get_level_values(0)
         area_m2 = self.area(stations) * 1e6  # area in m2
@@ -683,43 +736,6 @@ class CABra(Camels):
     @property
     def _area_name(self)->str:
         return 'catch_area'
-
-    # def area(
-    #         self,
-    #         stations: Union[str, List[str]] = None
-    # ) ->pd.Series:
-    #     """
-    #     Returns area (Km2) of all catchments as pandas series
-
-    #     parameters
-    #     ----------
-    #     stations : str/list
-    #         name/names of stations. Default is None, which will return
-    #         area of all stations
-
-    #     Returns
-    #     --------
-    #     pd.Series
-    #         a pandas series whose indices are catchment ids and values
-    #         are areas of corresponding catchments.
-
-    #     Examples
-    #     ---------
-    #     >>> from water_datasets import CABra
-    #     >>> dataset = CABra()
-    #     >>> dataset.area()  # returns area of all stations
-    #     >>> dataset.stn_coords('92')  # returns area of station whose id is 912101A
-    #     >>> dataset.stn_coords(['92', '142'])  # returns area of two stations
-    #     """
-
-    #     stations = check_attributes(stations, self.stations())
-
-    #     df = self.topology_attrs()
-
-    #     s = df['catch_area']
-    #     s.index = s.index.astype(str)
-    #     s.name = 'area'
-    #     return s.loc[stations]
 
     def stn_coords(
             self,
@@ -1059,12 +1075,14 @@ class CABra(Camels):
         df = pd.read_csv(q_fpath, sep='\t',
                          header=8,
                          names=['Year', 'Month', 'Day', 'Streamflow', 'Quality'],
-                         dtype={'Year': int,
-                                'Month': int,
-                                'Day': int,
+                         dtype={'Year': np.int16,
+                                'Month': np.int16,
+                                'Day': np.int16,
                                 #'Streamflow': np.float32,
-                                'Quality': int}
+                                'Quality': np.int16}
                          )
+        df.rename(columns=self.dyn_map, inplace=True)
+        df['obs_q_cms'] = df['obs_q_cms'].astype(np.float32)
         return df
 
     def _read_meteo_from_csv(
@@ -1106,6 +1124,8 @@ class CABra(Camels):
                              names=list(dtypes.keys()),
                              dtype=dtypes,
                              header=12)
+        
+        df.rename(columns=self.dyn_map, inplace=True)
         return df
 
     def fetch_static_features(
@@ -1183,7 +1203,7 @@ class CABra(Camels):
             en=None
     )->dict:
 
-        attributes = check_attributes(dynamic_features, self.dynamic_features)
+        features = check_attributes(dynamic_features, self.dynamic_features, 'dynamic_features')
 
         # qs and meteo data has different index
 
@@ -1197,16 +1217,7 @@ class CABra(Camels):
         met_idx = pd.to_datetime(
             meteos[10]['Year'].astype(str) + '-' + meteos[10]['Month'].astype(str)+'-' + meteos[10]['Day'].astype(str))
 
-        met_cols = ["p_ens",
-                  "tmin_ens",
-                  "tmax_ens",
-                  "rh_ens",
-                  "wnd_ens",
-                  "srad_ens",
-                  "et_ens",
-                  "pet_pm",
-                  "pet_pt",
-                  "pet_hg"]
+        met_cols = [col for col in meteos[0].columns if col not in ['Year', 'Month', 'Day']]
 
         dyn = {}
 
@@ -1218,6 +1229,12 @@ class CABra(Camels):
                 meteo.index = met_idx
             q.index = q_idx
 
-            dyn[stn] = pd.concat([meteo[met_cols], q[['Quality', 'Streamflow']]], axis=1)[attributes]
+            stn_df = pd.concat(
+                [meteo[met_cols].astype(np.float32), q[['Quality', 'obs_q_cms']]], axis=1)[features]
+            
+            stn_df.index.name = 'time'
+            stn_df.columns.name = 'dynamic_features'
+
+            dyn[stn] = stn_df
 
         return dyn
